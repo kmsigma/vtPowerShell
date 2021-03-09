@@ -24,7 +24,7 @@ function Add-VtPoints {
     [CmdletBinding(
         SupportsShouldProcess=$true, 
         PositionalBinding=$false,
-        HelpUri = 'http://www.microsoft.com/',
+        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64799/point-transaction-rest-endpoints',
         ConfirmImpact='Medium')]
     [Alias()]
     [OutputType([String])]
@@ -117,7 +117,7 @@ function Add-VtPoints {
                     Value = $Points;
                     ContentID = $ContentId;
                     ContentTypeId = $ContentTypeId;
-                    CreateDate = $AwardDateTime;
+                    CreatedDate = $AwardDateTime;
                 }
                 try {
                     $PointsRequest = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Method Post -Body $Body -Headers $AuthHeader
