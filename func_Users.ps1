@@ -83,6 +83,8 @@ function Get-VtUsers {
         switch ( $pscmdlet.ParameterSetName ) {
             'All Users' {
                 Write-Host "Not implemented yet - sorry" -ForegroundColor Red 
+                Write-Verbose -Message "Pulling a list of all users can take a significant amount of time"
+
             }
             'Username' { 
                 Write-Verbose -Message "Using the username [$Username] for the lookup"
@@ -102,7 +104,15 @@ function Get-VtUsers {
                 if ( $ReturnDetails ) {
                     $Users.Users
                 } else {
-                    $Users.Users.id
+                    [PSCustomObject]@{
+                        UserId = $Users.Users.id;
+                        Username = $Users.Users.Username;
+                        EmailAddress = $Users.Users.PrivateEmail;
+                        Status = $Users.Users.AccountStatus;
+                        CurrentPresence = $Users.Users.Presence;
+                        LastLogin = $Users.Users.LastLoginDate;
+                        LastVisit = $Users.Users.LastVisitedDate;
+                    }
                 }
             } elseif ( $Users.TotalCount -gt 1 ) {
                 # We found multiple users, which is bad
