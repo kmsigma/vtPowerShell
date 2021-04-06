@@ -115,8 +115,8 @@ function Add-VtPointTransaction {
                     Description   = "<p>$Description</p>";
                     UserId        = $UserId;
                     Value         = $Points;
-                    ContentID     = $ContentId;
-                    ContentTypeId = $ContentTypeId;
+                    ContentID     = $ContentId;     # We'll just use the ContentID from the user
+                    ContentTypeId = $ContentTypeId; # We'll just use the ContentID from the user
                     CreatedDate   = $AwardDateTime;
                 }
                 try {
