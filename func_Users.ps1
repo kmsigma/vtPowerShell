@@ -289,13 +289,19 @@ function Get-VtUser {
             }
         }
         
-        # Validate that the authentication header function  is available
+        # Validate that the authentication header function is available
         if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
             . .\func_Telligent.ps1
         }
 
         if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue) ) {
             . .\func_Utilities.ps1
+        }
+
+        # Check the authentication header for any 'Rest-Method'
+        if ( $AuthHeader["Rest-Method"] ) {
+            # Remove it because this is a 'GET' call - anything else will cause an error in Invoke-RestMethod
+            $AuthHeader.Remove("Rest-Method")
         }
 
         # Set default page index, page size, and add any other filters
@@ -589,3 +595,6 @@ function Remove-VtUser {
 Set-VtUser (based on https://community.telligent.com/community/11/w/api-documentation/64926/update-user-rest-endpoint)
 
 #>
+
+
+Get-VtUser -Username "KMSigma" -Verbose
