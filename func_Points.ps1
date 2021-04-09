@@ -221,7 +221,7 @@ function Get-VtPointTransaction {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidateRange(100, 10000)]
-        [int]$BatchSize = 500,
+        [int]$BatchSize = 1000,
 
         # Authentication Header for the community
         [Parameter(
