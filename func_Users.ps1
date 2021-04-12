@@ -452,11 +452,8 @@ function Get-VtUser {
 }
 
 <#
-
-This still needs to be done
-
 .Synopsis
-    Short description
+    This function is not yet completed.  When complete, this block will be updated
 .DESCRIPTION
     Long description
 .EXAMPLE
@@ -590,11 +587,6 @@ function Remove-VtUser {
     }
 }
 
-<# Additional functions to complete:
-
+<# Additional functions to build:
 Set-VtUser (based on https://community.telligent.com/community/11/w/api-documentation/64926/update-user-rest-endpoint)
-
 #>
-
-
-#Get-VtUser -Username "KMSigma" -Verbose
