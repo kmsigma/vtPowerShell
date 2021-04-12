@@ -597,4 +597,4 @@ Set-VtUser (based on https://community.telligent.com/community/11/w/api-document
 #>
 
 
-Get-VtUser -Username "KMSigma" -Verbose
+#Get-VtUser -Username "KMSigma" -Verbose
