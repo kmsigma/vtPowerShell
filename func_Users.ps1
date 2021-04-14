@@ -275,6 +275,7 @@ function Get-VtUser {
                         Status           = $UserResponse.User.AccountStatus;
                         ModerationStatus = $UserResponse.User.ModerationLevel
                         CurrentPresence  = $UserResponse.User.Presence;
+                        JoinDate         = $UserResponse.User.JoinDate;
                         LastLogin        = $UserResponse.User.LastLoginDate;
                         LastVisit        = $UserResponse.User.LastVisitedDate;
                         LifetimePoints   = $UserResponse.User.Points;
@@ -414,7 +415,7 @@ function Get-VtUser {
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "UserId" -Value Id -Force
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "EmailAddress" -Value PrivateEmail -Force
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "Status" -Value AccountStatus  -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "ModerationStatus" -Verbose ModerationLevel -Force
+                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "ModerationStatus" -Value ModerationLevel -Force
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "CurrentPresence" -Value Presence  -Force
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "LastLogin" -Value LastLoginDate -Force
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "LastVisit" -Value LastVisitedDate -Force
@@ -423,10 +424,10 @@ function Get-VtUser {
                             # Output 
                             if ( $IsFiltered ) {
                                 Write-Verbose -Message "FILTER: Filtering with: $FilterScript"
-                                $UserResponse.Users | Where-Object -FilterScript $FilterScript | Select-Object -Property UserId, Username, EmailAddress, Status, ModerationStatus, CurrentPresence, LastLogin, LastVisit, LifetimePoints
+                                $UserResponse.Users | Where-Object -FilterScript $FilterScript | Select-Object -Property UserId, Username, EmailAddress, Status, ModerationStatus, CurrentPresence, JoinDate, LastLogin, LastVisit, LifetimePoints
                             }
                             else {
-                                $UserResponse.Users | Select-Object -Property UserId, Username, EmailAddress, Status, ModerationStatus, CurrentPresence, LastLogin, LastVisit, LifetimePoints
+                                $UserResponse.Users | Select-Object -Property UserId, Username, EmailAddress, Status, ModerationStatus, CurrentPresence, JoinDate, LastLogin, LastVisit, LifetimePoints
                             }
                         }
                         $TotalUsersReturned += $UserResponse.Users.Count
