@@ -247,11 +247,12 @@ function Get-VtUser {
     begin {
 
         <#
-.Synopsis
-    Function to pull back a single acccount from Verint/Telligent Communities
-.DESCRIPTION
-    This function pulls back a single account from a Verint/Tellident Community.  It's implemented internally-only for getting arrays of data
-#>        function Get-VtSingleUser {
+        .Synopsis
+            Function to pull back a single acccount from Verint/Telligent Communities
+        .DESCRIPTION
+            This function pulls back a single account from a Verint/Tellident Community.  It's implemented internally-only for parsing through arrays of accounts
+        #>
+        function Get-VtSingleUser {
             [CmdletBinding()]
             param (
                 [Parameter()]
@@ -261,9 +262,8 @@ function Get-VtUser {
                 [switch]$ReturnDetails
             )
             try {
-                Write-Verbose -Message "Executing in single user lookup mode"
+                Write-Verbose -Message "Executing in single user mode"
                 # Don't need page size or page index, so remove them from the UriParmeters
-                Write-Verbose -Message "Uri: $( ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) )"
                 $UserResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
                 if ( $UserResponse -and $ReturnDetails ) {
                     # We found a matching user, return everything with no pretty formatting
@@ -284,6 +284,7 @@ function Get-VtUser {
                         LastLogin        = $UserResponse.User.LastLoginDate;
                         LastVisit        = $UserResponse.User.LastVisitedDate;
                         LifetimePoints   = $UserResponse.User.Points;
+                        EmailEnabled     = $UserResponse.User.ReceiveEmails;
                     }
                 }
                 else {
@@ -305,10 +306,7 @@ function Get-VtUser {
         }
 
         # Check the authentication header for any 'Rest-Method'
-        if ( $AuthHeader["Rest-Method"] ) {
-            # Remove it because this is a 'GET' call - anything else will cause an error in Invoke-RestMethod
-            $AuthHeader.Remove("Rest-Method")
-        }
+        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get
 
         # Set default page index, page size, and add any other filters
         $UriParameters = @{}
@@ -425,6 +423,7 @@ function Get-VtUser {
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "LastLogin" -Value LastLoginDate -Force
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "LastVisit" -Value LastVisitedDate -Force
                             $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "LifetimePoints" -Value Points -Force
+                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "EmailEnabled" -Value ReceiveEmails -Force
                         
                             # Output 
                             if ( $IsFiltered ) {
@@ -503,7 +502,7 @@ function Remove-VtUser {
         [Alias("Id")] 
         [int[]]$UserId,
 
-        # Delete account by User Id
+        # Delete account by Username
         [Parameter(
             Mandatory = $true,
             ValueFromPipeline = $true,
@@ -565,26 +564,88 @@ function Remove-VtUser {
     )
 
     Begin {
-        # Check for proper parameterization
 
+        <#
+        .Synopsis
+            Convert a hashtable to a query string
+        .DESCRIPTION
+            Converts a passed hashtable to a query string based on the key:value pairs
+        .OUTPUTS
+            string object in the form of "key1=value1&key2=value2..."  Does not include the preceeding '?' required for many URI calls
+        .NOTES
+            This is bascially the reverse of [System.Web.HttpUtility]::ParseQueryString
+        #>
+        function ConvertTo-QueryString {
+            param (
+                # Hashtable containing segmented query details
+                [Parameter(
+                    Mandatory = $true, 
+                    ValueFromPipeline = $true)]
+                [ValidateNotNull()]
+                [ValidateNotNullOrEmpty()]
+                [System.Collections.Hashtable]$Parameters
+            )
+            $ParameterStrings = @()
+            $Parameters.GetEnumerator() | ForEach-Object {
+                $ParameterStrings += "$( $_.Key )=$( $_.Value )"
+            }
+            $ParameterStrings -join "&"
+        }
+        
+        # Build up the URI parameter set 
+        $UriParameters = @{}
+        if ( $DeleteAllContent ) {
+            $UriParameters.Add("DeleteAllContent", "true")
+        }
+        else {
+            $UriParameters.Add("DeleteAllContent", "false")
+        }
+        if ( $ReassignedUserId ) {
+            $UriParameters.Add("ReassignedUserId", $ReassignedUserId)
+        }
+        if ( $ReassignedUsername ) {
+            $UserId = Get-VtUser -Username $ReassignedUsername -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false | Select-Object -ExpandProperty UserId
+            if ( $UserId ) {
+                $UriParameters.Add("ReassignedUserId", $UserId)
+            }
+            else {
+                Write-Error -Message "Unable to find a user Id for '$ReassignedUsername' - stopping"
+                break
+            }
+        }
+
+        # Rest-Method to use for the change
+        $RestMethod = "Delete"
     }
+
     Process {
+
         switch ( $pscmdlet.ParameterSetName ) {
             'User Id' {
                 Write-Verbose -Message "Processing account deletion using User Ids"
+                $Users = $UserId | ForEach-Object {
+                    Get-VtUser -UserId $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false }
             }
             'Username' { 
                 Write-Verbose -Message "Processing account deletion using Usernames"
+                $Users = $Username | ForEach-Object {
+                    Get-VtUser -Username $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false }
             }
+
             'Email Address' { 
                 Write-Verbose -Message "Processing account deletion using Email Addresses - must perform lookup first"
-                $UserId = $EmailAddress | ForEach-Object {
-                    Get-VtUser -EmailAddress $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader | Select-Object -ExpandProperty UserId
-                }
+                $Users = $EmailAddress | ForEach-Object {
+                    Get-VtUser -EmailAddress $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false }
             }
         }
-        ForEach ($U in $UserId) {
-            if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Delete User with ID: $U from") ) {
+        ForEach ( $U in $Users ) {
+            if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Delete User: '$( $U.Username )' [ID: $( $U.UserId )] <$( $( $U.EmailAddress ) )>") ) {
+                $Uri = "api.ashx/v2/users/$( $U.UserId ).json"
+                $DeleteResponse = Invoke-RestMethod -Method POST -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -WarningAction SilentlyContinue )
+                Write-Verbose -Message "User Deleted: '$( $U.Username )' [ID: $( $U.UserId )] <$( $( $U.EmailAddress ) )>"
+                if ( $DeleteResponse ) {
+                    Write-Host "Account: '$( $U.Username )' [ID: $( $U.UserId )] <$( $( $U.EmailAddress ) )> $( $DeleteResponse.Info )" -ForegroundColor Red
+                }
             }
         }
     }
@@ -596,3 +657,237 @@ function Remove-VtUser {
 <# Additional functions to build:
 Set-VtUser (based on https://community.telligent.com/community/11/w/api-documentation/64926/update-user-rest-endpoint)
 #>
+
+<#
+.Synopsis
+    To be completed when the function is ready
+    Starting very simply with AccountStatus, BanReason, BannedUntil, ModerationLevel, EmailAddress (PrivateEmail), Username, RequiresTermsOfServiceAcceptance, ReceiveEmails
+.DESCRIPTION
+    Long description
+.EXAMPLE
+    Example of how to use this cmdlet
+.EXAMPLE
+    Another example of how to use this cmdlet
+.INPUTS
+    Inputs to this cmdlet (if any)
+.OUTPUTS
+    Returns a PowerShell Custom object with the user account details after updating
+.NOTES
+    General notes - this really needs some better logic - like don't update something if is it's already set how you think.
+    That'll be something for another day though
+
+    Also should accept an array of User ID's if we are not doing new Email Address or new Username
+    Still need to figure out the proper logic for that.
+
+    VERY Rough Logic:
+    if ( $UserId -is [System.Array] ) {
+        Write-Warning -Message "Operating in multi-user mode - new Email Address and new Username are ignored"
+        $NewUsername = $null
+        $NewEmailAddress = $null
+    }
+.COMPONENT
+    The component this cmdlet belongs to
+.ROLE
+    The role this cmdlet belongs to
+.FUNCTIONALITY
+    The functionality that best describes this cmdlet
+#>
+function Set-VtUser {
+    [CmdletBinding(DefaultParameterSetName = 'User Id', 
+        SupportsShouldProcess = $true, 
+        PositionalBinding = $false,
+        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64926/update-user-rest-endpoint',
+        ConfirmImpact = 'High')]
+    Param
+    (
+        # The user id on which to operate.  Because this operation can change the username and email address, 
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            Position = 0,
+            ParameterSetName = 'User Id')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [Alias("Id")] 
+        [int]$UserId,
+
+        # New Username for the Account
+        [Parameter(Mandatory = $false)]
+        [AllowNull()]
+        [string]$NewUsername,
+
+        # Updated email address for the account
+        [Parameter(Mandatory = $false)]
+        [ValidatePattern("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|`"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*`")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])")]
+        # Regex for email:
+        # (?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])
+        [string]$NewEmailAddress,
+
+        # New status for the account: ApprovalPending, Approved, Banned, or Disapproved
+        [Parameter(Mandatory = $false)]
+        [AllowNull()]
+        [ValidateSet('ApprovalPending', 'Approved', 'Banned', 'Disapproved')]
+        [string]$AccountStatus,
+
+        # if the account status is updated to 'Banned', when are they allowed back - defaults to 1 year from now
+        [Parameter(Mandatory = $false)]
+        [AllowNull()]
+        [datetime]$BannedUntil = ( Get-Date ).AddYears(1),
+
+        # the reason the user was banned
+        [Parameter(Mandatory=$false)]
+        [ValidateSet('Profanity', 'Advertising', 'Spam', 'Aggressive', 'BadUsername', 'BadSignature', 'BanDodging', 'Other')]
+        [string]$BanReason = 'Other',
+
+        # New Moderation Level for the account: Unmoderated, Moderated
+        [Parameter(Mandatory = $false)]
+        [AllowNull()]
+        [ValidateSet('Unmoderated', 'Moderated')]
+        [string]$ModerationLevel,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$RequiresTermsOfServiceAcceptance = $false,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$EmailBlocked = $false,
+
+        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(
+            Mandatory = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [string]$CommunityDomain = $Global:CommunityDomain,
+
+        # Authentication Header for the community
+        [Parameter(
+            Mandatory = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
+    )
+
+    Begin {
+
+        <#
+        .Synopsis
+            Convert a hashtable to a query string
+        .DESCRIPTION
+            Converts a passed hashtable to a query string based on the key:value pairs
+        .OUTPUTS
+            string object in the form of "key1=value1&key2=value2..."  Does not include the preceeding '?' required for many URI calls
+        .NOTES
+            This is bascially the reverse of [System.Web.HttpUtility]::ParseQueryString
+        #>
+        function ConvertTo-QueryString {
+            param (
+                # Hashtable containing segmented query details
+                [Parameter(
+                    Mandatory = $true, 
+                    ValueFromPipeline = $true)]
+                [ValidateNotNull()]
+                [ValidateNotNullOrEmpty()]
+                [System.Collections.Hashtable]$Parameters
+            )
+            $ParameterStrings = @()
+            $Parameters.GetEnumerator() | ForEach-Object {
+                $ParameterStrings += "$( $_.Key )=$( $_.Value )"
+            }
+            $ParameterStrings -join "&"
+        }
+
+        # Rest-Method to use for the change
+        $RestMethod = "Put"
+
+        # Parameters to pass to the URI
+        $UriParameters = @{}
+        if ( $NewUsername ) {
+            if ( -not ( Get-VtUser -Username $NewUsername -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue ) ) {
+                $UriParameters.Add("Username", $NewUsername)
+            }
+            else {
+                Write-Error -Message "Another user with the username '$NewUsername' was detected.  Cannot complete." -RecommendedAction "Please choose another username or delete the conflicing user"
+                break
+            }
+        }
+        if ( $NewEmailAddress ) {
+            if ( -not ( Get-VtUser -EmailAddress $NewEmailAddress -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue) ) {
+                $UriParameters.Add("PrivateEmail", $NewEmailAddress)
+            }
+            else {
+                Write-Error -Message "Another user with the email address '$NewEmailAddress' was detected.  Cannot complete." -RecommendedAction "Please choose another email address or delete the conflicing user"
+            }
+        }
+        if ( $AccountStatus ) {
+            $UriParameters.Add("AccountStatus", $AccountStatus )
+        }
+        if ( $ModerationLevel ) {
+            $UriParameters.Add("ModerationLevel", $ModerationLevel )
+        }
+        if ( $RequiresTermsOfServiceAcceptance ) {
+            $UriParameters.Add("AcceptTermsOfService", ( -not $RequiresTermsOfServiceAcceptance ).ToString() )
+        }
+        if ( $EmailBlocked ) {
+            $UriParameters.Add("ReceiveEmails", 'false')
+        }
+
+        # Add Banned Until date (and other things) only if the status is been defined as 'Banned'
+        if ( $UriParameters["AccountStatus"] -eq "Banned" ) {
+            $UriParameters.Add("BannedUntil", $BannedUntil )
+            $UriParameters.Add("BanReason", $BanReason)
+            $UriParameters["ModerationLevel"] = 'Moderated'
+            $UriParameters["AcceptTermsOfService"] = 'false'
+            $UriParameters["ForceLogin"] = 'true'
+        }
+
+    }
+    Process {
+        if ( $UriParameters.Keys.Count ) {
+            $Uri = "api.ashx/v2/users/$UserId.json"
+            $User = Get-VtUser -UserId $UserId -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -Verbose:$false
+            if ( $User ) {
+                # Imples that we found a user on which to operate
+                if ( $pscmdlet.ShouldProcess($CommunityDomain, "Update User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
+                    # Execute the Update
+                    Write-Verbose -Message "Updating User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
+                    $UpdateResponse = Invoke-RestMethod -Method Post -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod ) -Verbose:$false
+                    if ( $UpdateResponse ) {
+                        [PSCustomObject]@{
+                            UserId           = $UpdateResponse.User.id;
+                            Username         = $UpdateResponse.User.Username;
+                            EmailAddress     = $UpdateResponse.User.PrivateEmail;
+                            Status           = $UpdateResponse.User.AccountStatus;
+                            ModerationStatus = $UpdateResponse.User.ModerationLevel
+                            CurrentPresence  = $UpdateResponse.User.Presence;
+                            JoinDate         = $UpdateResponse.User.JoinDate;
+                            LastLogin        = $UpdateResponse.User.LastLoginDate;
+                            LastVisit        = $UpdateResponse.User.LastVisitedDate;
+                            LifetimePoints   = $UpdateResponse.User.Points;
+                            EmailEnabled     = $UpdateResponse.User.ReceiveEmails;
+                        }
+                    }
+                    else {
+                        Write-Error -Message "Unable to update '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
+                    }
+                }
+            }
+            else {
+                Write-Warning -Message "No user found for ID: $UserId"
+            }
+        }
+        else {
+            Write-Error -Message "No changes were requested for user with ID: $UserId" -RecommendedAction "Include a parameter to make updates"
+        }
+
+    }
+    End {
+
+    }
+}
+
+<# === Begin Testing Block === #>
+#Remove-VtUser -Username "kevinsparenberg" -WhatIf 
+#Remove-VtUser -UserId 251954, 244830 -DeleteAllContent
+<# ==== End Testing Block ==== #>
