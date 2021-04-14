@@ -18,6 +18,7 @@
     Status           : Approved
     ModerationStatus : Unmoderated
     CurrentPresence  : Offline
+    JoinDate         : 3/14/2020 9:19:44 AM
     LastLogin        : 4/5/2021 9:44:21 PM
     LastVisit        : 4/5/2021 9:44:37 PM
     LifetimePoints   : 475
@@ -37,6 +38,7 @@
     Status           : Approved
     ModerationStatus : Unmoderated
     CurrentPresence  : Offline
+    JoinDate         : 3/14/2020 9:19:44 AM
     LastLogin        : 4/5/2021 9:44:21 PM
     LastVisit        : 4/5/2021 9:44:37 PM
     LifetimePoints   : 475
@@ -52,6 +54,7 @@
     Status           : Approved
     ModerationStatus : Unmoderated
     CurrentPresence  : Offline
+    JoinDate         : 3/14/2020 9:19:44 AM
     LastLogin        : 4/5/2021 9:44:21 PM
     LastVisit        : 4/5/2021 9:44:37 PM
     LifetimePoints   : 475
@@ -62,6 +65,7 @@
     Status           : Approved
     ModerationStatus : Unmoderated
     CurrentPresence  : Offline
+    JoinDate         : 4/11/2020 8:08:11 AM
     LastLogin        : 4/5/2021 9:44:21 PM
     LastVisit        : 4/5/2021 9:44:37 PM
     LifetimePoints   : 600
@@ -72,6 +76,7 @@
     Status           : Approved
     ModerationStatus : Unmoderated
     CurrentPresence  : Offline
+    JoinDate         : 5/11/2019 11:47:11 PM
     LastLogin        : 4/5/2021 9:44:21 PM
     LastVisit        : 4/5/2021 9:44:37 PM
     LifetimePoints   : 404
