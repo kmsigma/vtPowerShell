@@ -183,13 +183,12 @@ function Set-VtAuthHeader {
                }
                else {
                   # 'Get' does not require the additional Rest-Method, so we'll remove it
-                  $h.Remove("Rest-Method")
+                  if ( $h["Rest-Method"] ) {
+                     $h.Remove("Rest-Method")
+                  }
                }
-               # Return the new header
-               $h
-            } else {
-               Write-Host "Header with 'Rest-User-Token: $( $h["Rest-User-Token"] )' not updated."
             }
+            $h
          }
          else {
             Write-Error -Message "Header does not contain the 'Rest-User-Token' - Please generate a valid header with Get-VtAuthHeader"
