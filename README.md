@@ -31,7 +31,7 @@ $ApiKey   = "[Put your API Key here]"
 
 $AuthHeader = Get-VtAuthHeader -Username $Username -ApiKey $ApiKey
 
-$CommunityDomain = "[Put your community domain here.  It should include the protocol (http/https) and the trailing slash.]"
+$CommunityDomain = "[Put your community domain here - include the protocol (http/https) and the trailing slash.]"
 
 # 'Import' the user functions to test connectivity
 . .\func_Users.ps1
@@ -55,7 +55,7 @@ LifetimePoints   : 283319
 EmailEnabled     : True
 ```
 
-If it does then the functions are working as expected.  You can continue to use the `$CommunityDomain` and `$AuthHeader` for subsequent calls.
+If it does, then the functions are working as expected.  You can continue to use the `$CommunityDomain` and `$AuthHeader` for subsequent calls to other functions.
 
 ## Resources I'm Using
 
