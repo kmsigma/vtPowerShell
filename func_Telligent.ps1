@@ -10,13 +10,6 @@
    Name                           Value
    ----                           -----
    Rest-User-Token                bG1[omitted]dtYQ==
-.EXAMPLE
-   Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns" -ReadWrite
-
-   Name                           Value
-   ----                           -----
-   Rest-Method                    PUT
-   Rest-User-Token                bG1[omitted]dtYQ==
 .INPUTS
    Username and API key.  Your API key is distinct, but as powerful as your password.  Guard it similarly.
    API Keys can be obtained from https://community.domain.here/user/myapikeys
