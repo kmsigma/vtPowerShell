@@ -116,7 +116,7 @@ function Add-VtPointTransaction {
                     Description   = "<p>$Description</p>";
                     UserId        = $UserId;
                     Value         = $Points;
-                    ContentID     = $ContentId;     # We'll just use the ContentID from the user
+                    ContentID     = $ContentId; # We'll just use the ContentID from the user
                     ContentTypeId = $ContentTypeId; # We'll just use the ContentID from the user
                     CreatedDate   = $AwardDateTime;
                 }
@@ -177,6 +177,15 @@ function Get-VtPointTransaction {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [int]$UserId,
+
+        # Email address to use for lookup
+        [Parameter(
+            Mandatory = $true,
+            ParameterSetName = 'Transaction Id'
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [int]$TransactionId,
 
         # Get all transactions
         [Parameter(
@@ -291,6 +300,11 @@ function Get-VtPointTransaction {
                 $UriParameters.Add("UserId", $User.UserId)
                 $LookupKey = "for Email Address: [$EmailAddress]"
             }
+            'Transaction Id' {
+                Write-Verbose -Message "Get-VtPointTransaction: Using the TransactionID [$TransactionId] for the lookup"
+                # Points Lookup requires the UserID, not the email address
+                $LookupKey = "for Transaction ID: [$TransactionId]"
+            }
             'All Users' {
                 Write-Verbose -Message "Request all points for the lookup"
                 $LookupKey = "for [All Users]"
@@ -336,16 +350,121 @@ function Get-VtPointTransaction {
                     $PointTransactions
                 }
                 else {
-                    $PointTransactions | Select-Object -Property @{ Name = "TransactionId"; Expression = { $_.id } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
+                    $PointTransactions | Select-Object -Property @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
                 }
             }
         }
-        else {
-            # No matching user was found, or the account is banned
+        elseif ( $pscmdlet.ParameterSetName -eq 'Transaction Id' ) {
+            $Uri = "api.ashx/v2/pointtransaction/$( $TransactionId ).json"
+            $PointsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Headers $AuthHeader -Verbose:$false
+            if ( $PointsResponse.PointTransaction.User ) {
+                # If we want details, return everything
+                if ( $ReturnDetails ) {
+                    $PointsResponse.PointTransaction
+                }
+                else {
+                    $PointsResponse.PointTransaction | Select-Object -Property @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
+                }
+            }
+            else {
+                Write-Verbose -Message "No points transaction found matching #$TransactionId"
+            }
         }
     }
-    
     end {
         # Nothing to see here
+    }
+}
+
+<#
+.Synopsis
+    Remove a Point Transaction based on the Transaction ID
+.DESCRIPTION
+    Remove one or more point transactions using the 
+.EXAMPLE
+    
+.EXAMPLE
+    
+.OUTPUTS
+    PowerShell Custom Object Containing the Content, CreateDate, Description, Transaction ID, User Custom Object, and point Value
+.NOTES
+    General notes
+.COMPONENT
+    The component this cmdlet belongs to
+.ROLE
+    The role this cmdlet belongs to
+.FUNCTIONALITY
+    The functionality that best describes this cmdlet
+#>
+function Remove-VtPointTransaction {
+    [CmdletBinding(
+        SupportsShouldProcess = $true, 
+        PositionalBinding = $false,
+        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64801/delete-point-transaction-point-transaction-rest-endpoint',
+        ConfirmImpact = 'High')
+    ]
+    Param
+    (
+        # TransactionIDs to use for lookup
+        [Parameter(
+            Mandatory = $true, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [int[]]$TransactionId,
+
+        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(
+            Mandatory = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [string]$CommunityDomain = $Global:CommunityDomain,
+
+        # Authentication Header for the community
+        [Parameter(
+            Mandatory = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
+    )
+    begin {
+        $RestMethod = "Delete"
+
+    }
+    process {
+        # This is where things do stuff
+        ForEach ( $id in $TransactionId ) {
+            if ( Get-VtPointTransaction -TransactionId $Id -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -Verbose:$false ) {
+                if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Delete Point Transaction $id") ) {
+                
+                    $Uri = "api.ashx/v2/pointtransaction/$( $id ).json"
+                    # Method: Post
+                    # Rest-Method: Delete
+                    try {
+                        $RemovePointsResponse = Invoke-RestMethod -Method Post -Uri ( $CommunityDomain + $Uri ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod )
+                        if ( $RemovePointsResponse ) {
+                            Write-Verbose -Message "Points Transaction #$id removed"
+                        }
+                    }
+                    catch {
+                        Write-Error -Message "Error purging Points Transaction #$id"
+                    }
+                }
+                
+            }
+            else {
+                Write-Verbose -Message "No points transaction found matching #$id.  Unable to delete."
+            }
+        }
+
+    }
+    end {
+        # nothing here
     }
 }
