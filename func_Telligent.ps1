@@ -145,7 +145,7 @@ function Set-VtAuthHeader {
    [CmdletBinding(
       SupportsShouldProcess = $true, 
       PositionalBinding = $false,
-      HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64803/list-point-transactions-point-transaction-rest-endpoint',
+      HelpUri = 'https://community.telligent.com/community/10/w/developer-training/53138/authentication#Using_an_API_Key_and_username_to_authenticate_REST_requests',
       ConfirmImpact = 'Medium')
    ]
    param (
@@ -191,7 +191,7 @@ function Set-VtAuthHeader {
             $h
          }
          else {
-            Write-Error -Message "Header does not contain the 'Rest-User-Token' - Please generate a valid header with Get-VtAuthHeader"
+            Write-Error -Message "Header does not contain the 'Rest-User-Token'" -RecommendedAction "Please generate a valid header with Get-VtAuthHeader"
          }
       }
    }
