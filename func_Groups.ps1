@@ -23,34 +23,14 @@
 function Get-VtGroup
 {
     [CmdletBinding(DefaultParameterSetName='All Groups', 
-                  SupportsShouldProcess=$true, 
-                  PositionalBinding=$false,
-                  HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64699/group-rest-endpoints',
-                  ConfirmImpact='Medium')]
+        SupportsShouldProcess=$true, 
+        PositionalBinding=$false,
+        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64699/group-rest-endpoints',
+        ConfirmImpact='Medium')]
     [Alias()]
     [OutputType()]
     Param
     (
-        # Community where you'll query for groups.  Protocol is required.
-        [Parameter(
-            Mandatory=$false,
-            ValueFromPipeline=$true,
-            Position=0,
-            HelpMessage='Provide your community URL including the "http://" or "https://" and trailing slash' )]
-        [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [Alias("Community", "Domain")]
-        [string]$CommunityDomain = $Global:CommunityDomain,
-
-        # Required authentication header
-        [Parameter(
-            Mandatory=$false,
-            Position=1
-        )]
-        [ValidateNotNullOrEmpty()]
-        [Alias("Header")]
-        [hashtable]$VtAuthHeader = $Global:AuthHeader,
-
         # Get group by name
         [Parameter(
             ParameterSetName='By Name')]
@@ -71,7 +51,24 @@ function Get-VtGroup
         [Parameter(
             Mandatory=$false
         )]
-        [switch]$Recurse = $false
+        [switch]$Recurse = $false,
+
+        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(
+            Mandatory = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [string]$CommunityDomain = $Global:CommunityDomain,
+
+        # Authentication Header for the community
+        [Parameter(
+            Mandatory = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
 
     
     )

@@ -66,21 +66,22 @@ function Add-VtPointTransaction {
         )]
         [datetime]$AwardDateTime = ( Get-Date ),
 
-        # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader,
-
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(
             Mandatory = $false
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [string]$CommunityDomain = $Global:CommunityDomain
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [string]$CommunityDomain = $Global:CommunityDomain,
+
+        # Authentication Header for the community
+        [Parameter(
+            Mandatory = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
     )
 
     begin {
@@ -110,7 +111,7 @@ function Add-VtPointTransaction {
             }
             if ( $Proceed ) {
                 # Build the body to send to the account
-                # For proper display, the description needs to be wrapped in HTML paragraph tags
+                # For proper display, the description needs to be wrapped in HTML paragraph tags.
                 $Body = @{
                     Description   = "<p>$Description</p>";
                     UserId        = $UserId;
@@ -223,21 +224,22 @@ function Get-VtPointTransaction {
         [ValidateRange(100, 10000)]
         [int]$BatchSize = 1000,
 
-        # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader,
-
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(
             Mandatory = $false
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [string]$CommunityDomain = $Global:CommunityDomain
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [string]$CommunityDomain = $Global:CommunityDomain,
+
+        # Authentication Header for the community
+        [Parameter(
+            Mandatory = $false
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
     )
     
     begin {

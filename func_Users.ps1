@@ -232,6 +232,7 @@ function Get-VtUser {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
         [string]$CommunityDomain = $Global:CommunityDomain,
 
         # Authentication Header for the community
@@ -552,6 +553,7 @@ function Remove-VtUser {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
         [string]$CommunityDomain = $Global:CommunityDomain,
 
         # Authentication Header for the community
