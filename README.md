@@ -7,6 +7,7 @@ These may or may not ever see the light of day, but I figured I should put them 
 I've never written a proper PowerShell Module before, so I'm starting the way I know - with functions to do the things I need.
 
 ## Getting Started
+
 To use these functions, you'll need your **username** and an **API key** from your community.
 To generate an API key
 
@@ -18,11 +19,11 @@ To generate an API key
 **The API Key & Username combination has the same power as your username and password.  Guard these credentials.**
 
 Either clone the repository to a folder or download the functions you wish to use.  Put them all at the same level in the folder.
-In the same folder create a `myCreds.ps1` file.
+In the same folder create a `myTest.ps1` file.
 This is an example of that file.
 
 ``` powershell
-# We'll first 'import' the authenticaiton functions
+# 'Import' the authenticaiton functions
 . .\func_Telligent.ps1
 
 $Username = "[Put your username here]"
@@ -32,23 +33,29 @@ $AuthHeader = Get-VtAuthHeader -Username $Username -ApiKey $ApiKey
 
 $CommunityDomain = "[Put your community domain here.  It should include the protocol (http/https) and the trailing slash.]"
 
-# Import the user functions to test connectivity
+# 'Import' the user functions to test connectivity
 . .\func_Users.ps1
 
 Get-VtUser -Username $Username -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader
 ```
 
-```
+When you run that file, your results should look something like this:
+
+```text
 UserId           : 112233
-Username         : MyUserName
-EmailAddress     : MyRegisteredEmail@domain.local
+Username         : MyUsername
+EmailAddress     : MyPublicEmail@domain.local
 Status           : Approved
 ModerationStatus : Unmoderated
 CurrentPresence  : Offline
+JoinDate         : 2/11/2020 2:59:44 PM
 LastLogin        : 4/14/2021 7:51:13 PM
 LastVisit        : 4/15/2021 12:56:54 PM
 LifetimePoints   : 283319
+EmailEnabled     : True
 ```
+
+If it does then the functions are working as expected.  You can continue to use the `$CommunityDomain` and `$AuthHeader` for subsequent calls.
 
 ## Resources I'm Using
 
@@ -67,7 +74,7 @@ LifetimePoints   : 283319
 - [ ] Assemble into a module
 - [ ] Publish to PSGallery
 
-#### Current work
+### Current work status
 
 | Script | Task | Yet to Do | Functional Confidence Level |
 | -----------------| ---- | ----------------- | ---------------: |
@@ -79,7 +86,3 @@ LifetimePoints   : 283319
 | `func_Points.ps1` | Remove-VtPointTransaction | Process validated, need to put into a function | 0% |
 | `func_Telligent.ps1` | Get-VtAuthHeader | Complete | 100% |
 | `func_Telligent.ps1` | Set-VtAuthHeader | Complete | 100% |
-
-
-
-
