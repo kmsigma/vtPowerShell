@@ -806,6 +806,7 @@ function Set-VtUser {
         # Parameters to pass to the URI
         $UriParameters = @{}
         if ( $NewUsername ) {
+            # Check to see if the username already exists in the community
             if ( -not ( Get-VtUser -Username $NewUsername -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue ) ) {
                 $UriParameters.Add("Username", $NewUsername)
             }
@@ -815,6 +816,7 @@ function Set-VtUser {
             }
         }
         if ( $NewEmailAddress ) {
+            # Check to see if the email address already exists in the community
             if ( -not ( Get-VtUser -EmailAddress $NewEmailAddress -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue) ) {
                 $UriParameters.Add("PrivateEmail", $NewEmailAddress)
             }
@@ -833,6 +835,8 @@ function Set-VtUser {
         }
         if ( $EmailBlocked ) {
             $UriParameters.Add("ReceiveEmails", 'false')
+        } else {
+            $UriParameters.Add("ReceiveEmails", 'true')
         }
 
         # Add Banned Until date (and other things) only if the status is been defined as 'Banned'
