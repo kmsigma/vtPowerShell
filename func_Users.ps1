@@ -2,7 +2,7 @@
 .Synopsis
     Get a user (or more information) from a Telligent Community
 .DESCRIPTION
-    Query the REST endpoint to get user account information.  Using the -All
+    Query the REST endpoint to get user account information.
 .EXAMPLE
     Get-VtUser -Username "JoeSmith" -CommunityDomain "https://mycommunity.teligenthosted.net" -AuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
     PS > Get-VtUser -UserId 112233 -CommunityDomain "https://mycommunity.teligenthosted.net" -AuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
@@ -23,10 +23,6 @@
     LastVisit        : 4/5/2021 9:44:37 PM
     LifetimePoints   : 475
 
-.EXAMPLE
-    Get-VtUser -All -JoinDate ( ( Get-Date ).AddDays(-30) ) -Force
-
-    Get all users who have joined in the last 30 days.
 .EXAMPLE
     $Global:CommunityDomain = "https://mycommunity.telligenthosted.net"
     PS > $Global:AuthHeader       = Get-VtAuthHeader -Username "MyAdminAccount" -ApiKey "MyAdminApiKey"
@@ -96,12 +92,12 @@
 #>
 function Get-VtUser {
     [CmdletBinding(
+        DefaultParameterSetName = 'User Id',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64924/list-user-rest-endpoint',
-        ConfirmImpact = 'Medium',
-        DefaultParameterSetName = 'User Id')
-    ]
+        ConfirmImpact = 'Low'
+    )]
     Param
     (
         # Username to use for lookup
@@ -119,7 +115,7 @@ function Get-VtUser {
         [Parameter(
             Mandatory = $true,
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
+            ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false, 
             ParameterSetName = 'Email Address'
         )]
@@ -131,100 +127,14 @@ function Get-VtUser {
         [Parameter(
             Mandatory = $true,
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
+            ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false, 
             ParameterSetName = 'User Id'
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [Alias("Id")]
-        [int[]]$UserId,
-
-        # Get all users (computationally expensive)
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'All'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [switch]$All,
-
-        # Filter all users based on email (or portion thereof).  Use wildcard-based filter ( '*partial_email@domain.local' and not 'partial_email@domain.local' )
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [string]$FilterEmail,
-
-        # Filter all users based on username (or portion thereof).  Use wildcard-based filter ( '*munityUser' and not 'munityUser' )
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [string]$FilterUsername,
-
-        # Are you absolutely sure that you want to run for all users?  Required for -All parameter.
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [switch]$Force = $false,
-
-        # Batch size for API pulls for all users (1..100).  Defaults to API default of 20.
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [ValidateRange(1, 100)]
-        [int]$BatchSize = 20,
-
-        # Return all details instead of an abbreviated set
-        [switch]$ReturnDetails = $false,
-
-        # Include hidden accounts (typically service accounts)
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [switch]$IncludeHidden = $false,
-
-        # Include only accounts joined after this date/time
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [datetime]$JoinDate,
-
-        # Include only accounts that have been updated after this date/time (automatically converts to UTC time)
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [datetime]$LastUpdated,
-
-        # Filter for account status - default is "All"
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [ValidateSet('Approved', 'ApprovalPending', 'Disapproved', 'Banned', 'All')]
-        [string]$AccountStatus = 'All',
-
-        # Filter for current presence status - default is neither 'Offline' nor 'Online'
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All'
-        )]
-        [ValidateSet('Online', 'Offline')]
-        [string]$Presence,
+        [int64[]]$UserId,
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(
@@ -247,25 +157,122 @@ function Get-VtUser {
 
     begin {
 
+        # Validate that the authentication header function is available
+        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
+            . .\func_Telligent.ps1
+        }
+
         <#
         .Synopsis
-            Function to pull back a single acccount from Verint/Telligent Communities
+            Convert a hashtable to a query string
         .DESCRIPTION
-            This function pulls back a single account from a Verint/Tellident Community.  It's implemented internally-only for parsing through arrays of accounts
+            Converts a passed hashtable to a query string based on the key:value pairs.
+        .EXAMPLE
+            $UriParameters = @{}
+            PS > $UriParameters.Add("PageSize", 20)
+            PS > $UriParameters.Add("PageIndex", 1)
+
+            PS > $UriParameters
+
+        Name                           Value
+        ----                           -----
+        PageSize                       20
+        PageIndex                      1
+
+            PS > $UriParameters | ConvertTo-QueryString
+
+            PageSize=20&PageIndex=1
+        .OUTPUTS
+            string object in the form of "key1=value1&key2=value2..."  Does not include the preceeding '?' required for many URI calls
+        .NOTES
+            This is bascially the reverse of [System.Web.HttpUtility]::ParseQueryString
+
+            This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
         #>
-        function Get-VtSingleUser {
-            [CmdletBinding()]
+        function ConvertTo-QueryString {
             param (
-                [Parameter()]
-                [string]$CommunityDomain,
-                [string]$Uri,
-                [System.Collections.Hashtable]$UriParameters,
-                [switch]$ReturnDetails
+                # Hashtable containing segmented query details
+                [Parameter(
+                    Mandatory = $true, 
+                    ValueFromPipeline = $true)]
+                [ValidateNotNull()]
+                [ValidateNotNullOrEmpty()]
+                [System.Collections.Hashtable]$Parameters
             )
-            try {
-                Write-Verbose -Message "Executing in single user mode"
-                # Don't need page size or page index, so remove them from the UriParmeters
-                $UserResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
+            $ParameterStrings = @()
+            $Parameters.GetEnumerator() | ForEach-Object {
+                $ParameterStrings += "$( $_.Key )=$( $_.Value )"
+            }
+            $ParameterStrings -join "&"
+        }
+
+        # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
+        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+
+        # Set default page index, page size, and add any other filters
+        $UriParameters = @{}
+
+    }
+    process {
+        switch ( $pscmdlet.ParameterSetName ) {
+            'Username' { 
+                if ( $Username -is [array] ) {
+                    $Uri = "api.ashx/v2/user.json"
+                    $UriParameterSet = @()
+                    For ( $i = 0 ; $i -lt $Username.Count; $i++ ) {
+                        $TempUriSet = $UriParameters.Clone()
+                        $TempUriSet["Username"] = $Username[$i]
+                        $UriParameterSet += $TempUriSet
+                    }
+                }
+                else {
+                    Write-Verbose -Message "Get-VtUser: Using the username [$Username] for the lookup"
+                    $Uri = "api.ashx/v2/user.json"
+                    $LookupKey = "Username: $Username"
+                    $UriParameters["Username"] = $Username
+                }
+            }
+            'Email Address' {
+                if ( $EmailAddress -is [array] ) {
+                    $Uri = "api.ashx/v2/user.json"
+                    $UriParameterSet = @()
+                    For ( $i = 0 ; $i -lt $EmailAddress.Count; $i++ ) {
+                        $TempUriSet = $UriParameters.Clone()
+                        $TempUriSet["EmailAddress"] = $EmailAddress[$i]
+                        $UriParameterSet += $TempUriSet
+                    }
+                }
+                else {
+                    Write-Verbose -Message "Get-VtUser: Using the Email Address [$EmailAddress] for the lookup"
+                    $Uri = "api.ashx/v2/user.json"
+                    $LookupKey = "Email Address: $EmailAddress"
+                    $UriParameters["EmailAddress"] = $EmailAddress
+                }
+            }
+            'User Id' {
+                if ( $UserId -is [array] ) {
+                    $Uri = "api.ashx/v2/user.json"
+                    $UriParameterSet = @()
+                    For ( $i = 0 ; $i -lt $UserId.Count; $i++ ) {
+                        $TempUriSet = $UriParameters.Clone()
+                        $TempUriSet["Id"] = $UserId[$i]
+                        $UriParameterSet += $TempUriSet
+                    }
+                }
+                else {
+                    Write-Verbose -Message "Get-VtUser: Using the UserId [$UserId] for the lookup"
+                    $Uri = "api.ashx/v2/user.json"
+                    $LookupKey = "UserId: $UserId"
+                    $UriParameters["Id"] = $UserId
+                }
+                
+            }
+
+        }
+        if ( $UriParameterSet ) {
+            # Cycle through things
+            ForEach ( $ParameterSet in $UriParameterSet ) {
+                $UserResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $ParameterSet | ConvertTo-QueryString ) ) -Headers $AuthHeader
                 if ( $UserResponse -and $ReturnDetails ) {
                     # We found a matching user, return everything with no pretty formatting
                     $UserResponse.User
@@ -292,164 +299,34 @@ function Get-VtUser {
                     Write-Warning -Message "No results returned for users matching [$LookupKey]"
                 }
             }
-            catch {
+        }
+        else {
+            $UserResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
+            if ( $UserResponse -and $ReturnDetails ) {
+                # We found a matching user, return everything with no pretty formatting
+                $UserResponse.User
+            }
+            elseif ( $UserResponse ) {
+                #implies '-not $ReturnDetails'
+                # Return abbreviated data
+                # We found a matching user, build a custom PowerShell Object for it
+                [PSCustomObject]@{
+                    UserId           = $UserResponse.User.id;
+                    Username         = $UserResponse.User.Username;
+                    EmailAddress     = $UserResponse.User.PrivateEmail;
+                    Status           = $UserResponse.User.AccountStatus;
+                    ModerationStatus = $UserResponse.User.ModerationLevel
+                    CurrentPresence  = $UserResponse.User.Presence;
+                    JoinDate         = $UserResponse.User.JoinDate;
+                    LastLogin        = $UserResponse.User.LastLoginDate;
+                    LastVisit        = $UserResponse.User.LastVisitedDate;
+                    LifetimePoints   = $UserResponse.User.Points;
+                    EmailEnabled     = $UserResponse.User.ReceiveEmails;
+                }
+            }
+            else {
                 Write-Warning -Message "No results returned for users matching [$LookupKey]"
             }
-        }
-        
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue) ) {
-            . .\func_Utilities.ps1
-        }
-
-        # Check the authentication header for any 'Rest-Method'
-        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get
-
-        # Set default page index, page size, and add any other filters
-        $UriParameters = @{}
-        # We only need to paginate if we are getting all users
-        if ( $All ) {
-            $UriParameters.Add("PageIndex", 0)
-            $UriParameters.Add("PageSize", $BatchSize)
-            if ( $IncludeHidden ) {
-                $UriParameters.Add("IncludeHidden", "true")
-            }
-            if ( $AccountStatus -ne 'All') {
-                $UriParameters.Add("AccountStatus", $AccountStatus)
-            }
-            if ( $JoinDate ) {
-                $UriParameters.Add("JoinDate", $JoinDate)
-            }
-            if ( $Presence ) {
-                $UriParameters.Add("Presence", $Presence)
-            }
-            if ( $LastUpdated ) {
-                $UriParameters.Add("LastUpdatedUtcDate", $LastUpdated.ToUniversalTime())
-            }
-        
-            if ( -not $Force ) {
-                Write-Warning -Message "Using the 'All' parameter requires the use of the 'Force' parameter.  This can take an incredible amount of time based on your environment."
-                break
-            }
-        }
-
-    }
-    process {
-        switch ( $pscmdlet.ParameterSetName ) {
-            'Username' { 
-                ForEach ( $U in $Username ) {
-                    Write-Verbose -Message "Get-VtUser: Using the username [$U] for the lookup"
-                    $Uri = "api.ashx/v2/user.json"
-                    $LookupKey = $U
-                    $UriParameters["Username"] = $U
-                    Get-VtSingleUser -CommunityDomain $CommunityDomain -Uri $Uri -UriParameters $UriParameters -ReturnDetails:$ReturnDetails
-                }
-
-            }
-            'Email Address' {
-                ForEach ( $U in $EmailAddress ) {
-                    Write-Verbose -Message "Get-VtUser: Using the email [$U] for the lookup"
-                    $Uri = "api.ashx/v2/user.json"
-                    $LookupKey = $U
-                    $UriParameters["EmailAddress"] = $U
-                    Get-VtSingleUser -CommunityDomain $CommunityDomain -Uri $Uri -UriParameters $UriParameters -ReturnDetails:$ReturnDetails
-                }
-
-            }
-            'User Id' {
-                ForEach ( $U in $UserId ) {
-                    Write-Verbose -Message "Get-VtUser: Using the user id [$U] for the lookup"
-                    $Uri = "api.ashx/v2/user.json"
-                    $LookupKey = $U
-                    $UriParameters["Id"] = $U
-                    Get-VtSingleUser -CommunityDomain $CommunityDomain -Uri $Uri -UriParameters $UriParameters -ReturnDetails:$ReturnDetails
-                }
-                
-            }
-            'All' {
-                Write-Verbose -Message "Get-VtUser: All Users"
-                if ( $FilterEmail ) {
-                    Write-Verbose -Message "`tFilter on Email: $FilterEmail"
-                }
-                elseif ( $FilterUsername ) {
-                    Write-Verbose -Message "`tFilter on Username: $FilterUsername"
-                }
-                $Uri = "api.ashx/v2/users.json"
-                $LookupKey = "All Users"
-
-                if ( $FilterEmail ) {
-                    $FilterScript = { $_.PrivateEmail -like $FilterEmail }
-                    $IsFiltered = $true
-                }
-                elseif ( $FilterUsername ) {
-                    $FilterScript = { $_.Username -like $FilterUsername }
-                    $IsFiltered = $true
-                }
-                elseif ( $FilterEmail -and $FilterUsername ) {
-                    $FilterScript = { ( $_.PrivateEmail -like $FilterEmail ) -and ( $_.Username -like $FilterUsername ) }
-                    $IsFiltered = $true
-                }
-
-                if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Search for user with [$LookupKey]") ) {
-                    # Get all vt users
-
-                    $TotalUsersReturned = 0
-                    Write-Progress -Activity "Getting All Users from $CommunityDomain" -CurrentOperation "Initial Call" -PercentComplete 0
-                    $StopWatch = New-Object -TypeName System.Diagnostics.Stopwatch
-                    $StopWatch.Start()
-                    do {
-                        Write-Verbose -Message "Uri: $( $CommunityDomain + $Uri + "?" + ( $UriParameters | ConvertTo-QueryString ) )"
-                        $UserResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + "?" + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
-                        $UsersPerSecond = $UserResponse.Users.Count / $StopWatch.Elapsed.TotalSeconds
-                        if ( $ReturnDetails ) {
-                            if ( $IsFiltered ) {
-                                Write-Verbose -Message "FILTER: Filtering with: $FilterScript"
-                                $UserResponse.Users | Where-Object -FilterScript $FilterScript
-                            }
-                            else {
-                                $UserResponse.Users
-                            }
-                        }
-                        else {
-                            # Alias fields we want in the simple output
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "UserId" -Value Id -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "EmailAddress" -Value PrivateEmail -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "Status" -Value AccountStatus  -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "ModerationStatus" -Value ModerationLevel -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "CurrentPresence" -Value Presence  -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "LastLogin" -Value LastLoginDate -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "LastVisit" -Value LastVisitedDate -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "LifetimePoints" -Value Points -Force
-                            $UserResponse.Users | Add-Member -MemberType AliasProperty -Name "EmailEnabled" -Value ReceiveEmails -Force
-                        
-                            # Output 
-                            if ( $IsFiltered ) {
-                                Write-Verbose -Message "FILTER: Filtering with: $FilterScript"
-                                $UserResponse.Users | Where-Object -FilterScript $FilterScript | Select-Object -Property UserId, Username, EmailAddress, Status, ModerationStatus, CurrentPresence, JoinDate, LastLogin, LastVisit, LifetimePoints
-                            }
-                            else {
-                                $UserResponse.Users | Select-Object -Property UserId, Username, EmailAddress, Status, ModerationStatus, CurrentPresence, JoinDate, LastLogin, LastVisit, LifetimePoints
-                            }
-                        }
-                        $TotalUsersReturned += $UserResponse.Users.Count
-                        if ( $TotalUsersReturned ) {
-                            Write-Progress -Activity "Getting All Users from $CommunityDomain" -CurrentOperation "Making Call #$( $UriParameters["PageIndex"] + 1) [$TotalUsersReturned results so far / $( $UserResponse.TotalCount ) total results]" -PercentComplete ( ( $TotalUsersReturned / $UserResponse.TotalCount ) * 100 ) -SecondsRemaining ( $UsersPerSecond * $UserResponse.TotalCount )
-                        }
-
-                        # Increment Page Index
-                        ( $UriParameters.PageIndex )++
-
-                    } while ( ( $TotalUsersReturned -lt $UserResponse.TotalCount ) )
-                    Write-Progress -Activity "Getting All Users from $CommunityDomain" -Completed
-                }
-
-            } 
-
-            
         }
     }
     end {
@@ -459,25 +336,19 @@ function Get-VtUser {
 
 <#
 .Synopsis
-    This function is not yet completed.  When complete, this block will be updated
+    Delete an account (completely) from a Verint/Telligent community
 .DESCRIPTION
-    Long description
+    Delete an account (completely) from a Verint/Telligent community.  Optionally, delete all the user's content or assign to another user/userid
 .EXAMPLE
-    Example of how to use this cmdlet
+    Get-VtUser -EmailAddress "myAccountEmail@company.corp" -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader | Remove-VtUser -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader
+    Find and then remove the account with email "myAccountEmail@company.corp" and will request confirmation for each deletion
 .EXAMPLE
-    Another example of how to use this cmdlet
+    Remove-VtUser -UserId 11332, 5362, 420 -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -Confirm:$false
+    Remove users with id 113322, 5362, or 420 without confirmation
 .INPUTS
-    Inputs to this cmdlet (if any)
-.OUTPUTS
-    Output from this cmdlet (if any)
+    Either integters of the user id or a user object like those returned by Get-VtUser
 .NOTES
     General notes
-.COMPONENT
-    The component this cmdlet belongs to
-.ROLE
-    The role this cmdlet belongs to
-.FUNCTIONALITY
-    The functionality that best describes this cmdlet
 #>
 function Remove-VtUser {
     [CmdletBinding(
@@ -489,6 +360,7 @@ function Remove-VtUser {
     )]
     Param
     (
+    
         # Delete account by User Id
         [Parameter(
             Mandatory = $true, 
@@ -501,7 +373,7 @@ function Remove-VtUser {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [Alias("Id")] 
-        [int[]]$UserId,
+        [int64[]]$UserId,
 
         # Delete account by Username
         [Parameter(
@@ -602,6 +474,10 @@ function Remove-VtUser {
         else {
             $UriParameters.Add("DeleteAllContent", "false")
         }
+        if ( $ReassignedUserId -and $ReassignedUsername ) {
+            Write-Error -Message "Cannot specify a reassigned username *and* reassigned user id." -RecommendedAction "Select one or the other"
+            break
+        }
         if ( $ReassignedUserId ) {
             $UriParameters.Add("ReassignedUserId", $ReassignedUserId)
         }
@@ -611,7 +487,7 @@ function Remove-VtUser {
                 $UriParameters.Add("ReassignedUserId", $UserId)
             }
             else {
-                Write-Error -Message "Unable to find a user Id for '$ReassignedUsername' - stopping"
+                Write-Error -Message "Unable to find a user Id for '$ReassignedUsername'"
                 break
             }
         }
@@ -625,29 +501,24 @@ function Remove-VtUser {
         switch ( $pscmdlet.ParameterSetName ) {
             'User Id' {
                 Write-Verbose -Message "Processing account deletion using User Ids"
-                $Users = $UserId | ForEach-Object {
-                    Get-VtUser -UserId $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false }
+                $User = $UserId | Get-VtUser -UserId $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false
             }
             'Username' { 
                 Write-Verbose -Message "Processing account deletion using Usernames"
-                $Users = $Username | ForEach-Object {
-                    Get-VtUser -Username $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false }
+                $User = $Username | Get-VtUser -Username $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false 
             }
 
             'Email Address' { 
                 Write-Verbose -Message "Processing account deletion using Email Addresses - must perform lookup first"
-                $Users = $EmailAddress | ForEach-Object {
-                    Get-VtUser -EmailAddress $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false }
+                $User = $EmailAddress | Get-VtUser -EmailAddress $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false
             }
         }
-        ForEach ( $U in $Users ) {
-            if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Delete User: '$( $U.Username )' [ID: $( $U.UserId )] <$( $( $U.EmailAddress ) )>") ) {
-                $Uri = "api.ashx/v2/users/$( $U.UserId ).json"
-                $DeleteResponse = Invoke-RestMethod -Method POST -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -WarningAction SilentlyContinue )
-                Write-Verbose -Message "User Deleted: '$( $U.Username )' [ID: $( $U.UserId )] <$( $( $U.EmailAddress ) )>"
-                if ( $DeleteResponse ) {
-                    Write-Host "Account: '$( $U.Username )' [ID: $( $U.UserId )] <$( $( $U.EmailAddress ) )> $( $DeleteResponse.Info )" -ForegroundColor Red
-                }
+        if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Delete User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
+            $Uri = "api.ashx/v2/users/$( $User.UserId ).json"
+            $DeleteResponse = Invoke-RestMethod -Method POST -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -WarningAction SilentlyContinue )
+            Write-Verbose -Message "User Deleted: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
+            if ( $DeleteResponse ) {
+                Write-Host "Account: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )> - $( $DeleteResponse.Info )" -ForegroundColor Red
             }
         }
     }
@@ -656,43 +527,44 @@ function Remove-VtUser {
     }
 }
 
-<# Additional functions to build:
-Set-VtUser (based on https://community.telligent.com/community/11/w/api-documentation/64926/update-user-rest-endpoint)
-#>
-
 <#
 .Synopsis
-    To be completed when the function is ready
-    Starting very simply with AccountStatus, BanReason, BannedUntil, ModerationLevel, EmailAddress (PrivateEmail), Username, RequiresTermsOfServiceAcceptance, ReceiveEmails
+    Changes setting for a Verint/Telligent user account on your community
 .DESCRIPTION
-    Long description
+    Change settings (Username, Email Address, Account Status, Moderation Status, is email enabled?) for a Verint/Telligent user account
 .EXAMPLE
-    Example of how to use this cmdlet
+    $CommunityDomain = 'https://community.domain.local/'
+    PS > $AuthHeader      = @{ 'Test-User-Token' = 'bG1[REDACTED]tYQ==' }
+    PS > Set-VtUser -UserId 112233 -NewUsername 'MyNewUsername' -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader
+    
+    Set a new username for an account
 .EXAMPLE
-    Another example of how to use this cmdlet
+    $CommunityDomain = 'https://community.domain.local/'
+    PS > $AuthHeader      = @{ 'Test-User-Token' = 'bG1[REDACTED]tYQ==' }
+
+    PS > $UserToUpdate = Get-VtUser -Username 'CurrentlyBannedUser' -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader
+    -- Ban the user --
+    PS > $UserToUpdate | Set-VtUser -AccountStatus Banned -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader
+    -- 'Un'-Ban the user --
+    PS > $UserToUpdate | Set-VtUser -AccountStatus Approved -ModerationLevel Unmoderated -EmailBlocked:$false -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -PassThru
+
+        UserId           : 181222
+        Username         : CurrentlyBannedUser
+        EmailAddress     : banned@new-email.com
+        Status           : Approved
+        ModerationStatus : Unmoderated
+        CurrentPresence  : Offline
+        JoinDate         : 11/1/2016 12:23:01 PM
+        LastLogin        : 2/22/2021 2:38:29 PM
+        LastVisit        : 2/22/2021 2:58:57 PM
+        LifetimePoints   : 2954
+        EmailEnabled     : True
 .INPUTS
-    Inputs to this cmdlet (if any)
+    Accepts either a user id (because that is unique) or a User Object (as is returned from Get-VtUser)
 .OUTPUTS
-    Returns a PowerShell Custom object with the user account details after updating
+    No outputs unless using -PassThru which returns a PowerShell Custom Object with the user account details after updating
 .NOTES
-    General notes - this really needs some better logic - like don't update something if is it's already set how you think.
-    That'll be something for another day though
-
-    Also should accept an array of User ID's if we are not doing new Email Address or new Username
-    Still need to figure out the proper logic for that.
-
-    VERY Rough Logic:
-    if ( $UserId -is [System.Array] ) {
-        Write-Warning -Message "Operating in multi-user mode - new Email Address and new Username are ignored"
-        $NewUsername = $null
-        $NewEmailAddress = $null
-    }
-.COMPONENT
-    The component this cmdlet belongs to
-.ROLE
-    The role this cmdlet belongs to
-.FUNCTIONALITY
-    The functionality that best describes this cmdlet
+    I haven't been able to test every single feature, but the logic should hold
 #>
 function Set-VtUser {
     [CmdletBinding(DefaultParameterSetName = 'User Id', 
@@ -702,17 +574,17 @@ function Set-VtUser {
         ConfirmImpact = 'High')]
     Param
     (
-        # The user id on which to operate.  Because this operation can change the username and email address, 
+
+        # The user id on which to operate.  Because this operation can change the username and email address, neither should be considered authorotative
         [Parameter(Mandatory = $true, 
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false, 
-            Position = 0,
-            ParameterSetName = 'User Id')]
+            Position = 0)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [Alias("Id")] 
-        [int]$UserId,
+        [int64[]]$UserId,
 
         # New Username for the Account
         [Parameter(Mandatory = $false)]
@@ -738,7 +610,7 @@ function Set-VtUser {
         [datetime]$BannedUntil = ( Get-Date ).AddYears(1),
 
         # the reason the user was banned
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [ValidateSet('Profanity', 'Advertising', 'Spam', 'Aggressive', 'BadUsername', 'BadSignature', 'BanDodging', 'Other')]
         [string]$BanReason = 'Other',
 
@@ -748,11 +620,13 @@ function Set-VtUser {
         [ValidateSet('Unmoderated', 'Moderated')]
         [string]$ModerationLevel,
 
-        [Parameter(Mandatory = $false)]
-        [switch]$RequiresTermsOfServiceAcceptance = $false,
-
+        # Is the account blocked from receiving email?
         [Parameter(Mandatory = $false)]
         [switch]$EmailBlocked = $false,
+
+        # Do you want to return the new user object back to the original call?
+        [Parameter(Mandatory = $false)]
+        [switch]$PassThru = $false,
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(
@@ -803,27 +677,14 @@ function Set-VtUser {
         # Rest-Method to use for the change
         $RestMethod = "Put"
 
+        # Parameter Check
+        # I can't provide a new Username or a new Email Address if there are multiple input objects
+        
+
+
         # Parameters to pass to the URI
         $UriParameters = @{}
-        if ( $NewUsername ) {
-            # Check to see if the username already exists in the community
-            if ( -not ( Get-VtUser -Username $NewUsername -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue ) ) {
-                $UriParameters.Add("Username", $NewUsername)
-            }
-            else {
-                Write-Error -Message "Another user with the username '$NewUsername' was detected.  Cannot complete." -RecommendedAction "Please choose another username or delete the conflicing user"
-                break
-            }
-        }
-        if ( $NewEmailAddress ) {
-            # Check to see if the email address already exists in the community
-            if ( -not ( Get-VtUser -EmailAddress $NewEmailAddress -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue) ) {
-                $UriParameters.Add("PrivateEmail", $NewEmailAddress)
-            }
-            else {
-                Write-Error -Message "Another user with the email address '$NewEmailAddress' was detected.  Cannot complete." -RecommendedAction "Please choose another email address or delete the conflicing user"
-            }
-        }
+
         if ( $AccountStatus ) {
             $UriParameters.Add("AccountStatus", $AccountStatus )
         }
@@ -835,7 +696,8 @@ function Set-VtUser {
         }
         if ( $EmailBlocked ) {
             $UriParameters.Add("ReceiveEmails", 'false')
-        } else {
+        }
+        else {
             $UriParameters.Add("ReceiveEmails", 'true')
         }
 
@@ -850,17 +712,49 @@ function Set-VtUser {
 
     }
     Process {
+        
+        if ( $NewUsername ) {
+            # Check to see if the username already exists in the community
+            $CheckUser = Get-VtUser -Username $NewUsername -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+            if ( -not ( $CheckUser ) ) {
+                $UriParameters.Add("Username", $NewUsername)
+            }
+            # check to see if this username matches the current operating user
+            elseif ( -not ( Compare-Object -ReferenceObject $PsItem -DifferenceObject $CheckUser ) ) {
+                Write-Error -Message "The current user is already using this username."
+            }
+            else {
+                Write-Error -Message "Another user with the username '$NewUsername' was detected.  Cannot complete." -RecommendedAction "Please choose another username or delete the conflicing user"
+                break
+            }
+        }
+        if ( $NewEmailAddress ) {
+            # Check to see if the email address already exists in the community
+            $CheckUser = Get-VtUser -EmailAddress $NewEmailAddress -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue
+            if ( -not ( $CheckUser ) ) {
+                $UriParameters.Add("PrivateEmail", $NewEmailAddress)
+            }
+            # check to see if this email matches the current operating user
+            elseif ( -not ( Compare-Object -ReferenceObject $PsItem -DifferenceObject $CheckUser ) ) {
+                Write-Warning -Message "The current user is already using this email address."
+            }
+            else {
+                Write-Error -Message "Another user with the email address '$NewEmailAddress' was detected.  Cannot complete." -RecommendedAction "Please choose another email address or delete the conflicing user"
+                break
+            }
+        }
+        
+        $User = $UserId | Get-VtUser -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -Verbose:$false
         if ( $UriParameters.Keys.Count ) {
-            $Uri = "api.ashx/v2/users/$UserId.json"
-            $User = Get-VtUser -UserId $UserId -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -Verbose:$false
             if ( $User ) {
+                $Uri = "api.ashx/v2/users/$( $User.UserId ).json"
                 # Imples that we found a user on which to operate
                 if ( $pscmdlet.ShouldProcess($CommunityDomain, "Update User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
                     # Execute the Update
                     Write-Verbose -Message "Updating User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
                     $UpdateResponse = Invoke-RestMethod -Method Post -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod ) -Verbose:$false
                     if ( $UpdateResponse ) {
-                        [PSCustomObject]@{
+                        $UserObject = [PSCustomObject]@{
                             UserId           = $UpdateResponse.User.id;
                             Username         = $UpdateResponse.User.Username;
                             EmailAddress     = $UpdateResponse.User.PrivateEmail;
@@ -873,27 +767,28 @@ function Set-VtUser {
                             LifetimePoints   = $UpdateResponse.User.Points;
                             EmailEnabled     = $UpdateResponse.User.ReceiveEmails;
                         }
-                    }
-                    else {
-                        Write-Error -Message "Unable to update '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
+                        
+                        if ( $User -match $UserObject ) {
+                            Write-Warning -Message "Updates were sent, but no changes were detected on the user account."
+                        }
+
+                        if ( $PassThru ) {
+                            $UserObject
+                        }
                     }
                 }
+                
             }
             else {
-                Write-Warning -Message "No user found for ID: $UserId"
+                Write-Warning -Message "No user found."
             }
         }
         else {
-            Write-Error -Message "No changes were requested for user with ID: $UserId" -RecommendedAction "Include a parameter to make updates"
+            Write-Error -Message "No changes were requested for user with ID: $( $User.UserId )" -RecommendedAction "Include a parameter to make updates"
         }
-
     }
-    End {
 
+    End {
+        # Nothing here
     }
 }
-
-<# === Begin Testing Block === #>
-#Remove-VtUser -Username "kevinsparenberg" -WhatIf 
-#Remove-VtUser -UserId 251954, 244830 -DeleteAllContent
-<# ==== End Testing Block ==== #>
