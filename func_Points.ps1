@@ -436,6 +436,10 @@ function Remove-VtPointTransaction {
     begin {
         $RestMethod = "Delete"
 
+        if ( -not ( Get-Command -Name Set-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
+            . .\func_Telligent.ps1
+        }
+
     }
     process {
         # This is where things do stuff
@@ -468,3 +472,4 @@ function Remove-VtPointTransaction {
         # nothing here
     }
 }
+
