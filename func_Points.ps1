@@ -100,6 +100,8 @@ function Add-VtPointTransaction {
             $ContentTypeId = $User.ContentTypeId
         }
         $Uri = "api.ashx/v2/pointtransactions.json"
+
+        $RestMethod = "GET"
     }
     process {
         $Proceed = $true
@@ -121,7 +123,7 @@ function Add-VtPointTransaction {
                     CreatedDate   = $AwardDateTime;
                 }
                 try {
-                    $PointsRequest = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Method Post -Body $Body -Headers $AuthHeader
+                    $PointsRequest = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Method Post -Body $Body -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod RestMethod -Verbose:$False -WhatIf:$false )
                     $PointsRequest.PointTransaction
                 }
                 catch {
@@ -260,7 +262,8 @@ function Get-VtPointTransaction {
             . .\func_Utilities.ps1
         }
         
-        
+        $RestMethod = "GET"
+
         # Base Uri for calls
         $Uri = "api.ashx/v2/pointtransactions.json"
         
@@ -289,14 +292,14 @@ function Get-VtPointTransaction {
             'Username' { 
                 Write-Verbose -Message "Get-VtPointTransaction: Using the username [$Username] for the lookup"
                 # Points Lookup requires the UserID, not the username
-                $User = Get-VtUser -Username $Username -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader
+                $User = Get-VtUser -Username $Username -CommunityDomain $CommunityDomain -AuthHeader ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                 $UriParameters.Add("UserId", $User.UserId)
                 $LookupKey = "for Username: [$Username]"
             }
             'Email Address' {
                 Write-Verbose -Message "Get-VtPointTransaction: Using the email [$EmailAddress] for the lookup"
                 # Points Lookup requires the UserID, not the email address
-                $User = Get-VtUser -EmailAddress $EmailAddress -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader
+                $User = Get-VtUser -EmailAddress $EmailAddress -CommunityDomain $CommunityDomain -AuthHeader ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                 $UriParameters.Add("UserId", $User.UserId)
                 $LookupKey = "for Email Address: [$EmailAddress]"
             }
@@ -313,7 +316,7 @@ function Get-VtPointTransaction {
 
         if ( $UriParameters["UserId"] -or $pscmdlet.ParameterSetName -eq 'All Users' ) {
             if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Search for point transactions $LookupKey") ) {
-                $PointsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
+                $PointsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                 Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
                 Write-Progress -Activity "Querying $CommunityDomain for Points Transactions" -CurrentOperation "Searching $LookupKey for the first $BatchSize entries" -PercentComplete 0
                 $TotalResponseCount = $PointsResponse.PointTransactions.Count
@@ -331,7 +334,7 @@ function Get-VtPointTransaction {
                     ( $UriParameters.PageIndex )++
                     Write-Verbose -Message "Making call #$( $UriParameters.PageIndex ) to the API"
                     Write-Progress -Activity "Querying $CommunityDomain for Points Transactions" -CurrentOperation "Making call #$( $UriParameters.PageIndex ) to the API [$TotalResponseCount / $( $PointsResponse.TotalCount )]" -PercentComplete ( ( $TotalResponseCount / $PointsResponse.TotalCount ) * 100 )
-                    $PointsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
+                    $PointsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                     Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
                     $TotalResponseCount += $PointsResponse.PointTransactions.Count
                     if ( $ActionFilter ) {
@@ -356,7 +359,7 @@ function Get-VtPointTransaction {
         }
         elseif ( $pscmdlet.ParameterSetName -eq 'Transaction Id' ) {
             $Uri = "api.ashx/v2/pointtransaction/$( $TransactionId ).json"
-            $PointsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Headers $AuthHeader -Verbose:$false
+            $PointsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false ) -Verbose:$false
             if ( $PointsResponse.PointTransaction.User ) {
                 # If we want details, return everything
                 if ( $ReturnDetails ) {
@@ -444,14 +447,14 @@ function Remove-VtPointTransaction {
     process {
         # This is where things do stuff
         ForEach ( $id in $TransactionId ) {
-            if ( Get-VtPointTransaction -TransactionId $Id -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -Verbose:$false ) {
+            if ( Get-VtPointTransaction -TransactionId $Id -CommunityDomain $CommunityDomain -AuthHeader ( $AuthHeader | Set-VtAuthHeader -RestMethod Get -WhatIf:$false -Verbose:$false ) -Verbose:$false ) {
                 if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Delete Point Transaction $id") ) {
                 
                     $Uri = "api.ashx/v2/pointtransaction/$( $id ).json"
                     # Method: Post
                     # Rest-Method: Delete
                     try {
-                        $RemovePointsResponse = Invoke-RestMethod -Method Post -Uri ( $CommunityDomain + $Uri ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod )
+                        $RemovePointsResponse = Invoke-RestMethod -Method Post -Uri ( $CommunityDomain + $Uri ) -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                         if ( $RemovePointsResponse ) {
                             Write-Verbose -Message "Points Transaction #$id removed"
                         }
