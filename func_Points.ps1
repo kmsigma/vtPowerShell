@@ -123,7 +123,7 @@ function Add-VtPointTransaction {
                     CreatedDate   = $AwardDateTime;
                 }
                 try {
-                    $PointsRequest = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Method Post -Body $Body -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod RestMethod -Verbose:$False -WhatIf:$false )
+                    $PointsRequest = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Method Post -Body $Body -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -Verbose:$False -WhatIf:$false )
                     $PointsRequest.PointTransaction
                 }
                 catch {
