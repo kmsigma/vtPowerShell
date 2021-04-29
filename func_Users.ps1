@@ -272,30 +272,35 @@ function Get-VtUser {
         if ( $UriParameterSet ) {
             # Cycle through things
             ForEach ( $ParameterSet in $UriParameterSet ) {
-                $UserResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $ParameterSet | ConvertTo-QueryString ) ) -Headers $AuthHeader
-                if ( $UserResponse -and $ReturnDetails ) {
-                    # We found a matching user, return everything with no pretty formatting
-                    $UserResponse.User
-                }
-                elseif ( $UserResponse ) {
-                    #implies '-not $ReturnDetails'
-                    # Return abbreviated data
-                    # We found a matching user, build a custom PowerShell Object for it
-                    [PSCustomObject]@{
-                        UserId           = $UserResponse.User.id;
-                        Username         = $UserResponse.User.Username;
-                        EmailAddress     = $UserResponse.User.PrivateEmail;
-                        Status           = $UserResponse.User.AccountStatus;
-                        ModerationStatus = $UserResponse.User.ModerationLevel
-                        CurrentPresence  = $UserResponse.User.Presence;
-                        JoinDate         = $UserResponse.User.JoinDate;
-                        LastLogin        = $UserResponse.User.LastLoginDate;
-                        LastVisit        = $UserResponse.User.LastVisitedDate;
-                        LifetimePoints   = $UserResponse.User.Points;
-                        EmailEnabled     = $UserResponse.User.ReceiveEmails;
+                try {
+                    $UserResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $ParameterSet | ConvertTo-QueryString ) ) -Headers $AuthHeader
+                    if ( $UserResponse -and $ReturnDetails ) {
+                        # We found a matching user, return everything with no pretty formatting
+                        $UserResponse.User
+                    }
+                    elseif ( $UserResponse ) {
+                        #implies '-not $ReturnDetails'
+                        # Return abbreviated data
+                        # We found a matching user, build a custom PowerShell Object for it
+                        [PSCustomObject]@{
+                            UserId           = $UserResponse.User.id;
+                            Username         = $UserResponse.User.Username;
+                            EmailAddress     = $UserResponse.User.PrivateEmail;
+                            Status           = $UserResponse.User.AccountStatus;
+                            ModerationStatus = $UserResponse.User.ModerationLevel
+                            CurrentPresence  = $UserResponse.User.Presence;
+                            JoinDate         = $UserResponse.User.JoinDate;
+                            LastLogin        = $UserResponse.User.LastLoginDate;
+                            LastVisit        = $UserResponse.User.LastVisitedDate;
+                            LifetimePoints   = $UserResponse.User.Points;
+                            EmailEnabled     = $UserResponse.User.ReceiveEmails;
+                        }
+                    }
+                    else {
+                        Write-Warning -Message "No results returned for users matching [$LookupKey]"
                     }
                 }
-                else {
+                catch {
                     Write-Warning -Message "No results returned for users matching [$LookupKey]"
                 }
             }
