@@ -89,6 +89,9 @@
     Source Documentation: https://community.telligent.com/community/11/w/api-documentation/64921/user-rest-endpoints
 
     Relies on the Telligent and Utilities functions (defined in the 'begin' block )
+
+    TBD: For doing a 'wildcard' search for a user, I really need to use the search endpoint and not the users endpoint.
+    I've only just started experimenting with that in some scratch documents.
 #>
 function Get-VtUser {
     [CmdletBinding(
@@ -135,6 +138,14 @@ function Get-VtUser {
         [ValidateNotNullOrEmpty()]
         [Alias("Id")]
         [int64[]]$UserId,
+
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$ReturnDetails,
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(
@@ -294,6 +305,7 @@ function Get-VtUser {
                             LastVisit        = $UserResponse.User.LastVisitedDate;
                             LifetimePoints   = $UserResponse.User.Points;
                             EmailEnabled     = $UserResponse.User.ReceiveEmails;
+                            MentionText      = "[mention:$( $UserResponse.User.ContentId ):$( $UserResponse.User.ContentTypeId )]"
                         }
                     }
                     else {
@@ -327,6 +339,7 @@ function Get-VtUser {
                     LastVisit        = $UserResponse.User.LastVisitedDate;
                     LifetimePoints   = $UserResponse.User.Points;
                     EmailEnabled     = $UserResponse.User.ReceiveEmails;
+                    MentionText      = "[mention:$( $UserResponse.User.ContentId ):$( $UserResponse.User.ContentTypeId )]"
                 }
             }
             else {
