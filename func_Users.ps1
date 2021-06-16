@@ -519,16 +519,16 @@ function Remove-VtUser {
         switch ( $pscmdlet.ParameterSetName ) {
             'User Id' {
                 Write-Verbose -Message "Processing account deletion using User Ids"
-                $User = $UserId | Get-VtUser -UserId $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false
+                $User = Get-VtUser -UserId $UserId -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false
             }
             'Username' { 
                 Write-Verbose -Message "Processing account deletion using Usernames"
-                $User = $Username | Get-VtUser -Username $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false 
+                $User = Get-VtUser -Username $Username -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false 
             }
 
             'Email Address' { 
                 Write-Verbose -Message "Processing account deletion using Email Addresses - must perform lookup first"
-                $User = $EmailAddress | Get-VtUser -EmailAddress $_ -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false
+                $User = Get-VtUser -EmailAddress $EmailAddress -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false
             }
         }
         if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Delete User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
@@ -762,7 +762,7 @@ function Set-VtUser {
             }
         }
         
-        $User = $UserId | Get-VtUser -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -Verbose:$false
+        $User = $UserId | Get-VtUser -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExcludeProperty MentionText
         if ( $UriParameters.Keys.Count ) {
             if ( $User ) {
                 $Uri = "api.ashx/v2/users/$( $User.UserId ).json"

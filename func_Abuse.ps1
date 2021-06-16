@@ -1,25 +1,24 @@
-function Get-VtSysNotification {
+function Get-VtAbuseReport {
     [CmdletBinding(
-        DefaultParameterSetName = 'ContentId',
+        DefaultParameterSetName = 'UserGuid',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
-        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64865/system-notification-rest-endpoints',
+        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64478/abuse-report-rest-endpoints',
         ConfirmImpact = 'Low'
     )]
     Param
     (
-        <#
-        # Content ID to use for lookup
+        # User ID to use for abuse lookup
         [Parameter(
-            Mandatory = $true, 
+            Mandatory = $false, 
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false, 
-            ParameterSetName = 'ContentId')]
+            ParameterSetName = 'UserGuid')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [guid]$ContentId,
-        #>
+        [guid]$UserGuid,
+
         # Content URL to use for lookup
         [Parameter(
             Mandatory = $false,
@@ -27,7 +26,7 @@ function Get-VtSysNotification {
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
-        [ValidateRange(1, 1000)]
+        [ValidateRange(1, 100)]
         [int]$BatchSize = 20,
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
@@ -104,25 +103,29 @@ function Get-VtSysNotification {
         $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
 
         # Set the Uri for the target
-        $Uri = 'api.ashx/v2/systemnotifications.json'
+        $Uri = 'api.ashx/v2/abusereports.json'
 
         # Set default page index, page size, and add any other filters
         $UriParameters = @{}
         $UriParameters["PageSize"] = $BatchSize
         $UriParameters["PageIndex"] = 0
 
+        if ( $UserId ) {
+            $UriParameters["AuthorUserId"] = $UserGuid
+        }
+
     }
     process {
 
-        $TotalNotifications = 0
+        $TotalAbuseReports = 0
         do {
-            $NotificationsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
-            if ( $NotificationsResponse ) {
-                $TotalNotifications += $NotificationsResponse.SystemNotifications.Count
-                $NotificationsResponse.SystemNotifications
+            $AbuseReportsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
+            if ( $AbuseReportsResponse ) {
+                $TotalAbuseReports += $AbuseReportsResponse.SystemNotifications.Count
+                $AbuseReportsResponse.Reports
                 $UriParameters["PageIndex"]++
             }
-        } while ( $TotalNotifications -lt $NotificationsResponse.TotalCount )
+        } while ( $TotalAbuseReports -lt $AbuseReportsResponse.TotalCount )
     }
 
     end {
