@@ -431,6 +431,21 @@ function Set-VtForumThread {
         [ValidateNotNullOrEmpty()]
         [switch]$LockThread,
 
+        [Parameter()]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [switch]$StickyThread,
+
+        [Parameter()]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [date]$StickyDate = ( Get-Date ).AddDays(7),
+
+        [Parameter()]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [switch]$FeatureThread,
+
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(
             Mandatory = $false
@@ -498,6 +513,13 @@ function Set-VtForumThread {
         $UriParameters = @{}
         if ( $LockThread ) {
             $UriParameters["IsLocked"] = 'true'
+        }
+        if ( $StickyThread ) {
+            $UriParameters["IsSticky"] = 'true'
+            $UriParameters["StickyDate"] = $StickyDate
+        }
+        if ( $FeatureThread ) {
+            $UriParameters["IsFeatured"] = 'true'
         }
         # Update the authentication header for to "Put"
         $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Put -Verbose:$false -WhatIf:$false
