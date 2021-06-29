@@ -125,7 +125,16 @@ function Get-VtBlog {
             }
         
             if ( $Type -eq 'Single' ) {
-                #single retrn only
+                $BlogsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Headers $AuthHeader
+                if ( $BlogsResponse ) {
+                    if ( $ReturnDetails ) {
+                        $BlogsResponse.Blog
+                    } else {
+                        $BlogsResponse.Blog | Select-Object -Property @{ Name = "BlogId"; Expression = { $_.Id } }, Name, Key, Url, Enabled, PostCount, CommentCount, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Name ) } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }
+                    }
+                } else {
+                    Write-Error -Message "No blogs matching ID $BlogId found."
+                }
             }
             else {
                 # Multiple returns
