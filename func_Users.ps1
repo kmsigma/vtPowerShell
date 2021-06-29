@@ -641,6 +641,10 @@ function Set-VtUser {
         # Is the account blocked from receiving email?
         [Parameter(Mandatory = $false)]
         [switch]$EmailBlocked = $false,
+        
+        # Does the user need to accept the terms of service?
+        [Parameter(Mandatory = $false)]
+        [switch]$RequiresTermsOfServiceAcceptance,
 
         # Do you want to return the new user object back to the original call?
         [Parameter(Mandatory = $false)]
