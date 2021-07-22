@@ -305,7 +305,8 @@ function Get-VtUser {
                             LastVisit        = $UserResponse.User.LastVisitedDate;
                             LifetimePoints   = $UserResponse.User.Points;
                             EmailEnabled     = $UserResponse.User.ReceiveEmails;
-                            MentionText      = "[mention:$( $UserResponse.User.ContentId ):$( $UserResponse.User.ContentTypeId )]"
+                            # Need to strip out the dashes from the GUIDs
+                            MentionText      = "[mention:$( $UserResponse.User.ContentId.Replace('-', '') ):$( $UserResponse.User.ContentTypeId.Replace('-', '') )]"
                         }
                     }
                     else {
