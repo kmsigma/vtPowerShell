@@ -117,7 +117,7 @@ function Get-VtUser {
         # Email address to use for lookup
         [Parameter(
             Mandatory = $true,
-            ValueFromPipeline = $true,
+            ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false, 
             ParameterSetName = 'Email Address'
@@ -129,7 +129,7 @@ function Get-VtUser {
         # User ID for the lookup
         [Parameter(
             Mandatory = $true,
-            ValueFromPipeline = $true,
+            ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false, 
             ParameterSetName = 'User Id'
