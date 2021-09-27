@@ -57,7 +57,7 @@ function Get-VtIdea {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$CommunityDomain = $Global:CommunityDomain,
+        [string]$VtCommunity = $Global:VtCommunity,
 
         # Authentication Header for the community
         [Parameter(
@@ -65,7 +65,7 @@ function Get-VtIdea {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
     
     begin {
@@ -73,12 +73,9 @@ function Get-VtIdea {
         if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
             . .\func_Telligent.ps1
         }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
         
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
         $UriParameters = @{}
         $UriParameters['PageSize'] = $BatchSize
         $UriParameters['PageIndex'] = 0
@@ -90,7 +87,7 @@ function Get-VtIdea {
     }
     process {
         if ( $AllIdeas ) {
-            if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Get info about all Ideas'") ) {
+            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about all Ideas'") ) {
                 $Uri = 'api.ashx/v2/ideas/ideas.json'
                 $IdeaCount = 0
                 do {
@@ -99,7 +96,7 @@ function Get-VtIdea {
                     } else {
                         Write-Progress -Activity "Querying for Ideas" -Status "Making first call for first $( $UriParameters["PageSize"] ) ideas"
                     }
-                    $IdeaResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
+                    $IdeaResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
                     if ( $IdeaResponse ) {
                         if ( -not $ReturnDetails ) {
                             $IdeaResponse.Ideas | Select-Object -Property @{ Name = "IdeaId"; Expression = { $_.Id } }, @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } }, @{ Name = "Status"; Expression = { $_.Status.Name } }, @{ Name = "Author"; Expression = { $_.AuthorUser.Username } }, CreatedDate, LastUpdatedDate, Url, Score, @{ Name = "StatusNote"; Expression = { $_.CurrentStatus.Note } }
@@ -115,7 +112,7 @@ function Get-VtIdea {
             }
         }
         else {
-            if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Get info about Idea ID: $IdeaId'") ) {
+            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about Idea ID: $IdeaId'") ) {
                 $Uri = "api.ashx/v2/Ideas/$IdeaId.json"
             }
         }

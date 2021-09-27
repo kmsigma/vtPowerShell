@@ -76,7 +76,7 @@ function Get-VtAuthHeader {
 .DESCRIPTION
    Add an optional REST Method for use with Update and Delete type calls
 .EXAMPLE
-   $AuthHeader | Set-VtAuthHeader -Method "Delete"
+   $VtAuthHeader | Set-VtAuthHeader -Method "Delete"
 
    Name                           Value
    ----                           -----
@@ -86,14 +86,14 @@ function Get-VtAuthHeader {
    Take an existing header and add "Delete" as the rest method
 
 .EXAMPLE
-   $AuthHeader
+   $VtAuthHeader
 
    Name                           Value
    ----                           -----
    Rest-User-Token                bG1[omitted]dtYQ==
    Rest-Method                    DELETE
 
-   PS > $AuthHeader | Set-VtAuthHeader -Method "Get"
+   PS > $VtAuthHeader | Set-VtAuthHeader -Method "Get"
 
    Name                           Value
    ----                           -----
@@ -102,13 +102,13 @@ function Get-VtAuthHeader {
    "Get" style queries do not require a 'Rest-Mehod' in the header, so it is removed.  This is the same functionality as passing no RestMethod parameter.
 
 .EXAMPLE
-   $AuthHeader
+   $VtAuthHeader
 
    Name                           Value
    ----                           -----
    Rest-User-Token                bG1[omitted]dtYQ==
 
-   PS > $DeleteHeader = $AuthHeader | Set-VtAuthHeader -Method "Delete"
+   PS > $DeleteHeader = $VtAuthHeader | Set-VtAuthHeader -Method "Delete"
    PS > $DeleteHeader
 
    Name                           Value
@@ -116,7 +116,7 @@ function Get-VtAuthHeader {
    Rest-User-Token                bG1[omitted]dtYQ==
    Rest-Method                    DELETE
 
-   PS > $UpdateHeader = $AuthHeader | Set-VtAuthHeader -Method "Put"
+   PS > $UpdateHeader = $VtAuthHeader | Set-VtAuthHeader -Method "Put"
    PS > $UpdateHeader
 
    Name                           Value
@@ -124,7 +124,7 @@ function Get-VtAuthHeader {
    Rest-User-Token                bG1[omitted]dtYQ==
    Rest-Method                    PUT
 
-   Create two new headers ($DeleteHeader and $UpdateHeader) based on the original header ($AuthHeader)
+   Create two new headers ($DeleteHeader and $UpdateHeader) based on the original header ($VtAuthHeader)
 
 .INPUTS
    Existing Authentication Header (as Hashtable)
@@ -149,7 +149,7 @@ function Set-VtAuthHeader {
          ValueFromRemainingArguments = $false, 
          Position = 0)]
       [Alias("Header")] 
-      [System.Collections.Hashtable[]]$AuthHeader,
+      [System.Collections.Hashtable[]]$VtAuthHeader,
 
       # Rest-Method to invoke
       [Parameter(Mandatory = $false, 
@@ -160,12 +160,14 @@ function Set-VtAuthHeader {
    )
 
    begin {
-      # Nothing here
+      if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
+         . .\func_Utilities.ps1
+      }
    }
 
    process {
       # Support multiple tokens (this should be rare)
-      ForEach ( $h in $AuthHeader ) {
+      ForEach ( $h in $VtAuthHeader ) {
          
          if ( $h["Rest-User-Token"] ) {
             if ( $pscmdlet.ShouldProcess("Header with 'Rest-User-Token: $( $h["Rest-User-Token"] )'", "Update Rest-Method to $RestMethod type") ) {

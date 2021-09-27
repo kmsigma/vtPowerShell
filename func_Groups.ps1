@@ -99,7 +99,7 @@ function Get-VtGroup {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$CommunityDomain = $Global:CommunityDomain,
+        [string]$VtCommunity = $Global:VtCommunity,
 
         # Authentication Header for the community
         [Parameter(
@@ -107,7 +107,7 @@ function Get-VtGroup {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
 
     
     )
@@ -117,13 +117,10 @@ function Get-VtGroup {
         if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
             . .\func_Telligent.ps1
         }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
         
         
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
         $UriParameters = @{}
         $UriParameters['PageSize'] = $BatchSize
         $UriParameters['PageIndex'] = 0
@@ -148,7 +145,7 @@ function Get-VtGroup {
                     do {
                         Write-Verbose -Message "Making call with '$Uri'"
                         # Get the list of groups with matching name from the call
-                        $GroupsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader -Verbose:$false
+                        $GroupsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader -Verbose:$false
 
                         if ( $GroupsResponse ) {
                             $GroupCount += $GroupsResponse.Groups.Count
@@ -158,7 +155,7 @@ function Get-VtGroup {
                             }
                             if ( $ResolveParentName ) {
                                 # This calls itself to get the parent group name
-                                $GroupsResponse.Groups | Add-Member -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
+                                $GroupsResponse.Groups | Add-Member -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
                             }
                             # Should we return everything?
                             if ( $ReturnDetails ) {
@@ -187,7 +184,7 @@ function Get-VtGroup {
 
                     # Because everything is encoded in the URI, we don't need to send any $UriParameters
                     Write-Verbose -Message "Making call with '$Uri'"
-                    $GroupsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri ) -Headers $AuthHeader -Verbose:$false
+                    $GroupsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Headers $VtAuthHeader -Verbose:$false
                     
                     if ( $ResolveParentName ) {
                         # This calls itself to get the parent group name
@@ -217,7 +214,7 @@ function Get-VtGroup {
                 $Uri = 'api.ashx/v2/groups.json'
                 $GroupCount = 0
                 do {
-                    $GroupsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader -Verbose:$false
+                    $GroupsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader -Verbose:$false
 
                     if ( $ResolveParentName ) {
                         # This calls itself to get the parent group name

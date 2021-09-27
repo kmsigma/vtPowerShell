@@ -29,14 +29,14 @@ This is an example of that file.
 $Username = "[Put your username here]"
 $ApiKey   = "[Put your API Key here]"
 
-$AuthHeader = Get-VtAuthHeader -Username $Username -ApiKey $ApiKey
+$VtAuthHeader = Get-VtAuthHeader -Username $Username -ApiKey $ApiKey
 
-$CommunityDomain = "[Put your community domain here - include the protocol (http/https) and the trailing slash.]"
+$VtCommunity = "[Put your community domain here - include the protocol (http/https) and the trailing slash.]"
 
 # 'Import' the user functions to test connectivity
 . .\func_Users.ps1
 
-Get-VtUser -Username $Username -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader
+Get-VtUser -Username $Username -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader
 ```
 
 When you run that file, your results should look something like this:
@@ -55,7 +55,7 @@ LifetimePoints   : 283319
 EmailEnabled     : True
 ```
 
-If it does, then the functions are working as expected.  You can continue to use the `$CommunityDomain` and `$AuthHeader` for subsequent calls to other functions.
+If it does, then the functions are working as expected.  You can continue to use the `$VtCommunity` and `$VtAuthHeader` for subsequent calls to other functions.
 
 ## Resources I'm Using
 
@@ -74,7 +74,7 @@ If it does, then the functions are working as expected.  You can continue to use
 - [ ] Assemble into a module
 - [ ] Publish to PSGallery
 
-### Current work status
+### Current work status (behind on keeping this up to date)
 
 | Script | Task | Yet to Do | Functional Confidence Level |
 | -----------------| ---- | ----------------- | ---------------: |

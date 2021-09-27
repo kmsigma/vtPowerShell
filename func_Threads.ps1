@@ -1,4 +1,4 @@
-function Get-VtForumThead {
+function Get-VtForumThread {
     [CmdletBinding(
         DefaultParameterSetName = 'Thread By Forum Id',
         SupportsShouldProcess = $true, 
@@ -105,7 +105,7 @@ function Get-VtForumThead {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$CommunityDomain = $Global:CommunityDomain,
+        [string]$VtCommunity = $Global:VtCommunity,
 
         # Authentication Header for the community
         [Parameter(
@@ -113,7 +113,7 @@ function Get-VtForumThead {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
     begin {
         # Validate that the authentication header function is available
@@ -169,7 +169,7 @@ function Get-VtForumThead {
         }
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
 
         # Set default page index, page size, and add any other filters
         $UriParameters = @{}
@@ -181,10 +181,10 @@ function Get-VtForumThead {
             $UriParameters["AuthorId"] = $UserId
         }
         elseif ( $Username ) {
-            $UriParameters["AuthorId"] = Get-VtUser -Username $Username -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExpandProperty UserId
+            $UriParameters["AuthorId"] = Get-VtUser -Username $Username -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExpandProperty UserId
         }
         elseif ( $EmailAddress ) {
-            $UriParameters["AuthorId"] = Get-VtUser -EmailAddress $EamilAddress -CommunityDomain $CommunityDomain -AuthHeader $AuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExpandProperty UserId
+            $UriParameters["AuthorId"] = Get-VtUser -EmailAddress $EamilAddress -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExpandProperty UserId
         }
         if ( $QueryType ) {
             $UriParameters['ForumThreadQueryType'] = $QueryType
@@ -203,31 +203,43 @@ function Get-VtForumThead {
         else {
             $ActionName = "Enumerate Threads for all forums"
         }
-        if ( $pscmdlet.ShouldProcess("$CommunityDomain", $ActionName) ) {
-            $TotalThreads = 0
-            do {
-                if ( -not $ThreadsResponse ) {
-                    Write-Progress -Activity "Pulling Threads" -CurrentOperation "Pulling $BatchSize threads [initial call]" -PercentComplete 0
-                }
-                else {
-                    Write-Progress -Activity "Pulling Threads" -CurrentOperation "Pulling $BatchSize threads [$( $TotalThreads )/$( $ThreadsResponse.TotalCount )]" -PercentComplete ( ( $TotalThreads / $ThreadsResponse.TotalCount ) * 100 )
-                }
-                if ( -not $AllForums ) {
-                    $Uri = "api.ashx/v2/forums/$( $ForumId )/threads.json"
-                }
-                else {
-                    $Uri = 'api.ashx/v2/forums/threads.json'
-                }
-                $ThreadsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
-                $TotalThreads += $ThreadsResponse.Threads.Count
-                if ( $ReturnDetails ) {
-                    $ThreadsResponse.Threads
-                } else {
-                $ThreadsResponse.Threads | Select-Object -Property Id, Url, Subject, Body, @{ Name = 'Author'; Expression = { $_.Author.DisplayName } }, Date, LatestPostDate, ThreadStatus, ThreadType, ViewCount, ReplyCount, @{ Name = "Tags"; Expression = { $_.Tags.Value -join ", " } }
-                }
-                $UriParameters["PageIndex"]++
-            } while ( $TotalThreads -lt $ThreadsResponse.TotalCount )
-            Write-Progress -Activity "Pulling Threads" -Completed
+        ForEach ( $f in $ForumId ) {
+            if ( $pscmdlet.ShouldProcess("$VtCommunity", $ActionName) ) {
+                # Reset the PageIndex
+                $UriParameters["PageIndex"] = 0
+                # Remove the ThreadsReponse
+                Remove-Variable -Name ThreadsResponse -ErrorAction SilentlyContinue
+
+                $TotalThreads = 0
+                $ForumDetails = Get-VtForum -ForumId $f -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader | Select-Object -Property Title, GroupName
+                $ForumTitle = $ForumDetails.Title
+                $GroupName = $ForumDetails.GroupName
+                do {
+                    if ( -not $ThreadsResponse ) {
+                        Write-Progress -Activity "Pulling Threads in $GroupName / $ForumTitle" -CurrentOperation "Pulling $BatchSize threads [initial call]" -PercentComplete 0
+                    }
+                    else {
+                        Write-Progress -Activity "Pulling Threads in $GroupName / $ForumTitle" -CurrentOperation "Pulling $BatchSize threads [$( $TotalThreads )/$( $ThreadsResponse.TotalCount )]" -PercentComplete ( ( $TotalThreads / $ThreadsResponse.TotalCount ) * 100 )
+                    }
+                    if ( -not $AllForums ) {
+                        $Uri = "api.ashx/v2/forums/$( $f )/threads.json"
+                    }
+                    else {
+                        $Uri = 'api.ashx/v2/forums/threads.json'
+                    }
+                    $ThreadsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                    $TotalThreads += $ThreadsResponse.Threads.Count
+                    if ( $ReturnDetails ) {
+                        $ThreadsResponse.Threads
+                    }
+                    else {
+                        $ThreadsResponse.Threads | Select-Object -Property @{ Name = "GroupId"; Expression = { $_.GroupId } }, @{ Name = "GroupName"; Expression = { $GroupName } }, @{ Name = "ForumId"; Expression = { $_.ForumId } }, @{ Name = "ForumTitle"; Expression = { $ForumTitle } }, @{ Name = "ThreadId"; Expression = { $_.Id } }, Url, Subject, Body, @{ Name = 'Author'; Expression = { $_.Author.DisplayName } }, Date, LatestPostDate, ThreadStatus, ThreadType, ViewCount, ReplyCount, @{ Name = "Tags"; Expression = { $_.Tags.Value -join ", " } }
+                    }
+                    $UriParameters["PageIndex"]++
+                } while ( $TotalThreads -lt $ThreadsResponse.TotalCount )
+                Write-Progress -Activity "Pulling Threads in $GroupName / $ForumTitle" -Completed
+
+            }
         }
     }
     end {
@@ -290,7 +302,7 @@ function Get-VtForum {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$CommunityDomain = $Global:CommunityDomain,
+        [string]$VtCommunity = $Global:VtCommunity,
 
         # Authentication Header for the community
         [Parameter(
@@ -298,7 +310,7 @@ function Get-VtForum {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
     
     begin {
@@ -355,7 +367,7 @@ function Get-VtForum {
         }
         
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
         $UriParameters = @{}
         $UriParameters['PageSize'] = $BatchSize
         $UriParameters['PageIndex'] = 0
@@ -363,14 +375,14 @@ function Get-VtForum {
     }
     process {
         if ( $AllForums ) {
-            if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Get info about all forums'") ) {
+            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about all forums'") ) {
                 $Uri = 'api.ashx/v2/forums.json'
                 $ForumCount = 0
                 do {
-                    $ForumResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
+                    $ForumResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
                     if ( $ForumResponse ) {
                         if ( -not $ReturnDetails ) {
-                            $ForumResponse.Forums | Select-Object -Property ForumId, @{ Name = 'ThreadId'; Expression = { $_.Id } },  Title, Key, Url, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode($_.Group.Name) } }, @{ Name = "GroupKey"; Expression = { $_.Group.Key } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "AllowedThreadTypes"; Expression = { $_.AllowedThreadTypes.Value -join ", " } }, DefaultThreadType, LatestPostDate, Enabled, ThreadCount, ReplyCount
+                            $ForumResponse.Forums | Select-Object -Property @{ Name = 'ForumId'; Expression = { $_.Id } }, Title, Key, Url, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode($_.Group.Name) } }, @{ Name = "GroupKey"; Expression = { $_.Group.Key } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "AllowedThreadTypes"; Expression = { ( $_.AllowedThreadTypes.Value | Sort-Object ) -join ", " } }, DefaultThreadType, LatestPostDate, Enabled, ThreadCount, ReplyCount
                         }
                         else {
                             $ForumResponse.Forums
@@ -382,8 +394,17 @@ function Get-VtForum {
             }
         }
         else {
-            if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Get info about Forum ID: $ForumId'") ) {
-                $Uri = "api.ashx/v2/forums/$ForumId.xml"
+            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about Forum ID: $ForumId'") ) {
+                $Uri = "api.ashx/v2/forums/$ForumId.json"
+                $ForumResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Headers $VtAuthHeader
+                if ( $ForumResponse ) {
+                    if ( -not $ReturnDetails ) {
+                        $ForumResponse.Forum | Select-Object -Property @{ Name = 'ForumId'; Expression = { $_.Id } }, Title, Key, Url, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode($_.Group.Name) } }, @{ Name = "GroupKey"; Expression = { $_.Group.Key } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "AllowedThreadTypes"; Expression = { ( $_.AllowedThreadTypes.Value | Sort-Object ) -join ", " } }, DefaultThreadType, LatestPostDate, Enabled, ThreadCount, ReplyCount
+                    }
+                    else {
+                        $ForumResponse.Forum
+                    }
+                }
             }
         }
     }
@@ -453,7 +474,7 @@ function Set-VtForumThread {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$CommunityDomain = $Global:CommunityDomain,
+        [string]$VtCommunity = $Global:VtCommunity,
 
         # Authentication Header for the community
         [Parameter(
@@ -461,54 +482,14 @@ function Set-VtForumThread {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
     
     begin {
-        <#
-        .Synopsis
-            Convert a hashtable to a query string
-        .DESCRIPTION
-            Converts a passed hashtable to a query string based on the key:value pairs.
-        .EXAMPLE
-            $UriParameters = @{}
-            PS > $UriParameters.Add("PageSize", 20)
-            PS > $UriParameters.Add("PageIndex", 1)
-
-            PS > $UriParameters
-
-        Name                           Value
-        ----                           -----
-        PageSize                       20
-        PageIndex                      1
-
-            PS > $UriParameters | ConvertTo-QueryString
-
-            PageSize=20&PageIndex=1
-        .OUTPUTS
-            string object in the form of "key1=value1&key2=value2..."  Does not include the preceeding '?' required for many URI calls
-        .NOTES
-            This is bascially the reverse of [System.Web.HttpUtility]::ParseQueryString
-
-            This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
-        #>
-        function ConvertTo-QueryString {
-            param (
-                # Hashtable containing segmented query details
-                [Parameter(
-                    Mandatory = $true, 
-                    ValueFromPipeline = $true)]
-                [ValidateNotNull()]
-                [ValidateNotNullOrEmpty()]
-                [System.Collections.Hashtable]$Parameters
-            )
-            $ParameterStrings = @()
-            $Parameters.GetEnumerator() | ForEach-Object {
-                $ParameterStrings += "$( $_.Key )=$( $_.Value )"
-            }
-            $ParameterStrings -join "&"
+        # Validate that the authentication header function is available
+        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
+            . .\func_Telligent.ps1
         }
-        
         
         $UriParameters = @{}
         if ( $LockThread ) {
@@ -522,7 +503,7 @@ function Set-VtForumThread {
             $UriParameters["IsFeatured"] = 'true'
         }
         # Update the authentication header for to "Put"
-        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Put -Verbose:$false -WhatIf:$false
+        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Put -Verbose:$false -WhatIf:$false
         $HttpMethod = "Post"
     }
     
@@ -533,11 +514,10 @@ function Set-VtForumThread {
         Uri = api.ashx/v2/forums/{forumid}/threads/{threadid}.json
         #>
 
-        if ( $pscmdlet.ShouldProcess("$CommunityDomain", "Update Thread $ThreadId in Forum $ForumId'") ){
+        if ( $pscmdlet.ShouldProcess("$VtCommunity", "Update Thread $ThreadId in Forum $ForumId'") ) {
             $Uri = "api.ashx/v2/forums/$ForumId/threads/$ThreadId.json"
-            $UpdateResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader -Method $HttpMethod
-            if ( $UpdateResponse )
-            {
+            $UpdateResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader -Method $HttpMethod
+            if ( $UpdateResponse ) {
                 $UpdateResponse
             }
         }

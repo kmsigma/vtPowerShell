@@ -37,7 +37,7 @@ function Get-VtSysNotification {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$CommunityDomain = $Global:CommunityDomain,
+        [string]$VtCommunity = $Global:VtCommunity,
 
         # Authentication Header for the community
         [Parameter(
@@ -45,7 +45,7 @@ function Get-VtSysNotification {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$AuthHeader = $Global:AuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
 
     )
 
@@ -56,52 +56,9 @@ function Get-VtSysNotification {
             . .\func_Telligent.ps1
         }
 
-        <#
-        .Synopsis
-            Convert a hashtable to a query string
-        .DESCRIPTION
-            Converts a passed hashtable to a query string based on the key:value pairs.
-        .EXAMPLE
-            $UriParameters = @{}
-            PS > $UriParameters.Add("PageSize", 20)
-            PS > $UriParameters.Add("PageIndex", 1)
-
-            PS > $UriParameters
-
-        Name                           Value
-        ----                           -----
-        PageSize                       20
-        PageIndex                      1
-
-            PS > $UriParameters | ConvertTo-QueryString
-
-            PageSize=20&PageIndex=1
-        .OUTPUTS
-            string object in the form of "key1=value1&key2=value2..."  Does not include the preceeding '?' required for many URI calls
-        .NOTES
-            This is bascially the reverse of [System.Web.HttpUtility]::ParseQueryString
-
-            This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
-        #>
-        function ConvertTo-QueryString {
-            param (
-                # Hashtable containing segmented query details
-                [Parameter(
-                    Mandatory = $true, 
-                    ValueFromPipeline = $true)]
-                [ValidateNotNull()]
-                [ValidateNotNullOrEmpty()]
-                [System.Collections.Hashtable]$Parameters
-            )
-            $ParameterStrings = @()
-            $Parameters.GetEnumerator() | ForEach-Object {
-                $ParameterStrings += "$( $_.Key )=$( $_.Value )"
-            }
-            $ParameterStrings -join "&"
-        }
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $AuthHeader = $AuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
 
         # Set the Uri for the target
         $Uri = 'api.ashx/v2/systemnotifications.json'
@@ -116,7 +73,7 @@ function Get-VtSysNotification {
 
         $TotalNotifications = 0
         do {
-            $NotificationsResponse = Invoke-RestMethod -Uri ( $CommunityDomain + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeader
+            $NotificationsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
             if ( $NotificationsResponse ) {
                 $TotalNotifications += $NotificationsResponse.SystemNotifications.Count
                 $NotificationsResponse.SystemNotifications

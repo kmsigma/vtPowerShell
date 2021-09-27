@@ -1,5 +1,5 @@
 <#
-Note: This is not ready for prime-time - still working on it
+Note: This is not ready for prime-time - LOTS of work to do here
 #>
 
 <#
@@ -44,7 +44,7 @@ function Get-VtChallenge
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
         [Alias("Community", "Domain")]
-        [string]$CommunityDomain = $Global:CommunityDomain,
+        [string]$VtCommunity = $Global:VtCommunity,
 
         # Required authentication header
         [Parameter(
@@ -53,7 +53,7 @@ function Get-VtChallenge
         )]
         [ValidateNotNullOrEmpty()]
         [Alias("Header")]
-        [hashtable]$VtAuthHeader = $Global:AuthHeader,
+        [hashtable]$VtAuthHeader = $Global:VtAuthHeader,
 
         # Get challenge by name
         [Parameter(
@@ -80,9 +80,14 @@ function Get-VtChallenge
     )
     
     begin {
-        if ( -not ( Get-Command -Name "Get-VtAll" -ErrorAction SilentlyContinue ) ) {
+        # Validate that the authentication header function is available
+        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
             . .\func_Telligent.ps1
         }
+        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
+            . .\func_Utilities.ps1
+        }
+
     }
     
     process {
@@ -90,11 +95,11 @@ function Get-VtChallenge
             "By Name" {
                 Write-Verbose -Message "Querying for Challenge by Name"
                 $UriSegment = "api.ashx/v2/ideas/challenges.json?Name=$( [System.Web.HTTPUtility]::UrlEncode( [System.Web.HTTPUtility]::HtmlEncode( $Name ) ) )"
-                $Uri = $CommunityDomain + $UriSegment
+                $Uri = $VtCommunity + $UriSegment
                 if ( $ExactMatch -and $Recurse ) {
                     $ChallengeId = Get-VtAll -Uri $Uri -VtAuthHeader $VtAuthHeader | Where-Object { $_.Name -eq [System.Web.HTTPUtility]::HtmlEncode( $Name ) } | Select-Object -ExpandProperty Id
                     if ( $ChallengeId ) {
-                        Get-VtGroup -CommunityDomain $CommunityDomain -VtAuthHeader $VtAuthHeader -Id $GroupId -Recurse
+                        Get-VtGroup -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -Id $GroupId -Recurse
                     }
                 } elseif ( $ExactMatch -and -not $Recurse ) {
                     Get-VtAll -Uri $Uri -VtAuthHeader $VtAuthHeader | Where-Object { $_.Name -eq [System.Web.HTTPUtility]::HtmlEncode( $Name ) }
@@ -102,7 +107,7 @@ function Get-VtChallenge
                     #Request-Groups -Uri $Uri -VtAuthHeader $VtAuthHeader
                     $ChallengeIds = Get-VtAll -Uri $Uri -VtAuthHeader $VtAuthHeader | Select-Object -ExpandProperty Id
                     ForEach ( $ChallengeId in $ChallengeIds ) {
-                        Get-VtChallenge -CommunityDomain $CommunityDomain -VtAuthHeader $VtAuthHeader -GroupId $GroupId -Recurse
+                        Get-VtChallenge -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -GroupId $GroupId -Recurse
                     }
                 } else {
                     Get-VtAll -Uri $Uri -VtAuthHeader $VtAuthHeader
@@ -111,7 +116,7 @@ function Get-VtChallenge
                 if ( $Recurse ) {
                     $UriSegment += "&IncludeAllSubGroups=true"
                 }
-                $Uri = $CommunityDomain + $UriSegment
+                $Uri = $VtCommunity + $UriSegment
                 if ( -not $ExactMatch ) {
                     Request-Groups -Uri $Uri -VtAuthHeader $VtAuthHeader
                 } else {
@@ -123,14 +128,14 @@ function Get-VtChallenge
             "By Id" {
                 Write-Verbose -Message "Querying for Challenge by Group ID"
                 $UriSegment = "api.ashx/v2/ideas/challenges.json?GroupId=$GroupId"
-                $Uri = $CommunityDomain + $UriSegment
+                $Uri = $VtCommunity + $UriSegment
                 Get-VtAll -Uri $Uri -VtAuthHeader $VtAuthHeader
 
                 
                 if ( $Recurse ) {
                     Write-Verbose -Message "`tQuerying for children of Group by ID"
                     $UriSegment = "api.ashx/v2/ideas/challenges.json?GroupId=$GroupId&IncludeAllSubGroups=true"
-                    $Uri = $CommunityDomain + $UriSegment
+                    $Uri = $VtCommunity + $UriSegment
                     Get-VtAll -Uri $Uri -VtAuthHeader $VtAuthHeader
                 }
             }
@@ -138,7 +143,7 @@ function Get-VtChallenge
                 Write-Verbose -Message "Querying for all challenges"
                 $UriSegment = 'api.ashx/v2/ideas/challenges.json?IncludeAllSubGroups=true'
                 $UriSegment = 'api.ashx/v2/ideas/challenges.json'
-                $Uri = $CommunityDomain + $UriSegment
+                $Uri = $VtCommunity + $UriSegment
                 Get-VtAll -Uri $Uri -VtAuthHeader $VtAuthHeader
             }
         }
