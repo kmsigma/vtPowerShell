@@ -284,7 +284,7 @@ function Set-VtBlog {
 
         # Update the blog's decription
         [Parameter()]
-        [ValidateLength(0, 1023)]
+        [ValidateLength(0, 999)] # Just noticed that the blog description is limited to 1000 characters
         [string]$Description,
 
         # Update the blog's parent group (move the blog)
