@@ -4,9 +4,9 @@
 .DESCRIPTION
     Query the REST endpoint to get user account information.
 .EXAMPLE
-    Get-VtUser -Username "JoeSmith" -VtCommunity "https://mycommunity.teligenthosted.net" -VtAuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
-    PS > Get-VtUser -UserId 112233 -VtCommunity "https://mycommunity.teligenthosted.net" -VtAuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
-    PS > Get-VtUser -EmailAddress "joseph.smith@company.com" -VtCommunity "https://mycommunity.teligenthosted.net" -VtAuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
+    Get-VtUser -Username "JoeSmith" -VtCommunity "https://mycommunity.teligenthosted.net/" -VtAuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
+    PS > Get-VtUser -UserId 112233 -VtCommunity "https://mycommunity.teligenthosted.net/" -VtAuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
+    PS > Get-VtUser -EmailAddress "joseph.smith@company.com" -VtCommunity "https://mycommunity.teligenthosted.net/" -VtAuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
 
         Return a single user based on the their username, email address, or id
     
@@ -25,7 +25,7 @@
     LifetimePoints   : 475
 
 .EXAMPLE
-    $Global:VtCommunity = "https://mycommunity.telligenthosted.net"
+    $Global:VtCommunity = "https://mycommunity.telligenthosted.net/"
     PS > $Global:VtAuthHeader       = Get-VtAuthHeader -Username "MyAdminAccount" -ApiKey "MyAdminApiKey"
     PS > Get-VtUser -Username "JoeSmith"
     
@@ -44,7 +44,7 @@
     Make calls against the API with Community Domain and Authentication Header stored as global variables
 
 .EXAMPLE
-    Get-VtUser -EmailAddress "joseph.smith@company.com", "mary.jones@company.com", "jesse.storm@corp.com.au" -VtCommunity "https://mycommunity.teligenthosted.net" -VtAuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
+    Get-VtUser -EmailAddress "joseph.smith@company.com", "mary.jones@company.com", "jesse.storm@corp.com.au" -VtCommunity "https://mycommunity.teligenthosted.net/" -VtAuthHeader @{ "Rest-User-Token" = "bG[REDACTED]]Q==" }
 
     UserId           : 112233
     Username         : JoeSmith
