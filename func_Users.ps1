@@ -17,6 +17,7 @@
     EmailAddress     : joseph.smith@company.com
     Status           : Approved
     ModerationStatus : Unmoderated
+    IsIgnored        : True
     CurrentPresence  : Offline
     JoinDate         : 3/14/2020 9:19:44 AM
     LastLogin        : 4/5/2021 9:44:21 PM
@@ -33,6 +34,7 @@
     EmailAddress     : joseph.smith@company.com
     Status           : Approved
     ModerationStatus : Unmoderated
+    IsIgnored        : True
     CurrentPresence  : Offline
     JoinDate         : 3/14/2020 9:19:44 AM
     LastLogin        : 4/5/2021 9:44:21 PM
@@ -49,6 +51,7 @@
     EmailAddress     : joseph.smith@company.com
     Status           : Approved
     ModerationStatus : Unmoderated
+    IsIgnored        : True
     CurrentPresence  : Offline
     JoinDate         : 3/14/2020 9:19:44 AM
     LastLogin        : 4/5/2021 9:44:21 PM
@@ -60,6 +63,7 @@
     EmailAddress     : mary.jones@company.com
     Status           : Approved
     ModerationStatus : Unmoderated
+    IsIgnored        : True
     CurrentPresence  : Offline
     JoinDate         : 4/11/2020 8:08:11 AM
     LastLogin        : 4/5/2021 9:44:21 PM
@@ -71,6 +75,7 @@
     EmailAddress     : jesse.storm@corp.com.au
     Status           : Approved
     ModerationStatus : Unmoderated
+    IsIgnored        : True
     CurrentPresence  : Offline
     JoinDate         : 5/11/2019 11:47:11 PM
     LastLogin        : 4/5/2021 9:44:21 PM
@@ -521,6 +526,7 @@ function Remove-VtUser {
         EmailAddress     : banned@new-email.com
         Status           : Approved
         ModerationStatus : Unmoderated
+        IsIgnored        : True
         CurrentPresence  : Offline
         JoinDate         : 11/1/2016 12:23:01 PM
         LastLogin        : 2/22/2021 2:38:29 PM
