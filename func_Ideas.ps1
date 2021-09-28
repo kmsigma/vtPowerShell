@@ -1,4 +1,6 @@
-# funct_Ideas.ps1
+# func_Ideas.ps1
+# This still needs some significant work, but is sufficient for us at the moment to pull what *we* need.
+# If you are using other statuses, you may need to change the allow list of status names for the [string]$Status parameter line
 function Get-VtIdea {
     [CmdletBinding(
         DefaultParameterSetName = 'Thread By Idea Id',
@@ -20,7 +22,7 @@ function Get-VtIdea {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [Alias("Id")]
-        [int64[]]$IdeaId,
+        [guid]$IdeaId,
         
         [Parameter(
             Mandatory = $true,
@@ -34,8 +36,23 @@ function Get-VtIdea {
         [Alias("All")]
         [switch]$AllIdeas,
 
+        # Filter for only Ideas in a specific group
         [Parameter()]
         [int64]$GroupId,
+
+        # Filter for only Ideas in a specific status (Default is "Any")
+        [Parameter()]
+        [ValidateSet("Any", "Open", "ComingSoon", "Implemented", "Closed")]
+        [string]$Status = 'Any',
+
+        # Sort ideas in a specific order (Default is "Date")
+        [Parameter()]
+        [ValidateSet("Date", "Topic", "Score", "TotalVotes", "YesVotes", "NoVotes", "lastUpdatedDate")]
+        [string]$SortyBy = 'Date',
+
+        # Sort ideas in a specific order (Default is "Descending")
+        [Parameter()]
+        [switch]$Descdencing,
 
         [Parameter()]
         [ValidateNotNull()]
@@ -73,6 +90,10 @@ function Get-VtIdea {
         if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
             . .\func_Telligent.ps1
         }
+        # Validate that the authentication header function is available
+        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
+            . .\func_Utilities.ps1
+        }
         
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -83,6 +104,19 @@ function Get-VtIdea {
         if ( $GroupId ) {
             $UriParameters['GroupId'] = $GroupId
         }
+        if ( $Status -ne 'Any' ) {
+            $UriParameters['Status'] = $Status
+        }
+        if ( $SortyBy ) {
+            $UriParameters['SortBy'] = $SortyBy
+            if ( -not $Descdencing ) {
+                $UriParameters['SortOrder'] = 'ascending'
+            }
+            else {
+                $UriParameters['SortOrder'] = 'descending'
+            }
+        }
+        
         
     }
     process {
@@ -93,7 +127,8 @@ function Get-VtIdea {
                 do {
                     if ( $UriParameters["PageIndex"] -gt 0 ) {
                         Write-Progress -Activity "Querying for Ideas" -Status "Making call #$( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"] ) ideas of $( $IdeaResponse.TotalCount ) total ideas" -PercentComplete ( $IdeaCount / $IdeaResponse.TotalCount * 100 )
-                    } else {
+                    }
+                    else {
                         Write-Progress -Activity "Querying for Ideas" -Status "Making first call for first $( $UriParameters["PageSize"] ) ideas"
                     }
                     $IdeaResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
