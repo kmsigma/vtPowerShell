@@ -96,6 +96,7 @@
 function Get-VtUser {
     [CmdletBinding(
         DefaultParameterSetName = 'User Id',
+        SupportsShouldProcess = $true,     
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64924/list-user-rest-endpoint',
         ConfirmImpact = 'Low'
@@ -248,29 +249,32 @@ function Get-VtUser {
             # Cycle through things
             ForEach ( $ParameterSet in $UriParameterSet ) {
                 try {
-                    $UserResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $ParameterSet | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
-                    if ( $UserResponse -and $ReturnDetails ) {
-                        # We found a matching user, return everything with no pretty formatting
-                        $UserResponse.User
-                    }
-                    elseif ( $UserResponse ) {
-                        #implies '-not $ReturnDetails'
-                        # Return abbreviated data
-                        # We found a matching user, build a custom PowerShell Object for it
-                        [PSCustomObject]@{
-                            UserId           = $UserResponse.User.id;
-                            Username         = $UserResponse.User.Username;
-                            EmailAddress     = $UserResponse.User.PrivateEmail;
-                            Status           = $UserResponse.User.AccountStatus;
-                            ModerationStatus = $UserResponse.User.ModerationLevel
-                            CurrentPresence  = $UserResponse.User.Presence;
-                            JoinDate         = $UserResponse.User.JoinDate;
-                            LastLogin        = $UserResponse.User.LastLoginDate;
-                            LastVisit        = $UserResponse.User.LastVisitedDate;
-                            LifetimePoints   = $UserResponse.User.Points;
-                            EmailEnabled     = $UserResponse.User.ReceiveEmails;
-                            # Need to strip out the dashes from the GUIDs
-                            MentionText      = "[mention:$( $UserResponse.User.ContentId.Replace('-', '') ):$( $UserResponse.User.ContentTypeId.Replace('-', '') )]"
+                    if ( $pscmdlet.ShouldProcess("Lookup User", $VtCommunity ) ) {
+                        $UserResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $ParameterSet | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                        if ( $UserResponse -and $ReturnDetails ) {
+                            # We found a matching user, return everything with no pretty formatting
+                            $UserResponse.User
+                        }
+                        elseif ( $UserResponse ) {
+                            #implies '-not $ReturnDetails'
+                            # Return abbreviated data
+                            # We found a matching user, build a custom PowerShell Object for it
+                            [PSCustomObject]@{
+                                UserId           = $UserResponse.User.id
+                                Username         = $UserResponse.User.Username
+                                EmailAddress     = $UserResponse.User.PrivateEmail
+                                Status           = $UserResponse.User.AccountStatus
+                                ModerationStatus = $UserResponse.User.ModerationLevel
+                                IsIgnored        = $UserResponse.User.IsIgnored
+                                CurrentPresence  = $UserResponse.User.Presence
+                                JoinDate         = $UserResponse.User.JoinDate
+                                LastLogin        = $UserResponse.User.LastLoginDate
+                                LastVisit        = $UserResponse.User.LastVisitedDate
+                                LifetimePoints   = $UserResponse.User.Points
+                                EmailEnabled     = $UserResponse.User.ReceiveEmails
+                                # Need to strip out the dashes from the GUIDs
+                                MentionText      = "[mention:$( $UserResponse.User.ContentId.Replace('-', '') ):$( $UserResponse.User.ContentTypeId.Replace('-', '') )]"
+                            }
                         }
                     }
                     else {
@@ -293,17 +297,18 @@ function Get-VtUser {
                 # Return abbreviated data
                 # We found a matching user, build a custom PowerShell Object for it
                 [PSCustomObject]@{
-                    UserId           = $UserResponse.User.id;
-                    Username         = $UserResponse.User.Username;
-                    EmailAddress     = $UserResponse.User.PrivateEmail;
-                    Status           = $UserResponse.User.AccountStatus;
+                    UserId           = $UserResponse.User.id
+                    Username         = $UserResponse.User.Username
+                    EmailAddress     = $UserResponse.User.PrivateEmail
+                    Status           = $UserResponse.User.AccountStatus
                     ModerationStatus = $UserResponse.User.ModerationLevel
-                    CurrentPresence  = $UserResponse.User.Presence;
-                    JoinDate         = $UserResponse.User.JoinDate;
-                    LastLogin        = $UserResponse.User.LastLoginDate;
-                    LastVisit        = $UserResponse.User.LastVisitedDate;
-                    LifetimePoints   = $UserResponse.User.Points;
-                    EmailEnabled     = $UserResponse.User.ReceiveEmails;
+                    IsIgnored        = $UserResponse.User.IsIgnored
+                    CurrentPresence  = $UserResponse.User.Presence
+                    JoinDate         = $UserResponse.User.JoinDate
+                    LastLogin        = $UserResponse.User.LastLoginDate
+                    LastVisit        = $UserResponse.User.LastVisitedDate
+                    LifetimePoints   = $UserResponse.User.Points
+                    EmailEnabled     = $UserResponse.User.ReceiveEmails
                     MentionText      = "[mention:$( $UserResponse.User.ContentId ):$( $UserResponse.User.ContentTypeId )]"
                 }
             }
@@ -591,6 +596,10 @@ function Set-VtUser {
         [Parameter(Mandatory = $false)]
         [switch]$RequiresTermsOfServiceAcceptance,
 
+        # Do we want to ignore the user's content?
+        [Parameter(Mandatory = $false)]
+        [switch]$IgnoreUser,
+
         # Do you want to return the new user object back to the original call?
         [Parameter(Mandatory = $false)]
         [switch]$PassThru = $false,
@@ -601,6 +610,7 @@ function Set-VtUser {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
         [string]$VtCommunity = $Global:VtCommunity,
 
         # Authentication Header for the community
@@ -618,13 +628,13 @@ function Set-VtUser {
         if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
             . .\func_Telligent.ps1
         }
+        # Validate that the query string function is available
+        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
+            . .\func_Utilities.ps1
+        }
 
         # Rest-Method to use for the change
         $RestMethod = "Put"
-
-        # Parameter Check
-        # I can't provide a new Username or a new Email Address if there are multiple input objects
-        
 
 
         # Parameters to pass to the URI
@@ -644,6 +654,9 @@ function Set-VtUser {
         }
         else {
             $UriParameters.Add("ReceiveEmails", 'true')
+        }
+        if ( $IgnoreUser ) {
+            $UriParameters.Add("IsIgnored", 'true')
         }
 
         # Add Banned Until date (and other things) only if the status is been defined as 'Banned'
@@ -689,47 +702,50 @@ function Set-VtUser {
             }
         }
         
-        $User = $UserId | Get-VtUser -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExcludeProperty MentionText
-        if ( $UriParameters.Keys.Count ) {
-            if ( $User ) {
-                $Uri = "api.ashx/v2/users/$( $User.UserId ).json"
-                # Imples that we found a user on which to operate
-                if ( $pscmdlet.ShouldProcess($VtCommunity, "Update User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
-                    # Execute the Update
-                    Write-Verbose -Message "Updating User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
-                    $UpdateResponse = Invoke-RestMethod -Method Post -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod ) -Verbose:$false
-                    if ( $UpdateResponse ) {
-                        $UserObject = [PSCustomObject]@{
-                            UserId           = $UpdateResponse.User.id;
-                            Username         = $UpdateResponse.User.Username;
-                            EmailAddress     = $UpdateResponse.User.PrivateEmail;
-                            Status           = $UpdateResponse.User.AccountStatus;
-                            ModerationStatus = $UpdateResponse.User.ModerationLevel
-                            CurrentPresence  = $UpdateResponse.User.Presence;
-                            JoinDate         = $UpdateResponse.User.JoinDate;
-                            LastLogin        = $UpdateResponse.User.LastLoginDate;
-                            LastVisit        = $UpdateResponse.User.LastVisitedDate;
-                            LifetimePoints   = $UpdateResponse.User.Points;
-                            EmailEnabled     = $UpdateResponse.User.ReceiveEmails;
-                        }
+        ForEach ( $U in $UserId ) {
+            $User = Get-VtUser -UserId $U -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExcludeProperty MentionText
+            if ( $UriParameters.Keys.Count ) {
+                if ( $User ) {
+                    $Uri = "api.ashx/v2/users/$( $User.UserId ).json"
+                    # Imples that we found a user on which to operate
+                    if ( $pscmdlet.ShouldProcess($VtCommunity, "Update User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
+                        # Execute the Update
+                        Write-Verbose -Message "Updating User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
+                        $UpdateResponse = Invoke-RestMethod -Method Post -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod ) -Verbose:$false
+                        if ( $UpdateResponse ) {
+                            $UserObject = [PSCustomObject]@{
+                                UserId           = $UpdateResponse.User.id
+                                Username         = $UpdateResponse.User.Username
+                                EmailAddress     = $UpdateResponse.User.PrivateEmail
+                                Status           = $UpdateResponse.User.AccountStatus
+                                ModerationStatus = $UpdateResponse.User.ModerationLevel
+                                IsIgnored        = $UpdateResponse.User.IsIgnored
+                                CurrentPresence  = $UpdateResponse.User.Presence
+                                JoinDate         = $UpdateResponse.User.JoinDate
+                                LastLogin        = $UpdateResponse.User.LastLoginDate
+                                LastVisit        = $UpdateResponse.User.LastVisitedDate
+                                LifetimePoints   = $UpdateResponse.User.Points
+                                EmailEnabled     = $UpdateResponse.User.ReceiveEmails
+                            }
                         
-                        if ( $User -match $UserObject ) {
-                            Write-Warning -Message "Updates were sent, but no changes were detected on the user account."
-                        }
+                            if ( $User -match $UserObject ) {
+                                Write-Warning -Message "Updates were sent, but no changes were detected on the user account."
+                            }
 
-                        if ( $PassThru ) {
-                            $UserObject
+                            if ( $PassThru ) {
+                                $UserObject
+                            }
                         }
                     }
-                }
                 
+                }
+                else {
+                    Write-Warning -Message "No user found."
+                }
             }
             else {
-                Write-Warning -Message "No user found."
+                Write-Error -Message "No changes were requested for user with ID: $( $User.UserId )" -RecommendedAction "Include a parameter to make updates"
             }
-        }
-        else {
-            Write-Error -Message "No changes were requested for user with ID: $( $User.UserId )" -RecommendedAction "Include a parameter to make updates"
         }
     }
 
