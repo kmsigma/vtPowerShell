@@ -113,10 +113,18 @@ function Get-VtGroup {
     )
     
     begin {
+        #region Import Necessary Functions
         # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
+        if ( -not ( Get-Command -Name "Get-VtAuthHeader" -ErrorAction SilentlyContinue ) ) {
             . .\func_Telligent.ps1
         }
+
+        # Validate that the query string function is available
+        if ( -not ( Get-Command -Name "ConvertTo-QueryString" -ErrorAction SilentlyContinue ) ) {
+            . .\func_Utilities.ps1
+        }
+
+        #endregion Import Necessary Functions
         
         
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
