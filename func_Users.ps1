@@ -265,18 +265,19 @@ function Get-VtUser {
                             # Return abbreviated data
                             # We found a matching user, build a custom PowerShell Object for it
                             [PSCustomObject]@{
+                            #[VtUser]@{
                                 UserId           = $UserResponse.User.id
                                 Username         = $UserResponse.User.Username
                                 EmailAddress     = $UserResponse.User.PrivateEmail
                                 Status           = $UserResponse.User.AccountStatus
                                 ModerationStatus = $UserResponse.User.ModerationLevel
-                                IsIgnored        = $UserResponse.User.IsIgnored
+                                IsIgnored        = $UserResponse.User.IsIgnored -eq "true"
                                 CurrentPresence  = $UserResponse.User.Presence
                                 JoinDate         = $UserResponse.User.JoinDate
                                 LastLogin        = $UserResponse.User.LastLoginDate
                                 LastVisit        = $UserResponse.User.LastVisitedDate
                                 LifetimePoints   = $UserResponse.User.Points
-                                EmailEnabled     = $UserResponse.User.ReceiveEmails
+                                EmailEnabled     = $UserResponse.User.ReceiveEmails -eq "true"
                                 # Need to strip out the dashes from the GUIDs
                                 MentionText      = "[mention:$( $UserResponse.User.ContentId.Replace('-', '') ):$( $UserResponse.User.ContentTypeId.Replace('-', '') )]"
                             }
@@ -725,13 +726,13 @@ function Set-VtUser {
                                 EmailAddress     = $UpdateResponse.User.PrivateEmail
                                 Status           = $UpdateResponse.User.AccountStatus
                                 ModerationStatus = $UpdateResponse.User.ModerationLevel
-                                IsIgnored        = $UpdateResponse.User.IsIgnored
+                                IsIgnored        = $UpdateResponse.User.IsIgnored -eq "true"
                                 CurrentPresence  = $UpdateResponse.User.Presence
                                 JoinDate         = $UpdateResponse.User.JoinDate
                                 LastLogin        = $UpdateResponse.User.LastLoginDate
                                 LastVisit        = $UpdateResponse.User.LastVisitedDate
                                 LifetimePoints   = $UpdateResponse.User.Points
-                                EmailEnabled     = $UpdateResponse.User.ReceiveEmails
+                                EmailEnabled     = $UpdateResponse.User.ReceiveEmails -eq "true"
                             }
                         
                             if ( $User -match $UserObject ) {
