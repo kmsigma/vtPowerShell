@@ -32,11 +32,12 @@ function Add-VtPointTransaction {
         # The username of the account who is getting the points
         [Parameter(
             Mandatory = $true, 
-            Position = 0
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [string]$Username,
+        [string[]]$Username,
 
         # The number of points to award to an account.  This does not support removing points.
         [Parameter(
@@ -93,46 +94,52 @@ function Add-VtPointTransaction {
             . .\func_Telligent.ps1
         }
         
-        # Convert the username to a userid
-        $User = Get-VtUser -Username $Username -VtAuthHeader $VtAuthHeader -VtCommunity $VtCommunity -ReturnDetails
-        # Since point transactions require a ContentId and ContentTypeId, we should pull those from the user's profile
-        if ( -not $User ) {
-            Write-Error -Message "Unable to add point because we didn't find a matching user for [$Username]"
-        }
-        else {
-            $Userid = $User.Id
-            $ContentId = $User.ContentId
-            $ContentTypeId = $User.ContentTypeId
-        }
         $Uri = "api.ashx/v2/pointtransactions.json"
 
         $RestMethod = "GET"
     }
     process {
-        $Proceed = $true
-        if ($pscmdlet.ShouldProcess("$Username", "Add $Points to Account")) {
-            if ( $Points -gt 5000 ) {
-                Write-Host "====LARGE POINT DISTRIBUTION VALIDATION====" -ForegroundColor Yellow
-                $BigPoints = Read-Host -Prompt "You are about to add $Points to $Username's account.  Are you sure you want to do this?  [Enter 'Yes' to confirm]"
-                $Proceed = ( $BigPoints.ToLower() -eq 'yes' )
+
+        ForEach ( $U in $Username ) {
+            $Proceed = $true
+
+            # Convert the username to a userid
+            $User = Get-VtUser -Username $U -VtAuthHeader $VtAuthHeader -VtCommunity $VtCommunity -ReturnDetails -WhatIf:$false
+            # Since point transactions require a ContentId and ContentTypeId, we should pull those from the user's profile
+            if ( -not $User ) {
+                Write-Error -Message "Unable to add point because we didn't find a matching user for [$U]"
+                $Proceed = $false
             }
-            if ( $Proceed ) {
-                # Build the body to send to the account
-                # For proper display, the description needs to be wrapped in HTML paragraph tags.
-                $Body = @{
-                    Description   = "<p>$Description</p>";
-                    UserId        = $UserId;
-                    Value         = $Points;
-                    ContentID     = $ContentId; # We'll just use the ContentID from the user
-                    ContentTypeId = $ContentTypeId; # We'll just use the ContentID from the user
-                    CreatedDate   = $AwardDateTime;
+            else {
+                $Userid = $User.Id
+                $ContentId = $User.ContentId
+                $ContentTypeId = $User.ContentTypeId
+            }
+        
+            if ($pscmdlet.ShouldProcess("User: $( $User.DisplayName )", "Add $Points points") -and $Proceed) {
+                if ( $Points -gt 5000 ) {
+                    Write-Host "====LARGE POINT DISTRIBUTION VALIDATION====" -ForegroundColor Yellow
+                    $BigPoints = Read-Host -Prompt "You are about to add $Points to $( $U.DisplayName  )'s account.  Are you sure you want to do this?  [Enter 'Yes' to confirm]"
+                    $Proceed = ( $BigPoints.ToLower() -eq 'yes' )
                 }
-                try {
-                    $PointsRequest = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Method Post -Body $Body -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -Verbose:$False -WhatIf:$false )
-                    $PointsRequest.PointTransaction
-                }
-                catch {
-                    Write-Error -Message "Something didn't work"
+                if ( $Proceed ) {
+                    # Build the body to send to the account
+                    # For proper display, the description needs to be wrapped in HTML paragraph tags.
+                    $Body = @{
+                        Description   = "<p>$Description</p>";
+                        UserId        = $UserId;
+                        Value         = $Points;
+                        ContentID     = $ContentId; # We'll just use the ContentID from the user
+                        ContentTypeId = $ContentTypeId; # We'll just use the ContentID from the user
+                        CreatedDate   = $AwardDateTime;
+                    }
+                    try {
+                        $PointsRequest = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Method Post -Body $Body -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -Verbose:$False -WhatIf:$false )
+                        $PointsRequest.PointTransaction
+                    }
+                    catch {
+                        Write-Error -Message "Something didn't work"
+                    }
                 }
             }
         }
