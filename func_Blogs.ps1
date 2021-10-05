@@ -578,20 +578,20 @@ function Get-VtBlogPost {
 
         # List of properties we'd like to pull
         $PropertyList = @{ Name = "BlogPostId"; Expression = { $_.Id } },
-        "BlogId",
-        "GroupId",
-        @{ Name = "Title"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Title ) } },
-        "Slug",
-        "PublishedDate",
-        "Url",
-        "IsApproved",
-        "IsFeatured",
-        "Views",
-        "CommentCount",
-        @{ Name = "PostImageFileName"; Expression = { $_.PostImageFile.FileName } },
-        @{ Name = "PostImageFileUrl"; Expression = { $_.PostImageFile.FileUrl } },
-        @{ Name = "Author"; Expression = { $_.Author.DisplayName } },
-        @{ Name = "Tags"; Expression = { ( $_.Tags | ForEach-Object { $_ | Select-Object -ExpandProperty Value } ) } }
+            "BlogId",
+            "GroupId",
+            @{ Name = "Title"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Title ) } },
+            "Slug",
+            "PublishedDate",
+            "Url",
+            "IsApproved",
+            "IsFeatured",
+            "Views",
+            "CommentCount",
+            @{ Name = "PostImageFileName"; Expression = { $_.PostImageFile.FileName } },
+            @{ Name = "PostImageFileUrl"; Expression = { $_.PostImageFile.FileUrl } },
+            @{ Name = "Author"; Expression = { $_.Author.DisplayName } },
+            @{ Name = "Tags"; Expression = { ( $_.Tags | ForEach-Object { $_ | Select-Object -ExpandProperty Value } ) } }
 
         $UriParameters = @{}
         if ( -not $BlogPostId ) {
