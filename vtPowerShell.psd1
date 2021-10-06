@@ -69,7 +69,10 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = 'Get-VtAuthHeader',
+    FunctionsToExport = ''
+
+    # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
+    CmdletsToExport   = 'Get-VtAuthHeader',
     'Set-VtAuthHeader',
     'Get-VtUser',
     'Set-VtUser',
@@ -92,9 +95,6 @@
     'Set-VtGalleryMedia',
     'Get-VtChallenge',
     'Get-VtAbuseReport'
-
-    # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport   = ''
 
     # Variables to export from this module
     VariablesToExport = ''
@@ -133,7 +133,7 @@
             Tags         = @('Vertint', 'Telligent', 'Online Community')
 
             # A URL to the license for this module.
-            LicenseUri   = 'https://raw.githubusercontent.com/kmsigma/vtPowerShell/main/LICENSE'
+            LicenseUri   = 'https://github.com/kmsigma/vtPowerShell/blob/main/LICENSE'
 
             # A URL to the main website for this project.
             ProjectUri   = 'https://github.com/kmsigma/vtPowerShell'
