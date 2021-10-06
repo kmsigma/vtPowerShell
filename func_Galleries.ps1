@@ -104,15 +104,7 @@ function Get-VtGallery {
 
     )
 
-    begin {
-
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
+    BEGIN {
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -123,7 +115,7 @@ function Get-VtGallery {
         $UriParameters["PageSize"] = $BatchSize
 
     }
-    process {
+    PROCESS {
         if ( $PSCmdlet.ShouldProcess( $VtCommunity, "Query Blogs on" ) ) {
         
             if ( $GalleryId -and -not $GroupId) {
@@ -183,7 +175,7 @@ function Get-VtGallery {
         
         } #end of 'should process'
     }
-    end {
+    END {
         # Nothing to see here
     }
 }
@@ -287,15 +279,8 @@ function Set-VtGallery {
 
     )
 
-    begin {
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
-        
+    BEGIN {
+
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Put -Verbose:$false -WhatIf:$false
         
@@ -309,7 +294,7 @@ function Set-VtGallery {
 
         $Uri = "api.ashx/v2/galleries/$GalleryId.json"
     }
-    process {
+    PROCESS {
 
         $CurrentName = Get-VtGallery -GalleryId $GalleryId -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -ErrorAction SilentlyContinue -WhatIf:$false | Select-Object -Property @{ Name = "Gallery"; Expression = { "'$( $_.Name )' in '$( $_.GroupName )'" } } | Select-Object -ExpandProperty Gallery
         if ( $PSCmdlet.ShouldProcess( $VtCommunity, "Update Gallery '$CurrentName'" ) ) {
@@ -319,7 +304,7 @@ function Set-VtGallery {
             }
         }
     }
-    end {
+    END {
         # Nothing to see here
     }
 }
@@ -482,15 +467,7 @@ function Get-VtGalleryMedia {
 
     )
 
-    begin {
-
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
+    BEGIN {
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -527,7 +504,7 @@ function Get-VtGalleryMedia {
             $UriParameters["SortOrder"] = "Ascending"
         }
     }
-    process {
+    PROCESS {
         if ( $PSCmdlet.ShouldProcess( $VtCommunity, "Query Media Gallery Files on" ) ) {
         
             switch ( $PSCmdlet.ParameterSetName ) {
@@ -561,7 +538,7 @@ function Get-VtGalleryMedia {
         
         } #end of 'should process'
     }
-    end {
+    END {
         # Nothing to see here
     }
 }
@@ -671,15 +648,7 @@ function Set-VtGalleryMedia {
 
     )
 
-    begin {
-
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
+    BEGIN {
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -704,7 +673,7 @@ function Set-VtGalleryMedia {
 
     }
 
-    process {
+    PROCESS {
         if ( -not $UriParameters ) {
             # If we have no parameters to change, then there's nothing to do
             Write-Error -Message "Function requires Name, Description, or Tags parameter" -RecommendedAction "Pass -Name, -Description, or -Tags parameters."
@@ -720,7 +689,7 @@ function Set-VtGalleryMedia {
         }
         
     }
-    end {
+    END {
         # Nothing to see here
     }
 }

@@ -115,58 +115,7 @@ function Get-VtForumThread {
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
-    begin {
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        if ( -not ( Get-Command -Name Get-VtUser -ErrorAction SilentlyContinue ) ) {
-            . .\func_Users.ps1
-        }
-
-        <#
-        .Synopsis
-            Convert a hashtable to a query string
-        .DESCRIPTION
-            Converts a passed hashtable to a query string based on the key:value pairs.
-        .EXAMPLE
-            $UriParameters = @{}
-            PS > $UriParameters.Add("PageSize", 20)
-            PS > $UriParameters.Add("PageIndex", 1)
-
-            PS > $UriParameters
-
-        Name                           Value
-        ----                           -----
-        PageSize                       20
-        PageIndex                      1
-
-            PS > $UriParameters | ConvertTo-QueryString
-
-            PageSize=20&PageIndex=1
-        .OUTPUTS
-            string object in the form of "key1=value1&key2=value2..."  Does not include the preceeding '?' required for many URI calls
-        .NOTES
-            This is bascially the reverse of [System.Web.HttpUtility]::ParseQueryString
-
-            This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
-        #>
-        function ConvertTo-QueryString {
-            param (
-                # Hashtable containing segmented query details
-                [Parameter(
-                    Mandatory = $true, 
-                    ValueFromPipeline = $true)]
-                [ValidateNotNull()]
-                [ValidateNotNullOrEmpty()]
-                [System.Collections.Hashtable]$Parameters
-            )
-            $ParameterStrings = @()
-            $Parameters.GetEnumerator() | ForEach-Object {
-                $ParameterStrings += "$( $_.Key )=$( $_.Value )"
-            }
-            $ParameterStrings -join "&"
-        }
+    BEGIN {
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -196,7 +145,7 @@ function Get-VtForumThread {
             $UriParameters['CreatedBeforeDate'] = $CreatedBeforeDate
         }
     }
-    process {
+    PROCESS {
         if ( -not $AllForums ) {
             $ActionName = "Enumerate Threads in Forum ID '$( $ForumId )'"
         }
@@ -242,7 +191,7 @@ function Get-VtForumThread {
             }
         }
     }
-    end {
+    END {
         # Nothing to see here
     }
 }
@@ -313,58 +262,7 @@ function Get-VtForum {
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
     
-    begin {
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        if ( -not ( Get-Command -Name Get-VtUser -ErrorAction SilentlyContinue ) ) {
-            . .\func_Users.ps1
-        }
-        
-        <#
-        .Synopsis
-            Convert a hashtable to a query string
-        .DESCRIPTION
-            Converts a passed hashtable to a query string based on the key:value pairs.
-        .EXAMPLE
-            $UriParameters = @{}
-            PS > $UriParameters.Add("PageSize", 20)
-            PS > $UriParameters.Add("PageIndex", 1)
-
-            PS > $UriParameters
-
-        Name                           Value
-        ----                           -----
-        PageSize                       20
-        PageIndex                      1
-
-            PS > $UriParameters | ConvertTo-QueryString
-
-            PageSize=20&PageIndex=1
-        .OUTPUTS
-            string object in the form of "key1=value1&key2=value2..."  Does not include the preceeding '?' required for many URI calls
-        .NOTES
-            This is bascially the reverse of [System.Web.HttpUtility]::ParseQueryString
-
-            This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
-        #>
-        function ConvertTo-QueryString {
-            param (
-                # Hashtable containing segmented query details
-                [Parameter(
-                    Mandatory = $true, 
-                    ValueFromPipeline = $true)]
-                [ValidateNotNull()]
-                [ValidateNotNullOrEmpty()]
-                [System.Collections.Hashtable]$Parameters
-            )
-            $ParameterStrings = @()
-            $Parameters.GetEnumerator() | ForEach-Object {
-                $ParameterStrings += "$( $_.Key )=$( $_.Value )"
-            }
-            $ParameterStrings -join "&"
-        }
+    BEGIN {
         
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -373,7 +271,7 @@ function Get-VtForum {
         $UriParameters['PageIndex'] = 0
         
     }
-    process {
+    PROCESS {
         if ( $AllForums ) {
             if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about all forums'") ) {
                 $Uri = 'api.ashx/v2/forums.json'
@@ -409,7 +307,7 @@ function Get-VtForum {
         }
     }
     
-    end {
+    END {
         
     }
 }
@@ -485,11 +383,7 @@ function Set-VtForumThread {
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
     
-    begin {
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
+    BEGIN {
         
         $UriParameters = @{}
         if ( $LockThread ) {
@@ -507,7 +401,7 @@ function Set-VtForumThread {
         $HttpMethod = "Post"
     }
     
-    process {
+    PROCESS {
         <#
         HTTP Method: POST
         Auth Header: PUT
@@ -523,7 +417,7 @@ function Set-VtForumThread {
         }
     }
     
-    end {
+    END {
         # Nothing to see here
     }
 }

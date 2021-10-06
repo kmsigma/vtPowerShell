@@ -161,9 +161,7 @@ function Set-VtAuthHeader {
    )
 
    begin {
-      if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-         . .\func_Utilities.ps1
-      }
+      # Nothing to see here
    }
 
    process {

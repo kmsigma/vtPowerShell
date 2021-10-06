@@ -79,18 +79,11 @@ function Get-VtChallenge
     
     )
     
-    begin {
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
-
+    BEGIN {
+        # Nothing to see here
     }
     
-    process {
+    PROCESS {
         switch ($pscmdlet.ParameterSetName) {
             "By Name" {
                 Write-Verbose -Message "Querying for Challenge by Name"
@@ -154,7 +147,7 @@ function Get-VtChallenge
 
     }
     
-    end {
+    END {
         
     }
 }

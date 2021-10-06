@@ -85,16 +85,8 @@ function Get-VtIdea {
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
     
-    begin {
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
-        
+    BEGIN {
+
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
         $UriParameters = @{}
@@ -119,7 +111,7 @@ function Get-VtIdea {
         
         
     }
-    process {
+    PROCESS {
         if ( $AllIdeas ) {
             if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about all Ideas'") ) {
                 $Uri = 'api.ashx/v2/ideas/ideas.json'
@@ -153,7 +145,7 @@ function Get-VtIdea {
         }
     }
     
-    end {
+    END {
         
     }
 }

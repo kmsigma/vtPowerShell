@@ -9,31 +9,31 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule        = '.\func_Telligent.psm1'
+    RootModule           = '.\VerintTelligent.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '0.0.1'
+    ModuleVersion        = '0.0.1'
 
     # Supported PSEditions
-    # CompatiblePSEditions = @()
+    CompatiblePSEditions = @('Desk', 'Core')
 
     # ID used to uniquely identify this module
-    GUID              = '7923a153-6984-47ec-a6de-41469b8cdbcc'
+    GUID                 = '7923a153-6984-47ec-a6de-41469b8cdbcc'
 
     # Author of this module
-    Author            = 'Kevin M. Sparenberg'
+    Author               = 'Kevin M. Sparenberg'
 
     # Company or vendor of this module
-    CompanyName       = 'No Company, just me.'
+    CompanyName          = 'No company, just me.'
 
     # Copyright statement for this module
-    Copyright         = '(c) 2021 Kevin M. Sparenberg. All rights reserved.'
+    Copyright            = '(c) 2021 Kevin M. Sparenberg. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'Collection of PowerShell Functions for working with Verint/Telligent Communities via their API'
+    Description          = 'Collection of PowerShell Functions for working with Verint/Telligent Communities via their API'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion = '7'
+    PowerShellVersion    = '7.0.0'
 
     # Name of the PowerShell host required by this module
     # PowerShellHostName = ''
@@ -66,41 +66,41 @@
     # FormatsToProcess = @()
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-    # NestedModules = @()
+    NestedModules        = @( )
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport = ''
+    FunctionsToExport    = @( 'Get-VtAuthHeader',
+        'Set-VtAuthHeader',
+        'Get-VtUser',
+        'Set-VtUser',
+        'Remove-VtUser',
+        'Get-VtBlog',
+        'Get-VtBlogPost',
+        'Set-VtBlog',
+        'Get-VtForum',
+        'Get-VtForumThread',
+        'Set-VtForumThread',
+        'New-VtPointTransaction',
+        'Get-VtPointTransaction',
+        'Remove-VtPointTransaction',
+        'Get-VtSysNotification',
+        'Get-VtIdea',
+        'Get-VtGroup',
+        'Get-VtGallery',
+        'Set-VtGallery',
+        'Get-VtGalleryMedia',
+        'Set-VtGalleryMedia',
+        'Get-VtChallenge',
+        'Get-VtAbuseReport' )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-    CmdletsToExport   = 'Get-VtAuthHeader',
-    'Set-VtAuthHeader',
-    'Get-VtUser',
-    'Set-VtUser',
-    'Remove-VtUser',
-    'Get-VtBlog',
-    'Get-VtBlogPost',
-    'Set-VtBlog',
-    'Get-VtForum',
-    'Get-VtForumThread',
-    'Set-VtForumThread',
-    'Add-VtPointTransaction',
-    'Get-VtPointTransaction',
-    'Remove-VtPointTransaction',
-    'Get-VtSysNotification',
-    'Get-VtIdea',
-    'Get-VtGroup',
-    'Get-VtGallery',
-    'Set-VtGallery',
-    'Get-VtGalleryMedia',
-    'Set-VtGalleryMedia',
-    'Get-VtChallenge',
-    'Get-VtAbuseReport'
+    CmdletsToExport      = @( )
 
     # Variables to export from this module
-    VariablesToExport = ''
+    VariablesToExport    = ''
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-    AliasesToExport   = ''
+    AliasesToExport      = ''
 
     # DSC resources to export from this module
     # DscResourcesToExport = @()
@@ -109,23 +109,10 @@
     # ModuleList = @()
 
     # List of all files packaged with this module
-    FileList          = @(
-        'func_Utilities.psm1',
-        'func_Abuse.psm1',
-        'func_Blogs.psm1',
-        'func_Challenges.psm1',
-        'func_Galleries.psm1',
-        'func_Groups.psm1',
-        'func_Ideas.psm1',
-        'func_Notifications.psm1',
-        'func_Points.psm1',
-        'func_Telligent.psm1',
-        'func_Threads.psm1',
-        'func_Users.psm1'
-    )
+    # FileList             = @( )
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
-    PrivateData       = @{
+    PrivateData          = @{
 
         PSData = @{
 
@@ -161,7 +148,7 @@
     # HelpInfoURI = ''
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
-    # DefaultCommandPrefix = ''
+    #DefaultCommandPrefix = 'Vt'
 
 }
 

@@ -48,13 +48,7 @@ function Get-VtAbuseReport {
 
     )
 
-    begin {
-
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-
+    BEGIN {
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -72,20 +66,22 @@ function Get-VtAbuseReport {
         }
 
     }
-    process {
+    PROCESS {
 
         $TotalAbuseReports = 0
-        do {
-            $AbuseReportsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
-            if ( $AbuseReportsResponse ) {
-                $TotalAbuseReports += $AbuseReportsResponse.SystemNotifications.Count
-                $AbuseReportsResponse.Reports
-                $UriParameters["PageIndex"]++
-            }
-        } while ( $TotalAbuseReports -lt $AbuseReportsResponse.TotalCount )
+        if ( $PSCmdlet.ShouldProcess("Target", "Operation") ) {
+            do {
+                $AbuseReportsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                if ( $AbuseReportsResponse ) {
+                    $TotalAbuseReports += $AbuseReportsResponse.SystemNotifications.Count
+                    $AbuseReportsResponse.Reports
+                    $UriParameters["PageIndex"]++
+                }
+            } while ( $TotalAbuseReports -lt $AbuseReportsResponse.TotalCount )
+        }
     }
 
-    end {
+    END {
         # Nothing to see here
     }
 }

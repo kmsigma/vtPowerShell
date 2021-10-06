@@ -171,21 +171,7 @@ function Get-VtUser {
 
     )
 
-    begin {
-
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
-
+    BEGIN {
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -194,7 +180,7 @@ function Get-VtUser {
         $UriParameters = @{}
 
     }
-    process {
+    PROCESS {
         switch ( $pscmdlet.ParameterSetName ) {
             'Username' { 
                 if ( $Username -is [array] ) {
@@ -323,7 +309,7 @@ function Get-VtUser {
             }
         }
     }
-    end {
+    END {
         # Nothing to see here
     }
 }
@@ -431,14 +417,7 @@ function Remove-VtUser {
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
 
-    Begin {
-
-
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        
+    BEGIN {
         
         # Build up the URI parameter set 
         $UriParameters = @{}
@@ -470,7 +449,7 @@ function Remove-VtUser {
         $RestMethod = "Delete"
     }
 
-    Process {
+    PROCESS {
 
         switch ( $pscmdlet.ParameterSetName ) {
             'User Id' {
@@ -496,7 +475,7 @@ function Remove-VtUser {
             }
         }
     }
-    End {
+    END {
         # Nothing to see here
     }
 }
@@ -629,16 +608,7 @@ function Set-VtUser {
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
 
-    Begin {
-
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        # Validate that the query string function is available
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
+    BEGIN {
 
         # Rest-Method to use for the change
         $RestMethod = "Put"
@@ -676,7 +646,7 @@ function Set-VtUser {
         }
 
     }
-    Process {
+    PROCESS {
         
         if ( $NewUsername ) {
             # Check to see if the username already exists in the community
@@ -756,7 +726,7 @@ function Set-VtUser {
         }
     }
 
-    End {
+    END {
         # Nothing here
     }
 }

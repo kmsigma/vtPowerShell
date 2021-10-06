@@ -1,5 +1,3 @@
-# Source Information: https://community.telligent.com/community/11/w/api-documentation/64799/point-transaction-rest-endpoints
-
 <#
 .Synopsis
     Short description
@@ -85,20 +83,13 @@ function Add-VtPointTransaction {
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
 
-    begin {
-        if ( -not ( Get-Command -Name Get-VtUser -ErrorAction SilentlyContinue ) ) {
-            . .\func_Users.ps1
-        }
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name Get-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-        
+    BEGIN {
+
         $Uri = "api.ashx/v2/pointtransactions.json"
 
         $RestMethod = "GET"
     }
-    process {
+    PROCESS {
 
         ForEach ( $U in $Username ) {
             $Proceed = $true
@@ -144,7 +135,7 @@ function Add-VtPointTransaction {
             }
         }
     }
-    end {
+    END {
         # Nothing to see here
     }
 }
@@ -265,15 +256,8 @@ function Get-VtPointTransaction {
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
     
-    begin {
-        # Check for necessary functions
-        if ( -not ( Get-Command -Name Get-VtUser -ErrorAction SilentlyContinue) ) {
-            . .\func_Users.ps1
-        }
-        if ( -not ( Get-Command -Name ConvertTo-QueryString -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
-        
+    BEGIN {
+
         $RestMethod = "GET"
 
         # Base Uri for calls
@@ -292,7 +276,7 @@ function Get-VtPointTransaction {
     }
     
 
-    process {
+    PROCESS {
         
         switch ( $pscmdlet.ParameterSetName ) {
             'User Id' {
@@ -386,7 +370,7 @@ function Get-VtPointTransaction {
             }
         }
     }
-    end {
+    END {
         # Nothing to see here
     }
 }
@@ -448,15 +432,12 @@ function Remove-VtPointTransaction {
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
     )
-    begin {
+    BEGIN {
+
         $RestMethod = "Delete"
 
-        if ( -not ( Get-Command -Name Set-VtAuthHeader -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-
     }
-    process {
+    PROCESS {
         # This is where things do stuff
         ForEach ( $id in $TransactionId ) {
             if ( Get-VtPointTransaction -TransactionId $Id -VtCommunity $VtCommunity -VtAuthHeader ( $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -WhatIf:$false -Verbose:$false ) -Verbose:$false ) {
@@ -483,7 +464,7 @@ function Remove-VtPointTransaction {
         }
 
     }
-    end {
+    END {
         # nothing here
     }
 }

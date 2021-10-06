@@ -110,19 +110,7 @@ function Get-VtBlog {
 
     )
 
-    begin {
-
-        #region Import Necessary Functions
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name "Get-VtAuthHeader" -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-
-        # Validate that the query string function is available
-        if ( -not ( Get-Command -Name "ConvertTo-QueryString" -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
-        #endregion Import Necessary Functions
+    BEGIN {
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
         $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
@@ -133,7 +121,7 @@ function Get-VtBlog {
         $UriParameters["PageSize"] = $BatchSize
 
     }
-    process {
+    PROCESS {
         if ( $PSCmdlet.ShouldProcess( $VtCommunity, "Query Blogs on" ) ) {
         
             if ( $BlogId -and -not $GroupId) {
@@ -193,7 +181,7 @@ function Get-VtBlog {
         
         } #end of 'should process'
     }
-    end {
+    END {
         # Nothing to see here
     }
 }
@@ -337,19 +325,7 @@ function Set-VtBlog {
         
     )
 
-    Begin {
-
-        #region Import Necessary Functions
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name "Get-VtAuthHeader" -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-
-        # Validate that the query string function is available
-        if ( -not ( Get-Command -Name "ConvertTo-QueryString" -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
-        #endregion Import Necessary Functions
+    BEGIN {
 
         $UriParameters = @{}
         if ( $GroupId ) { $UriParameters["GroupId"] = $GroupId }
@@ -357,7 +333,7 @@ function Set-VtBlog {
         if ( $Name ) { $UriParameters["Name"] = $Name }
         if ( $Description ) { $UriParameters["Description"] = $Description }
     }
-    Process {
+    PROCESS {
         ForEach ( $b in $BlogId ) {
             # Get the blog because we'll want it for some later things
             $Blog = Get-VtBlog -BlogId $b -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -Verbose:$false -WhatIf:$false
@@ -437,7 +413,7 @@ function Set-VtBlog {
             }
         }
     }
-    End {
+    END {
         # Nothing to see here
     }
 }
@@ -562,19 +538,7 @@ function Get-VtBlogPost {
         
     )
 
-    Begin {
-        #region Import Necessary Functions
-        # Validate that the authentication header function is available
-        if ( -not ( Get-Command -Name "Get-VtAuthHeader" -ErrorAction SilentlyContinue ) ) {
-            . .\func_Telligent.ps1
-        }
-
-        # Validate that the query string function is available
-        if ( -not ( Get-Command -Name "ConvertTo-QueryString" -ErrorAction SilentlyContinue ) ) {
-            . .\func_Utilities.ps1
-        }
-
-        #endregion Import Necessary Functions
+    BEGIN {
 
         # List of properties we'd like to pull
         $PropertyList = @{ Name = "BlogPostId"; Expression = { $_.Id } },
@@ -634,7 +598,7 @@ function Get-VtBlogPost {
         #}
     }
 
-    Process {
+    PROCESS {
         if ( $BlogId -and -not $BlogPostId ) {
             
             ForEach ( $B in $BlogId ) {
@@ -740,7 +704,7 @@ function Get-VtBlogPost {
             
 
 
-    End {
+    END {
 
     }
 }

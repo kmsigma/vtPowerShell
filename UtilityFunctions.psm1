@@ -64,15 +64,15 @@ function ConvertFrom-HtmlString {
         [string]$HtmlString
     )
     
-    begin {
+    BEGIN {
         
     }
     
-    process {
+    PROCESS {
         [System.Web.HttpUtility]::HtmlDecode( ( $HtmlString -replace "<[^>]*?>|<[^>]*>", "" ) )
     }
     
-    end {
+    END {
         
     }
 }
