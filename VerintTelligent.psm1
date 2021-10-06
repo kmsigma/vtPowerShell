@@ -1,4 +1,5 @@
 #region Community Authentication Functions
+function Get-VtAuthHeader {
 <#
 .Synopsis
     Get the necessary authentication header for Verint | Telligent Community
@@ -25,7 +26,6 @@
 .FUNCTIONALITY
     The functionality that best describes this cmdlet
 #>
-function Get-VtAuthHeader {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -72,6 +72,8 @@ function Get-VtAuthHeader {
     }
 }
 
+
+function Set-VtAuthHeader {
 <#
 .Synopsis
     Update an existing authentication header for Verint | Telligent Community
@@ -136,7 +138,6 @@ function Get-VtAuthHeader {
     https://community.telligent.com/community/10/w/developer-training/53138/authentication#Using_an_API_Key_and_username_to_authenticate_REST_requests
 
 #>
-function Set-VtAuthHeader {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -289,6 +290,8 @@ function Get-VtAbuseReport {
     New-VtBlog function (may be deferred because it's easier to do on the web)
     Remove-VtVtBlog function (may be deferred because it's easier to do on the web)
 #>
+
+function Get-VtBlog {
 <#
 .Synopsis
     Get blog from a Verint Community
@@ -326,7 +329,6 @@ function Get-VtAbuseReport {
 
     .NOTES
 #>
-function Get-VtBlog {
     [CmdletBinding(
         #DefaultParameterSetName = 'Blog Id',
         SupportsShouldProcess = $true, 
@@ -471,6 +473,8 @@ function Get-VtBlog {
     }
 }
 
+
+function Set-VtBlog {
 <#
 .Synopsis
     Update a Verint Blog
@@ -523,7 +527,6 @@ This will take the existing authors and remove the above 3 from the list.
 .LINK
     Online REST API Documentation: https://community.telligent.com/community/11/w/api-documentation/64540/update-blog-rest-endpoint
 #>
-function Set-VtBlog {
     [CmdletBinding(DefaultParameterSetName = 'Default', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -621,7 +624,7 @@ function Set-VtBlog {
     PROCESS {
         ForEach ( $b in $BlogId ) {
             # Get the blog because we'll want it for some later things
-            $Blog = Get-VtBlog -BlogId $b -Community $VtCommunity -AuthHeader $VtAuthHeader -Verbose:$false -WhatIf:$false
+            $Blog = Get-VtBlog -BlogId $b -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader -Verbose:$false -WhatIf:$false
 
             # Is the blog enabled and so we want to disable it?
             if ( $Blog.Enabled -and $Disabled ) {
@@ -635,8 +638,8 @@ function Set-VtBlog {
             switch ( $pscmdlet.ParameterSetName ) {
                 'Add/Remove Authors' { 
                     # Get Current List of Authors - we must use an ArrayList type or the .Add and .Remove methods are blocked
-                    $WorkingAuthorList = New-VtObject -TypeName System.Collections.ArrayList
-                    $OriginalAuthorList = New-VtObject -TypeName System.Collections.ArrayList
+                    $WorkingAuthorList = New-Object -TypeName System.Collections.ArrayList
+                    $OriginalAuthorList = New-Object -TypeName System.Collections.ArrayList
                     $Blog.Authors | ForEach-Object { $WorkingAuthorList.Add($_) | Out-Null }
                     $Blog.Authors | ForEach-Object { $OriginalAuthorList.Add($_) | Out-Null }
                     ForEach ( $R in $RemoveAuthor ) {
@@ -992,6 +995,8 @@ function Get-VtBlogPost {
 #endregion Blog Functions
 
 #region Challenge Functions
+
+function Get-VtChallenge {
 <#
 .Synopsis
     Get challenges from Verint / Telligent communities
@@ -1014,7 +1019,6 @@ function Get-VtBlogPost {
 .FUNCTIONALITY
     The functionality that best describes this cmdlet
 #>
-function Get-VtChallenge {
     [CmdletBinding(DefaultParameterSetName = 'All Groups', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -1146,6 +1150,8 @@ function Get-VtChallenge {
 #endregion Challenge Functions
 
 #region Media Gallery Functions
+
+function Get-VtGallery {
 <#
 .Synopsis
 
@@ -1174,7 +1180,6 @@ function Get-VtChallenge {
 .LINK
     Online REST API Documentation: 
 #>
-function Get-VtGallery {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -1318,6 +1323,8 @@ function Get-VtGallery {
     }
 }
 
+
+function Set-VtGallery {
 <#
 .Synopsis
 
@@ -1346,7 +1353,6 @@ function Get-VtGallery {
 .LINK
     Online REST API Documentation: 
 #>
-function Set-VtGallery {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -1447,6 +1453,7 @@ function Set-VtGallery {
     }
 }
 
+function Get-VtGalleryMedia {
 <#
 .Synopsis
 
@@ -1475,7 +1482,6 @@ function Set-VtGallery {
 .LINK
     Online REST API Documentation: 
 #>
-function Get-VtGalleryMedia {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -1681,6 +1687,7 @@ function Get-VtGalleryMedia {
     }
 }
 
+function Set-VtGalleryMedia {
 <#
 .Synopsis
 
@@ -1709,7 +1716,6 @@ function Get-VtGalleryMedia {
 .LINK
     Online REST API Documentation: 
 #>
-function Set-VtGalleryMedia {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -1834,6 +1840,8 @@ function Set-VtGalleryMedia {
 #endregion Media Gallery Functions
 
 #region Group Functions
+
+function Get-VtGroup {
 <#
 .Synopsis
     Get groups from Verint / Telligent communities
@@ -1856,7 +1864,6 @@ function Set-VtGalleryMedia {
 .FUNCTIONALITY
     The functionality that best describes this cmdlet
 #>
-function Get-VtGroup {
     [CmdletBinding(DefaultParameterSetName = 'Default', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -2230,6 +2237,34 @@ function Get-VtIdea {
 
 #region Notification Functions
 function Get-VtSysNotification {
+<#
+.Synopsis
+
+.DESCRIPTION
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.INPUTS
+
+.OUTPUTS
+
+.NOTES
+    You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
+    Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
+        $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+.COMPONENT
+    TBD
+.ROLE
+    TBD
+.LINK
+    Online REST API Documentation: 
+#>
     [CmdletBinding(
         DefaultParameterSetName = 'ContentId',
         SupportsShouldProcess = $true, 
@@ -2316,6 +2351,8 @@ function Get-VtSysNotification {
 #endregion Notification Functions
 
 #region Points Functions
+
+function New-VtPointTransaction {
 <#
 .Synopsis
     Short description
@@ -2336,7 +2373,6 @@ function Get-VtSysNotification {
 .FUNCTIONALITY
     The functionality that best describes this cmdlet
 #>
-function New-VtPointTransaction {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -2464,6 +2500,34 @@ I think I want to change the logic here to a do..while at a later date
 
 #>
 function Get-VtPointTransaction {
+<#
+.Synopsis
+
+.DESCRIPTION
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.INPUTS
+
+.OUTPUTS
+
+.NOTES
+    You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
+    Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
+        $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+.COMPONENT
+    TBD
+.ROLE
+    TBD
+.LINK
+    Online REST API Documentation: 
+#>
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -2693,11 +2757,13 @@ function Get-VtPointTransaction {
     }
 }
 
+
+function Remove-VtVtPointTransaction {
 <#
 .Synopsis
     Remove a Point Transaction based on the Transaction ID
 .DESCRIPTION
-    Remove one or more point transactions using the 
+    Remove one or more point transactions using the API
 .EXAMPLE
     
 .EXAMPLE
@@ -2713,7 +2779,6 @@ function Get-VtPointTransaction {
 .FUNCTIONALITY
     The functionality that best describes this cmdlet
 #>
-function Remove-VtVtPointTransaction {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -2788,33 +2853,34 @@ function Remove-VtVtPointTransaction {
 }
 
 
+
+function Get-VtAuthHeader {
 <#
 .Synopsis
-   Get the necessary authentication header for Verint | Telligent Community
+    Get the necessary authentication header for Verint | Telligent Community
 .DESCRIPTION
-   Using the username and API key, we'll build an authentication header required to access Verint | Telligent Communities.
-   Note this creation does NOT validate that the authentication works - it just builds the header.
+    Using the username and API key, we'll build an authentication header required to access Verint | Telligent Communities.
+    Note this creation does NOT validate that the authentication works - it just builds the header.
 .EXAMPLE
-   Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+    Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
 
-   Name                           Value
-   ----                           -----
-   Rest-User-Token                bG1[omitted]dtYQ==
+    Name                           Value
+    ----                           -----
+    Rest-User-Token                bG1[omitted]dtYQ==
 .INPUTS
-   Username and API key.  Your API key is distinct, but as powerful as your password.  Guard it similarly.
-   API Keys can be obtained from https://community.domain.here/user/myapikeys
+    Username and API key.  Your API key is distinct, but as powerful as your password.  Guard it similarly.
+    API Keys can be obtained from https://community.domain.here/user/myapikeys
 .OUTPUTS
-   Hashtable with necessary headers
+    Hashtable with necessary headers
 .NOTES
-   https://community.telligent.com/community/10/w/developer-training/53138/authentication#Using_an_API_Key_and_username_to_authenticate_REST_requests
+    https://community.telligent.com/community/10/w/developer-training/53138/authentication#Using_an_API_Key_and_username_to_authenticate_REST_requests
 .COMPONENT
-   The component this cmdlet belongs to
+    The component this cmdlet belongs to
 .ROLE
-   The role this cmdlet belongs to
+    The role this cmdlet belongs to
 .FUNCTIONALITY
-   The functionality that best describes this cmdlet
+    The functionality that best describes this cmdlet
 #>
-function Get-VtAuthHeader {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -2855,77 +2921,77 @@ function Get-VtAuthHeader {
             }
         }
     }
-   
+
     end {
         #Nothing to see here        
     }
 }
 
+function Set-VtAuthHeader {
 <#
 .Synopsis
-   Update an existing authentication header for Verint | Telligent Community
+    Update an existing authentication header for Verint | Telligent Community
 .DESCRIPTION
-   Add an optional REST Method for use with Update and Delete type calls
+    Add an optional REST Method for use with Update and Delete type calls
 .EXAMPLE
-   $VtAuthHeader | Set-VtAuthHeader -Method "Delete"
+    $VtAuthHeader | Set-VtAuthHeader -Method "Delete"
 
-   Name                           Value
-   ----                           -----
-   Rest-User-Token                bG1[omitted]dtYQ==
-   Rest-Method                    DELETE
+    Name                           Value
+    ----                           -----
+    Rest-User-Token                bG1[omitted]dtYQ==
+    Rest-Method                    DELETE
 
-   Take an existing header and add "Delete" as the rest method
-
-.EXAMPLE
-   $VtAuthHeader
-
-   Name                           Value
-   ----                           -----
-   Rest-User-Token                bG1[omitted]dtYQ==
-   Rest-Method                    DELETE
-
-   PS > $VtAuthHeader | Set-VtAuthHeader -Method "Get"
-
-   Name                           Value
-   ----                           -----
-   Rest-User-Token                bG1[omitted]dtYQ==
-
-   "Get" style queries do not require a 'Rest-Mehod' in the header, so it is removed.  This is the same functionality as passing no RestMethod parameter.
+    Take an existing header and add "Delete" as the rest method
 
 .EXAMPLE
-   $VtAuthHeader
+    $VtAuthHeader
 
-   Name                           Value
-   ----                           -----
-   Rest-User-Token                bG1[omitted]dtYQ==
+    Name                           Value
+    ----                           -----
+    Rest-User-Token                bG1[omitted]dtYQ==
+    Rest-Method                    DELETE
 
-   PS > $DeleteHeader = $VtAuthHeader | Set-VtAuthHeader -Method "Delete"
-   PS > $DeleteHeader
+    PS > $VtAuthHeader | Set-VtAuthHeader -Method "Get"
 
-   Name                           Value
-   ----                           -----
-   Rest-User-Token                bG1[omitted]dtYQ==
-   Rest-Method                    DELETE
+    Name                           Value
+    ----                           -----
+    Rest-User-Token                bG1[omitted]dtYQ==
 
-   PS > $UpdateHeader = $VtAuthHeader | Set-VtAuthHeader -Method "Put"
-   PS > $UpdateHeader
+    "Get" style queries do not require a 'Rest-Mehod' in the header, so it is removed.  This is the same functionality as passing no RestMethod parameter.
 
-   Name                           Value
-   ----                           -----
-   Rest-User-Token                bG1[omitted]dtYQ==
-   Rest-Method                    PUT
+.EXAMPLE
+    $VtAuthHeader
 
-   Create two new headers ($DeleteHeader and $UpdateHeader) based on the original header ($VtAuthHeader)
+    Name                           Value
+    ----                           -----
+    Rest-User-Token                bG1[omitted]dtYQ==
+
+    PS > $DeleteHeader = $VtAuthHeader | Set-VtAuthHeader -Method "Delete"
+    PS > $DeleteHeader
+
+    Name                           Value
+    ----                           -----
+    Rest-User-Token                bG1[omitted]dtYQ==
+    Rest-Method                    DELETE
+
+    PS > $UpdateHeader = $VtAuthHeader | Set-VtAuthHeader -Method "Put"
+    PS > $UpdateHeader
+
+    Name                           Value
+    ----                           -----
+    Rest-User-Token                bG1[omitted]dtYQ==
+    Rest-Method                    PUT
+
+    Create two new headers ($DeleteHeader and $UpdateHeader) based on the original header ($VtAuthHeader)
 
 .INPUTS
-   Existing Authentication Header (as Hashtable)
+    Existing Authentication Header (as Hashtable)
 .OUTPUTS
-   Hashtable with necessary headers
+    Hashtable with necessary headers
 .NOTES
-   https://community.telligent.com/community/10/w/developer-training/53138/authentication#Using_an_API_Key_and_username_to_authenticate_REST_requests
+    https://community.telligent.com/community/10/w/developer-training/53138/authentication#Using_an_API_Key_and_username_to_authenticate_REST_requests
 
 #>
-function Set-VtAuthHeader {
     [CmdletBinding(
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -2986,6 +3052,34 @@ function Set-VtAuthHeader {
 }
 
 function Get-VtForumThread {
+<#
+.Synopsis
+
+.DESCRIPTION
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.INPUTS
+
+.OUTPUTS
+
+.NOTES
+    You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
+    Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
+        $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+.COMPONENT
+    TBD
+.ROLE
+    TBD
+.LINK
+    Online REST API Documentation: 
+#>
     [CmdletBinding(
         DefaultParameterSetName = 'Thread By Forum Id',
         SupportsShouldProcess = $true, 
@@ -3184,6 +3278,34 @@ function Get-VtForumThread {
 }
 
 function Get-VtForum {
+<#
+.Synopsis
+
+.DESCRIPTION
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.INPUTS
+
+.OUTPUTS
+
+.NOTES
+    You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
+    Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
+        $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+.COMPONENT
+    TBD
+.ROLE
+    TBD
+.LINK
+    Online REST API Documentation: 
+#>
     [CmdletBinding(
         DefaultParameterSetName = 'Thread By Forum Id',
         SupportsShouldProcess = $true, 
@@ -3300,6 +3422,34 @@ function Get-VtForum {
 }
 
 function Set-VtForumThread {
+<#
+.Synopsis
+
+.DESCRIPTION
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.INPUTS
+
+.OUTPUTS
+
+.NOTES
+    You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
+    Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
+        $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+.COMPONENT
+    TBD
+.ROLE
+    TBD
+.LINK
+    Online REST API Documentation: 
+#>
     [CmdletBinding(
         DefaultParameterSetName = 'Thread and Forum Id',
         SupportsShouldProcess = $true, 
@@ -3410,6 +3560,8 @@ function Set-VtForumThread {
 }
 
 
+
+function Get-VtUser {
 <#
 .Synopsis
     Get a user (or more information) from a Telligent Community
@@ -3510,7 +3662,6 @@ function Set-VtForumThread {
     TBD: For doing a 'wildcard' search for a user, I really need to use the search endpoint and not the users endpoint.
     I've only just started experimenting with that in some scratch documents.
 #>
-function Get-VtUser {
     [CmdletBinding(
         DefaultParameterSetName = 'User Id',
         SupportsShouldProcess = $true,     
@@ -3726,6 +3877,8 @@ function Get-VtUser {
     }
 }
 
+
+function Remove-VtVtUser {
 <#
 .Synopsis
     Delete an account (completely) from a Verint/Telligent community
@@ -3742,7 +3895,6 @@ function Get-VtUser {
 .NOTES
     General notes
 #>
-function Remove-VtVtUser {
     [CmdletBinding(
         DefaultParameterSetName = 'User Id', 
         SupportsShouldProcess = $true, 
@@ -3892,6 +4044,8 @@ function Remove-VtVtUser {
     }
 }
 
+
+function Set-VtUser {
 <#
 .Synopsis
     Changes setting for a Verint/Telligent user account on your community
@@ -3932,7 +4086,6 @@ function Remove-VtVtUser {
 .NOTES
     I haven't been able to test every single feature, but the logic should hold
 #>
-function Set-VtUser {
     [CmdletBinding(DefaultParameterSetName = 'User Id', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
@@ -4145,6 +4298,7 @@ function Set-VtUser {
 #endregion Points Functions
 
 #region HTML Utility Functions
+function ConvertTo-QueryString {
 <#
 .Synopsis
     Convert a hashtable to a query string
@@ -4172,7 +4326,6 @@ PageIndex                      1
 
     This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
 #>
-function ConvertTo-QueryString {
     param (
         # Hashtable containing segmented query details
         [Parameter(
@@ -4189,6 +4342,7 @@ function ConvertTo-QueryString {
     $ParameterStrings -join "&"
 }
 
+function ConvertFrom-HtmlString {
 <#
 .Synopsis
     Strips HTML Content from a string
@@ -4199,7 +4353,6 @@ function ConvertTo-QueryString {
 .NOTES
     This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
 #>
-function ConvertFrom-HtmlString {
     [CmdletBinding()]
     param (
         # string with HTML content
