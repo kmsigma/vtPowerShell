@@ -1,27 +1,27 @@
 <#
 .Synopsis
-   Get groups from Verint / Telligent communities
+    Get groups from Verint / Telligent communities
 .DESCRIPTION
-   Long description
+    Long description
 .EXAMPLE
-   Example of how to use this cmdlet
+    Example of how to use this cmdlet
 .EXAMPLE
-   Another example of how to use this cmdlet
+    Another example of how to use this cmdlet
 .INPUTS
-   Inputs to this cmdlet (if any)
+    Inputs to this cmdlet (if any)
 .OUTPUTS
-   Output from this cmdlet (if any)
+    Output from this cmdlet (if any)
 .NOTES
-   https://community.telligent.com/community/11/w/api-documentation/64702/list-group-rest-endpoint
+    https://community.telligent.com/community/11/w/api-documentation/64702/list-group-rest-endpoint
 .COMPONENT
-   The component this cmdlet belongs to
+    The component this cmdlet belongs to
 .ROLE
-   The role this cmdlet belongs to
+    The role this cmdlet belongs to
 .FUNCTIONALITY
-   The functionality that best describes this cmdlet
+    The functionality that best describes this cmdlet
 #>
 function Get-VtGroup {
-    [CmdletBinding(DefaultParameterSetName = 'By Name', 
+    [CmdletBinding(DefaultParameterSetName = 'Default', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64699/group-rest-endpoints',
@@ -65,12 +65,6 @@ function Get-VtGroup {
         )]
         [ValidateRange(1, 100)]
         [int]$BatchSize = 20, 
-
-        # Get all groups
-        [Parameter(
-            ParameterSetName = 'All Groups')]
-        [Alias("All")]
-        [switch]$AllGroups,
 
         # Resolve the parent id to a name
         [switch]$ResolveParentName,
@@ -204,7 +198,7 @@ function Get-VtGroup {
                     }
                 }
             }
-            'All Groups' {
+            'Default' {
                 # No ForEach loop needed here because we are pulling all groups
                 $Uri = 'api.ashx/v2/groups.json'
                 $GroupCount = 0

@@ -1857,7 +1857,7 @@ function Set-VtGalleryMedia {
     The functionality that best describes this cmdlet
 #>
 function Get-VtGroup {
-    [CmdletBinding(DefaultParameterSetName = 'By Name', 
+    [CmdletBinding(DefaultParameterSetName = 'Default', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64699/group-rest-endpoints',
@@ -1901,12 +1901,6 @@ function Get-VtGroup {
         )]
         [ValidateRange(1, 100)]
         [int]$BatchSize = 20, 
-
-        # Get all groups
-        [Parameter(
-            ParameterSetName = 'All Groups')]
-        [Alias("All")]
-        [switch]$AllGroups,
 
         # Resolve the parent id to a name
         [switch]$ResolveParentName,
@@ -1986,7 +1980,7 @@ function Get-VtGroup {
                             }
                             if ( $ResolveParentName ) {
                                 # This calls itself to get the parent group name
-                                $GroupsResponse.Groups | Add-VtMember -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId -Community $VtCommunity -AuthHeader $VtAuthHeader | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
+                                $GroupsResponse.Groups | Add-Member -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
                             }
                             # Should we return everything?
                             if ( $ReturnDetails ) {
@@ -2019,7 +2013,7 @@ function Get-VtGroup {
                     
                     if ( $ResolveParentName ) {
                         # This calls itself to get the parent group name
-                        $GroupsResponse.Groups | Add-VtMember -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
+                        $GroupsResponse.Groups | Add-Member -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
                     }
 
                     # Filter if we are using the parent group id
@@ -2040,7 +2034,7 @@ function Get-VtGroup {
                     }
                 }
             }
-            'All Groups' {
+            'Default' {
                 # No ForEach loop needed here because we are pulling all groups
                 $Uri = 'api.ashx/v2/groups.json'
                 $GroupCount = 0
@@ -2049,7 +2043,7 @@ function Get-VtGroup {
 
                     if ( $ResolveParentName ) {
                         # This calls itself to get the parent group name
-                        $GroupsResponse.Groups | Add-VtMember -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
+                        $GroupsResponse.Groups | Add-Member -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
                     }
 
                     if ( $GroupsResponse ) {
