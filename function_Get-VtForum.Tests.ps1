@@ -13,10 +13,10 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
     Context 'Group 1' {
         
         It "Group 1 - Test 1" {
-            "Test 1" | Should Be $true
+            "Test 1" | Should -Be $true
         }
         It "Group 1 - Test 2" {
-            "Test 2" | Should Be $true
+            "Test 2" | Should -Be $true
         }
     }
 
@@ -25,10 +25,10 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
         Mock Run-Function { returns $true }
         
         It "Group 2 - Test 1" {
-            "Test 1" | Should Be $true
+            "Test 1" | Should -Be $true
         }
         It "Group 2 - Test 2" {
-            "Test 2" | Should Be $true
+            "Test 2" | Should -Be $true
         }
 
     }

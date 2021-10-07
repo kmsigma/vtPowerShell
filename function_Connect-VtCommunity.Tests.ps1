@@ -49,31 +49,31 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
         $RegexToken = '^[A-Za-z0-9\+\/=]{40}$'
 
         It "Validate community is proper format" {
-            $CommunityURL -match $RegexCommunity | Should Be $true
+            $CommunityURL -match $RegexCommunity | Should -Be $true
         }
         It "Validate API key is proper format and length" {
-            $ApiKey -match $RegexApiKey | Should Be $true
+            $ApiKey -match $RegexApiKey | Should -Be $true
         }
         It "Validate username is proper format and length" {
-            $Username -match $RegexUsername | Should Be $true
+            $Username -match $RegexUsername | Should -Be $true
         }
 
         It "Validate community connection with Username & API Key ($Username)" {
-            Connect-VtCommunity -VtCommunity $CommunityURL -Username $Username -ApiKey $ApiKey | Should Be $null
+            Connect-VtCommunity -VtCommunity $CommunityURL -Username $Username -ApiKey $ApiKey | Should -Be $null
         }
             
         Connect-VtCommunity -VtCommunity $CommunityURL -Username $Username -ApiKey $ApiKey -StoreAsGlobal
         It "Validate community connection and save credentials ($CommunityURL)" {
-            $Global:vtCommunity | Should Be $true
-            $Global:VtAuthHeader.ContainsKey('Rest-User-Token') | Should Be $true
-            $Global:VtAuthHeader['Rest-User-Token'] -match $RegexToken | Should Be $true
+            $Global:vtCommunity | Should -Be $true
+            $Global:VtAuthHeader.ContainsKey('Rest-User-Token') | Should -Be $true
+            $Global:VtAuthHeader['Rest-User-Token'] -match $RegexToken | Should -Be $true
                 
         }
         Remove-Variable -Name VtCommunity, VtAuthHeader -Scope Global -ErrorAction SilentlyContinue
         It "Validate failure on bad community URL ($CommunityURL)" {
             $CommunityUri = [Uri]( $CommunityURL )
-            $CommunityUri.Scheme -in ( 'http', 'https' ) | Should Be $true
-            $CommunityUri.LocalPath | Should Be '/'
+            $CommunityUri.Scheme -in ( 'http', 'https' ) | Should -Be $true
+            $CommunityUri.LocalPath | Should -Be '/'
         }
     }
     
@@ -81,14 +81,14 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
 
         It "Validate network connectivity ( $CommunityURL ) [simple test]" {
             $CommunityUri = [Uri]( $CommunityURL )
-            Test-NetConnection -ComputerName $CommunityUri.Host -Port $CommunityUri.Port -InformationLevel Quiet | Should Be $true
+            Test-NetConnection -ComputerName $CommunityUri.Host -Port $CommunityUri.Port -InformationLevel Quiet | Should -Be $true
         }
         It "Validate network connectivity ( $CommunityURL ) [detailed test]" {
             $CommunityUri = [Uri]( $CommunityURL )
             $NetCheck = Test-NetConnection -ComputerName $CommunityUri.Host -Port $CommunityUri.Port -InformationLevel Detailed
-            $NetCheck.TcpTestSucceeded | Should Be $true
-            $NetCheck.NameResolutionSucceeded | Should Be $true
-            $NetCheck.AllNameResolutionResults.Count -ge 1 | Should Be $true
+            $NetCheck.TcpTestSucceeded | Should -Be $true
+            $NetCheck.NameResolutionSucceeded | Should -Be $true
+            $NetCheck.AllNameResolutionResults.Count -ge 1 | Should -Be $true
         }
     }
 }
