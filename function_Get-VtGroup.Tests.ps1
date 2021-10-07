@@ -93,7 +93,7 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
             $Groups -is [Array] | Should -Be $true
             ForEach ( $Group in $Groups ) {
                 $Group.Name -like "*$GroupName*" | Should -Be $true
-                ( $Group.Key -eq $null ) | Should -Be $false
+                $Group.Key | Should -Not -BeNullOrEmpty
             }
         }
         
@@ -114,7 +114,7 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
             $NonAllCount = $GroupCounts | Where-Object { $_.GroupType -ne "All" } | Measure-Object -Property Count -Sum | Select-Object -ExpandProperty Sum
             $AllCount = $GroupCounts | Where-Object { $_.GroupType -eq "All" } | Measure-Object -Property Count -Sum | Select-Object -ExpandProperty Sum
 
-            $NonAllCount | Should -Be $AllCount
+            $NonAllCount | Should -Be $AllCount -Because "something"
 
         }
         
