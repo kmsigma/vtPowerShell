@@ -9,7 +9,7 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule           = '.\VerintTelligent.psm1'
+    RootModule           = 'vtPowerShell.psm1'
 
     # Version number of this module.
     ModuleVersion        = '0.0.1'
@@ -66,10 +66,38 @@
     # FormatsToProcess = @()
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-    NestedModules        = @( )
+    NestedModules        = @(
+        'function_Connect-VtCommunity.ps1'
+        'function_Get-VtAbuseReport.ps1',
+        'function_Get-VtAbuseReport.ps1',
+        'function_Get-VtAuthHeader.ps1',
+        'function_Get-VtBlog.ps1',
+        'function_Get-VtBlogPost.ps1',
+        'function_Get-VtChallenge.ps1',
+        'function_Get-VtForum.ps1',
+        'function_Get-VtForumThread.ps1',
+        'function_Get-VtGallery.ps1',
+        'function_Get-VtGalleryMedia.ps1',
+        'function_Get-VtGroup.ps1',
+        'function_Get-VtIdea.ps1',
+        'function_Get-VtPointTransaction.ps1',
+        'function_Get-VtSysNotification.ps1',
+        'function_Get-VtUser.ps1',
+        'function_New-VtPointTransaction.ps1',
+        'function_Remove-VtPointTransaction.ps1',
+        'function_Remove-VtUser.ps1',
+        'function_Set-VtAuthHeader.ps1',
+        'function_Set-VtBlog.ps1',
+        'function_Set-VtForumThread.ps1',
+        'function_Set-VtGallery.ps1',
+        'function_Set-VtGalleryMedia.ps1',
+        'function_Set-VtUser.ps1'
+    )
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport    = @( 'Get-VtAuthHeader',
+    FunctionsToExport    = @(
+        'Connect-VtCommunity',
+        'Get-VtAuthHeader',
         'Set-VtAuthHeader',
         'Get-VtUser',
         'Set-VtUser',
@@ -91,25 +119,51 @@
         'Get-VtGalleryMedia',
         'Set-VtGalleryMedia',
         'Get-VtChallenge',
-        'Get-VtAbuseReport' )
+        'Get-VtAbuseReport'
+    )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport      = @( )
 
     # Variables to export from this module
-    VariablesToExport    = ''
+    VariablesToExport    = @( )
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-    AliasesToExport      = ''
+    AliasesToExport      = @( )
 
     # DSC resources to export from this module
-    # DscResourcesToExport = @()
+    # DscResourcesToExport = @( )
 
     # List of all modules packaged with this module
-    # ModuleList = @()
+    # ModuleList = @( )
 
     # List of all files packaged with this module
-    # FileList             = @( )
+    FileList             = @( 
+        'function_Connect-VtCommunity.ps1',
+        'function_Get-VtAuthHeader.ps1',
+        'function_Set-VtAuthHeader.ps1',
+        'function_Get-VtUser.ps1',
+        'function_Set-VtUser.ps1',
+        'function_Remove-VtUser.ps1',
+        'function_Get-VtBlog.ps1',
+        'function_Get-VtBlogPost.ps1',
+        'function_Set-VtBlog.ps1',
+        'function_Get-VtForum.ps1',
+        'function_Get-VtForumThread.ps1',
+        'function_Set-VtForumThread.ps1',
+        'function_New-VtPointTransaction.ps1',
+        'function_Get-VtPointTransaction.ps1',
+        'function_Remove-VtPointTransaction.ps1',
+        'function_Get-VtSysNotification.ps1',
+        'function_Get-VtIdea.ps1',
+        'function_Get-VtGroup.ps1',
+        'function_Get-VtGallery.ps1',
+        'function_Set-VtGallery.ps1',
+        'function_Get-VtGalleryMedia.ps1',
+        'function_Set-VtGalleryMedia.ps1',
+        'function_Get-VtChallenge.ps1',
+        'function_Get-VtAbuseReport.ps1'
+    )
 
     # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
     PrivateData          = @{
@@ -148,7 +202,7 @@
     # HelpInfoURI = ''
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
-    #DefaultCommandPrefix = 'Vt'
+    #DefaultCommandPrefix = ''
 
 }
 

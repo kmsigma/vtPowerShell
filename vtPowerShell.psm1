@@ -1,4 +1,38 @@
+#region Helper Output
 <#
+$Output = @'
+----------------------------------------------------------------------------------------------------
+Each call with a Vertint/Telligent Function requires the Community's URL (VtCommunity) and an
+authentication packet passed as the header (VtAuthHeader) to the REST endpoint.
+
+    The Community URL must be in the format:
+        http(s)://sitename.domain.local/
+           ^                           ^
+    Protocol (http/https)              |
+                                Trailing Slash
+
+PS > Get-VtUser -Username "MyUsername" `
+        -VtCommunity 'https://myCommunityName.telligenthosting.com/' `
+        -VtAuthHeader @{ 'Rest-User-Token' = 'TokenizedString' }
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+For ease of use, you can globally define a VtCommunity and VtAuthHeader and they will be available
+for any function called within that session.
+
+PS > $Global:VtAuthHeader = New-VtAuthHeader -Username "myUsername" -ApiKey '1234567890abcdefghi'
+PS > $Global:VtCommunity  = 'https://myCommunityName.telligenthosting.com/'
+# Further calls *inherit* the community and authentication
+PS > Get-VtUser -Username "MyUsername"
+----------------------------------------------------------------------------------------------------
+'@
+Write-Host -ForegroundColor Yellow $Output
+Remove-Variable -Name Output -ErrorAction SilentlyContinue
+#endregion Helper Output
+#>
+
+#region HTML Utility Functions
+function ConvertTo-QueryString {
+    <#
 .Synopsis
     Convert a hashtable to a query string
 .DESCRIPTION
@@ -25,7 +59,6 @@ PageIndex                      1
 
     This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
 #>
-function ConvertTo-QueryString {
     param (
         # Hashtable containing segmented query details
         [Parameter(
@@ -42,7 +75,8 @@ function ConvertTo-QueryString {
     $ParameterStrings -join "&"
 }
 
-<#
+function ConvertFrom-HtmlString {
+    <#
 .Synopsis
     Strips HTML Content from a string
 .DESCRIPTION
@@ -52,7 +86,6 @@ function ConvertTo-QueryString {
 .NOTES
     This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
 #>
-function ConvertFrom-HtmlString {
     [CmdletBinding()]
     param (
         # string with HTML content
@@ -76,3 +109,7 @@ function ConvertFrom-HtmlString {
         
     }
 }
+#endregion HTML Utility Functions
+
+#Export-ModuleMember -Function ConvertTo-QueryString
+#Export-ModuleMember -Function ConvertFrom-HtmlString

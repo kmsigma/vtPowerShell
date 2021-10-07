@@ -1,7 +1,32 @@
-# func_Ideas.ps1
-# This still needs some significant work, but is sufficient for us at the moment to pull what *we* need.
-# If you are using other statuses, you may need to change the allow list of status names for the [string]$Status parameter line
 function Get-VtIdea {
+    <#
+.Synopsis
+
+.DESCRIPTION
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.EXAMPLE
+
+.INPUTS
+
+.OUTPUTS
+
+.NOTES
+    You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
+    Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
+        $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+.COMPONENT
+    TBD
+.ROLE
+    TBD
+.LINK
+    Online REST API Documentation: 
+#>
     [CmdletBinding(
         DefaultParameterSetName = 'Thread By Idea Id',
         SupportsShouldProcess = $true, 
