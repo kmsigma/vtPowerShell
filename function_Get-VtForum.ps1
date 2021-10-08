@@ -19,7 +19,7 @@ function Get-VtForum {
     .NOTES
         You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
         Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-            $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+            $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
     .COMPONENT
         TBD
     .ROLE
@@ -103,11 +103,11 @@ function Get-VtForum {
     }
     PROCESS {
         if ( $AllForums ) {
-            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about all forums'") ) {
+            if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Get info about all forums'") ) {
                 $Uri = 'api.ashx/v2/forums.json'
                 $ForumCount = 0
                 do {
-                    $ForumResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                    $ForumResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                     if ( $ForumResponse ) {
                         if ( -not $ReturnDetails ) {
                             $ForumResponse.Forums | Select-Object -Property @{ Name = 'ForumId'; Expression = { $_.Id } }, Title, Key, Url, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode($_.Group.Name) } }, @{ Name = "GroupKey"; Expression = { $_.Group.Key } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "AllowedThreadTypes"; Expression = { ( $_.AllowedThreadTypes.Value | Sort-Object ) -join ", " } }, DefaultThreadType, LatestPostDate, Enabled, ThreadCount, ReplyCount
@@ -122,9 +122,9 @@ function Get-VtForum {
             }
         }
         else {
-            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about Forum ID: $ForumId'") ) {
+            if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Get info about Forum ID: $ForumId'") ) {
                 $Uri = "api.ashx/v2/forums/$ForumId.json"
-                $ForumResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Headers $VtAuthHeader
+                $ForumResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders
                 if ( $ForumResponse ) {
                     if ( -not $ReturnDetails ) {
                         $ForumResponse.Forum | Select-Object -Property @{ Name = 'ForumId'; Expression = { $_.Id } }, Title, Key, Url, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode($_.Group.Name) } }, @{ Name = "GroupKey"; Expression = { $_.Group.Key } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "AllowedThreadTypes"; Expression = { ( $_.AllowedThreadTypes.Value | Sort-Object ) -join ", " } }, DefaultThreadType, LatestPostDate, Enabled, ThreadCount, ReplyCount

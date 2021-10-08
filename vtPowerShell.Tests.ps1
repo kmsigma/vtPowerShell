@@ -46,7 +46,7 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$Module Module Tests" {
     $functions = @( 
         'Connect-VtCommunity',
         'Get-VtAbuseReport',
-        'Get-VtAuthHeader',
+        'ConvertTo-VtAuthHeader',
         'Get-VtBlog',
         'Get-VtBlogPost',
         'Get-VtChallenge',

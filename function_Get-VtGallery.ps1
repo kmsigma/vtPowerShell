@@ -19,7 +19,7 @@ function Get-VtGallery {
     .NOTES
         You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
         Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-            $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+            $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
     .COMPONENT
         TBD
     .ROLE
@@ -130,7 +130,7 @@ function Get-VtGallery {
             }
             
             if ( $Type -eq 'Single' ) {
-                $GalleriesResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Headers $VtAuthHeader
+                $GalleriesResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders
                 if ( $GalleriesResponse ) {
                     if ( $ReturnDetails ) {
                         $GalleriesResponse.Gallery
@@ -149,7 +149,7 @@ function Get-VtGallery {
                 $TotalReturned = 0
                 do {
                     Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
-                    $GalleriesResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                    $GalleriesResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                     if ( $GalleriesResponse ) {
                         $TotalReturned += $GalleriesResponse.Galleries.Count
                         if ( $ReturnDetails ) {

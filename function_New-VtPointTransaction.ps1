@@ -107,7 +107,7 @@ function New-VtPointTransaction {
                 $ContentTypeId = $User.ContentTypeId
             }
             
-            if ($pscmdlet.ShouldProcess("User: $( $User.DisplayName )", "Add $Points points") -and $Proceed) {
+            if ($PSCmdlet.ShouldProcess("User: $( $User.DisplayName )", "Add $Points points") -and $Proceed) {
                 if ( $Points -gt 5000 ) {
                     Write-Host "====LARGE POINT DISTRIBUTION VALIDATION====" -ForegroundColor Yellow
                     $BigPoints = Read-Host -Prompt "You are about to add $Points to $( $U.DisplayName  )'s account.  Are you sure you want to do this?  [Enter 'Yes' to confirm]"
@@ -125,7 +125,7 @@ function New-VtPointTransaction {
                         CreatedDate   = $AwardDateTime;
                     }
                     try {
-                        $PointsRequest = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Method Post -Body $Body -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -Verbose:$False -WhatIf:$false )
+                        $PointsRequest = Invoke-RestMethod -Uri ( $Community + $Uri ) -Method Post -Body $Body -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -Verbose:$False -WhatIf:$false )
                         $PointsRequest.PointTransaction
                     }
                     catch {

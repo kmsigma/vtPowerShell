@@ -19,7 +19,7 @@ function Get-VtSysNotification {
     .NOTES
         You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
         Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-            $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+            $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
     .COMPONENT
         TBD
     .ROLE
@@ -96,7 +96,7 @@ function Get-VtSysNotification {
         $TotalNotifications = 0
         if ( $PSCmdlet.ShouldProcess("Target", "Operation") ) {
             do {
-                $NotificationsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                $NotificationsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                 if ( $NotificationsResponse ) {
                     $TotalNotifications += $NotificationsResponse.SystemNotifications.Count
                     $NotificationsResponse.SystemNotifications

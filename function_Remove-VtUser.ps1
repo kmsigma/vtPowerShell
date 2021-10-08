@@ -135,7 +135,7 @@ function Remove-VtVtUser {
     
     PROCESS {
     
-        switch ( $pscmdlet.ParameterSetName ) {
+        switch ( $PSCmdlet.ParameterSetName ) {
             'User Id' {
                 Write-Verbose -Message "Processing account deletion using User Ids"
                 $User = Get-VtUser -UserId $UserId -Community $VtCommunity -AuthHeader $VtAuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false
@@ -150,9 +150,9 @@ function Remove-VtVtUser {
                 $User = Get-VtUser -EmailAddress $EmailAddress -Community $VtCommunity -AuthHeader $VtAuthHeader -WhatIf:$false -WarningAction SilentlyContinue -Verbose:$false
             }
         }
-        if ( $pscmdlet.ShouldProcess("$VtCommunity", "Delete User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
+        if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Delete User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
             $Uri = "api.ashx/v2/users/$( $User.UserId ).json"
-            $DeleteResponse = Invoke-RestMethod -Method POST -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -WarningAction SilentlyContinue )
+            $DeleteResponse = Invoke-RestMethod -Method POST -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -WarningAction SilentlyContinue )
             Write-Verbose -Message "User Deleted: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
             if ( $DeleteResponse ) {
                 Write-Host "Account: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )> - $( $DeleteResponse.Info )" -ForegroundColor Red

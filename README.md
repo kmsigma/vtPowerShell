@@ -29,7 +29,7 @@ This is an example of that file.
 $Username = "[Put your username here]"
 $ApiKey   = "[Put your API Key here]"
 
-$VtAuthHeader = Get-VtAuthHeader -Username $Username -ApiKey $ApiKey
+$VtAuthHeader = ConvertTo-VtAuthHeader -Username $Username -ApiKey $ApiKey
 
 $VtCommunity = "[Put your community domain here - include the protocol (http/https) and the trailing slash.]"
 

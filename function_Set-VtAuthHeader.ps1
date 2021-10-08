@@ -95,7 +95,7 @@ function Set-VtAuthHeader {
         # Support multiple tokens (this should be rare)
         ForEach ( $h in $VtAuthHeader ) {
             if ( $h["Rest-User-Token"] ) {
-                if ( $pscmdlet.ShouldProcess("Header with 'Rest-User-Token: $( $h["Rest-User-Token"] )'", "Update Rest-Method to $RestMethod type") ) {
+                if ( $PSCmdlet.ShouldProcess("Header with 'Rest-User-Token: $( $h["Rest-User-Token"] )'", "Update Rest-Method to $RestMethod type") ) {
                     if ( $RestMethod -ne "Get" ) {
                         # Add a Rest-Method to the Token
                         $h["Rest-Method"] = $RestMethod.ToUpper()
@@ -110,7 +110,7 @@ function Set-VtAuthHeader {
                 $h
             }
             else {
-                Write-Error -Message "Header does not contain the 'Rest-User-Token'" -RecommendedAction "Please generate a valid header with Get-VtAuthHeader"
+                Write-Error -Message "Header does not contain the 'Rest-User-Token'" -RecommendedAction "Please generate a valid header with ConvertTo-VtAuthHeader"
             }
         }
     }

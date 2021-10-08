@@ -203,10 +203,10 @@ function Set-VtUser {
                 if ( $User ) {
                     $Uri = "api.ashx/v2/users/$( $User.UserId ).json"
                     # Imples that we found a user on which to operate
-                    if ( $pscmdlet.ShouldProcess($VtCommunity, "Update User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
+                    if ( $PSCmdlet.ShouldProcess($VtCommunity, "Update User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
                         # Execute the Update
                         Write-Verbose -Message "Updating User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
-                        $UpdateResponse = Invoke-RestMethod -Method Post -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod ) -Verbose:$false
+                        $UpdateResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod ) -Verbose:$false
                         if ( $UpdateResponse ) {
                             $UserObject = [PSCustomObject]@{
                                 UserId           = $UpdateResponse.User.id

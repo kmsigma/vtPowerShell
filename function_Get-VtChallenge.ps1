@@ -79,7 +79,7 @@ function Get-VtChallenge {
     }
         
     PROCESS {
-        switch ($pscmdlet.ParameterSetName) {
+        switch ($PSCmdlet.ParameterSetName) {
             "By Name" {
                 Write-Verbose -Message "Querying for Challenge by Name"
                 $UriSegment = "api.ashx/v2/ideas/challenges.json?Name=$( [System.Web.HTTPUtility]::UrlEncode( [System.Web.HTTPUtility]::HtmlEncode( $Name ) ) )"
@@ -138,7 +138,7 @@ function Get-VtChallenge {
                 Get-VtAll -Uri $Uri -AuthHeader $VtAuthHeader
             }
         }
-        if ($pscmdlet.ShouldProcess("On this target --> Target", "Did this thing --> Operation")) {
+        if ($PSCmdlet.ShouldProcess("On this target --> Target", "Did this thing --> Operation")) {
                 
     
         }

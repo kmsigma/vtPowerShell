@@ -64,13 +64,13 @@ function Remove-VtPointTransaction {
         # This is where things do stuff
         ForEach ( $id in $TransactionId ) {
             if ( Get-VtPointTransaction -TransactionId $Id -Community $VtCommunity -AuthHeader ( $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -WhatIf:$false -Verbose:$false ) -Verbose:$false ) {
-                if ( $pscmdlet.ShouldProcess("$VtCommunity", "Delete Point Transaction $id") ) {
+                if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Delete Point Transaction $id") ) {
                     
                     $Uri = "api.ashx/v2/pointtransaction/$( $id ).json"
                     # Method: Post
                     # Rest-Method: Delete
                     try {
-                        $RemovePointsResponse = Invoke-RestMethod -Method Post -Uri ( $VtCommunity + $Uri ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
+                        $RemovePointsResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                         if ( $RemovePointsResponse ) {
                             Write-Verbose -Message "Points Transaction #$id removed"
                         }

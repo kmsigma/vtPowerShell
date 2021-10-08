@@ -19,7 +19,7 @@ function Get-VtPointTransaction {
     .NOTES
         You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
         Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-            $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+            $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
     .COMPONENT
         TBD
     .ROLE
@@ -159,7 +159,7 @@ function Get-VtPointTransaction {
     
     PROCESS {
             
-        switch ( $pscmdlet.ParameterSetName ) {
+        switch ( $PSCmdlet.ParameterSetName ) {
             'User Id' {
                 Write-Verbose -Message "Get-VtPointTransaction: Using the user id [$UserId] for the lookup"
                 # Points Lookup requires the UserID, not the username
@@ -191,9 +191,9 @@ function Get-VtPointTransaction {
             }
         }
     
-        if ( $UriParameters["UserId"] -or $pscmdlet.ParameterSetName -eq 'All Users' ) {
-            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Search for point transactions $LookupKey") ) {
-                $PointsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
+        if ( $UriParameters["UserId"] -or $PSCmdlet.ParameterSetName -eq 'All Users' ) {
+            if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Search for point transactions $LookupKey") ) {
+                $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                 Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
                 Write-Progress -Activity "Querying $VtCommunity for Points Transactions" -CurrentOperation "Searching $LookupKey for the first $BatchSize entries" -PercentComplete 0
                 $TotalResponseCount = $PointsResponse.PointTransactions.Count
@@ -211,7 +211,7 @@ function Get-VtPointTransaction {
                         ( $UriParameters.PageIndex )++
                     Write-Verbose -Message "Making call #$( $UriParameters.PageIndex ) to the API"
                     Write-Progress -Activity "Querying $VtCommunity for Points Transactions" -CurrentOperation "Making call #$( $UriParameters.PageIndex ) to the API [$TotalResponseCount / $( $PointsResponse.TotalCount )]" -PercentComplete ( ( $TotalResponseCount / $PointsResponse.TotalCount ) * 100 )
-                    $PointsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
+                    $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                     Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
                     $TotalResponseCount += $PointsResponse.PointTransactions.Count
                     if ( $ActionFilter ) {
@@ -234,9 +234,9 @@ function Get-VtPointTransaction {
                 }
             }
         }
-        elseif ( $pscmdlet.ParameterSetName -eq 'Transaction Id' ) {
+        elseif ( $PSCmdlet.ParameterSetName -eq 'Transaction Id' ) {
             $Uri = "api.ashx/v2/pointtransaction/$( $TransactionId ).json"
-            $PointsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false ) -Verbose:$false
+            $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false ) -Verbose:$false
             if ( $PointsResponse.PointTransaction.User ) {
                 # If we want details, return everything
                 if ( $ReturnDetails ) {

@@ -19,7 +19,7 @@ function Set-VtForumThread {
     .NOTES
         You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
         Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-            $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+            $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
     .COMPONENT
         TBD
     .ROLE
@@ -122,9 +122,9 @@ function Set-VtForumThread {
             Uri = api.ashx/v2/forums/{forumid}/threads/{threadid}.json
             #>
     
-        if ( $pscmdlet.ShouldProcess("$VtCommunity", "Update Thread $ThreadId in Forum $ForumId'") ) {
+        if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Update Thread $ThreadId in Forum $ForumId'") ) {
             $Uri = "api.ashx/v2/forums/$ForumId/threads/$ThreadId.json"
-            $UpdateResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader -Method $HttpMethod
+            $UpdateResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders -Method $HttpMethod
             if ( $UpdateResponse ) {
                 $UpdateResponse
             }

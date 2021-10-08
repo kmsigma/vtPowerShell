@@ -19,7 +19,7 @@ function Get-VtForumThread {
     .NOTES
         You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
         Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-            $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+            $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
     .COMPONENT
         TBD
     .ROLE
@@ -181,7 +181,7 @@ function Get-VtForumThread {
             $ActionName = "Enumerate Threads for all forums"
         }
         ForEach ( $f in $ForumId ) {
-            if ( $pscmdlet.ShouldProcess("$VtCommunity", $ActionName) ) {
+            if ( $PSCmdlet.ShouldProcess("$VtCommunity", $ActionName) ) {
                 # Reset the PageIndex
                 $UriParameters["PageIndex"] = 0
                 # Remove the ThreadsReponse
@@ -204,7 +204,7 @@ function Get-VtForumThread {
                     else {
                         $Uri = 'api.ashx/v2/forums/threads.json'
                     }
-                    $ThreadsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                    $ThreadsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                     $TotalThreads += $ThreadsResponse.Threads.Count
                     if ( $ReturnDetails ) {
                         $ThreadsResponse.Threads

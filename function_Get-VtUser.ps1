@@ -27,7 +27,7 @@ function Get-VtUser {
     
     .EXAMPLE
         $Global:VtCommunity = "https://mycommunity.telligenthosted.net/"
-        PS > $Global:VtAuthHeader       = Get-VtAuthHeader -Username "MyAdminAccount" -ApiKey "MyAdminApiKey"
+        PS > $Global:VtAuthHeader       = ConvertTo-VtAuthHeader -Username "MyAdminAccount" -ApiKey "MyAdminApiKey"
         PS > Get-VtUser -Username "JoeSmith"
         
         UserId           : 112233
@@ -99,217 +99,335 @@ function Get-VtUser {
         TBD: For doing a 'wildcard' search for a user, I really need to use the search endpoint and not the users endpoint.
         I've only just started experimenting with that in some scratch documents.
     #>
-        [CmdletBinding(
-            DefaultParameterSetName = 'User Id',
-            SupportsShouldProcess = $true,     
-            PositionalBinding = $false,
-            HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64924/list-user-rest-endpoint',
-            ConfirmImpact = 'Low'
+    [CmdletBinding(
+        DefaultParameterSetName = 'Username with Connection File',
+        SupportsShouldProcess = $true,     
+        PositionalBinding = $false,
+        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64924/list-user-rest-endpoint',
+        ConfirmImpact = 'Low'
+    )]
+    Param
+    (
+        # Username to use for lookup
+        [Parameter(
+            Mandatory = $true, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Username with Authentication Headers')]
+        [Parameter(
+            Mandatory = $true,
+            ParameterSetName = 'Username with Connection Profile'
         )]
-        Param
-        (
-            # Username to use for lookup
-            [Parameter(
-                Mandatory = $true, 
-                ValueFromPipeline = $true,
-                ValueFromPipelineByPropertyName = $true, 
-                ValueFromRemainingArguments = $false, 
-                ParameterSetName = 'Username')]
-            [ValidateNotNull()]
-            [ValidateNotNullOrEmpty()]
-            [string[]]$Username,
+        [Parameter(
+            Mandatory = $true, 
+            ParameterSetName = 'Username with Connection File'
+        )]
+        [string[]]$Username,
     
-            # Email address to use for lookup
-            [Parameter(
-                Mandatory = $true,
-                ValueFromPipeline = $false,
-                ValueFromPipelineByPropertyName = $false, 
-                ValueFromRemainingArguments = $false, 
-                ParameterSetName = 'Email Address'
-            )]
-            [ValidateNotNull()]
-            [ValidateNotNullOrEmpty()]
-            [string[]]$EmailAddress,
+        # Email address to use for lookup
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Email Address with Authentication Headers'
+        )]
+        [Parameter(
+            Mandatory = $true, 
+            ParameterSetName = 'Email Address with Connection Profile'
+        )]
+        [Parameter(
+            Mandatory = $true, 
+            ParameterSetName = 'Email Address with Connection File'
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$EmailAddress,
     
-            # User ID for the lookup
-            [Parameter(
-                Mandatory = $true,
-                ValueFromPipeline = $false,
-                ValueFromPipelineByPropertyName = $false, 
-                ValueFromRemainingArguments = $false, 
-                ParameterSetName = 'User Id'
-            )]
-            [ValidateNotNull()]
-            [ValidateNotNullOrEmpty()]
-            [Alias("Id")]
-            [int64[]]$UserId,
+        # User ID for the lookup
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'User Id with Authentication Headers'
+        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Connection File')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [Alias("Id")]
+        [int64[]]$UserId,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Authentication Headers')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Connection File')]
+        [Alias("AllUsers")]
+        [switch]$All,
+
+        # Search for All Users? (not recommended)
     
-            [Parameter(
-                Mandatory = $false,
-                ValueFromPipeline = $false,
-                ValueFromPipelineByPropertyName = $false, 
-                ValueFromRemainingArguments = $false
-            )]
-            [switch]$ReturnDetails,
+        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Username with Authentication Headers')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Email Address with Authentication Headers')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Authentication Headers')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Authentication Headers')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [Alias("Community")]
+        [string]$VtCommunity,
+        
+        # Authentication Header for the community
+        [Parameter(Mandatory = $true, ParameterSetName = 'Username with Authentication Headers')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Email Address with Authentication Headers')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Authentication Headers')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Authentication Headers')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$VtAuthHeader,
     
-            # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-            [Parameter(
-                Mandatory = $false
-            )]
-            [ValidateNotNull()]
-            [ValidateNotNullOrEmpty()]
-            [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-            [string]$VtCommunity = $Global:VtCommunity,
+        [Parameter(Mandatory = $true, ParameterSetName = 'Username with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Email Address with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$ConnectionProfile,
     
-            # Authentication Header for the community
-            [Parameter(
-                Mandatory = $false
-            )]
-            [ValidateNotNull()]
-            [ValidateNotNullOrEmpty()]
-            [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
+        # File holding credentials.  By default is stores in your user profile \.vtCommunity\vtCredentials.json
+        [Parameter(ParameterSetName = 'Username with Connection File')]
+        [Parameter(ParameterSetName = 'Email Address with Connection File')]
+        [Parameter(ParameterSetName = 'User Id with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
     
+        # Should we return all details?
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$ReturnDetails,
+        
+        # Size of the call each time
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [ValidateRange(1, 100)]
+        [int]$BatchSize = 20,
+
+        # Filter for Account Status
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [ValidateSet('All', 'Approved', 'ApprovalPending', 'Disapproved', 'Banned')]
+        [string]$AccountStatus = 'All',
+
+        # Sort By
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [ValidateSet('JoinedDate', 'Username', 'DisplayName', 'Website', 'LastVisitedDate', 'Posts', 'Eamil', 'RecentPosts', 'Score', 'ContentIdsOrder')]
+        [string]$SortBy = 'JoinedDate',
+
+        # Sort Order
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [ValidateSet('Ascending', 'Descending')]
+        [string]$SortOrder = 'Ascending',
+
+        # Include Hidden
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$IncludeHidden,
+
+        # Filter for Recent
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [datetime]$UpdatedAfter,
+
+        # Filter for Presence
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [ValidateSet('All', 'Online', 'Offline')]
+        [string]$Presence = 'All'
+
+    )
+    
+    BEGIN {
+    
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $ConnectionProfile.Community
+                $AuthHeaders = $ConnectionProfile.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $Authheaders = $VtAuthHeader
+            }
+        }
+
+        # Set default page index, page size, and add any other filters
+        $UriParameters = @{}
+        $UriParameters["PageIndex"] = 0
+        $UriParameters["PageSize"] = $BatchSize
+
+        # Set other Parameters
+        $UriParameters["SortBy"] = $SortBy
+        $UriParameters["SortOrder"] = $SortOrder
+        if ( $IncludeHidden ) {
+            $UriParameters["IncludeHidden"] = 'true'
+        }
+        if ( $UpdatedAfter ) {
+            $UriParameters["LastUpdatedUtcDate"] = $UpdatedAfter
+        }
+        if ( $Presence -ne 'All' ) {
+            $UriParameters["LastUpdatedUtcDate"] = $Presence
+        }
+        if ( $AccountStatus -ne 'All' ) {
+            $UriParameters["AccountStatus"] = $AccountStatus
+        }
+
+        # Uri is the same except for by User Id
+        $Uri = "api.ashx/v2/users.json"
+
+        $PropertiesToReturn = @(
+            @{ Name = "UserId"; Expression = { $_.id } }
+            @{ Name = "Username"; Expression = { $_.Username } }
+            @{ Name = "EmailAddress"; Expression = { $_.PrivateEmail } }
+            @{ Name = "Status"; Expression = { $_.AccountStatus } }
+            @{ Name = "ModerationStatus"; Expression = { $_.ModerationLevel } }
+            @{ Name = "IsIgnored"; Expression = { $_.IsIgnored -eq "true" } }
+            @{ Name = "CurrentPresence"; Expression = { $_.Presence } }
+            @{ Name = "JoinDate"; Expression = { $_.JoinDate } }
+            @{ Name = "LastLogin"; Expression = { $_.LastLoginDate } }
+            @{ Name = "LastVisit"; Expression = { $_.LastVisitedDate } }
+            @{ Name = "LifetimePoints"; Expression = { $_.Points } }
+            @{ Name = "EmailEnabled"; Expression = { $_.ReceiveEmails -eq "true" } }
+            @{ Name = "MentionText"; Expression = { "[mention:$( $_.ContentId.Replace('-', '') ):$( $_.ContentTypeId.Replace('-', '') )]" } }
         )
     
-        BEGIN {
-    
-            # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-            $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
-    
-            # Set default page index, page size, and add any other filters
-            $UriParameters = @{}
-    
+    }
+    PROCESS {
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+            'Username *' { 
+                Write-Verbose -Message "Detected Search by Username"
+                $UriParameters["Usernames"] = $Username -join ','
+                $ProcessMethod = "Show"
+            }
+            
+            'Email Address *' {
+                Write-Verbose -Message "Detected Search by Email Address"
+                $Uri = "api.ashx/v2/user.json"
+                $ProcessMethod = "Show"
+            }
+            'User Id *' {
+                Write-Verbose -Message "Detected Search by User ID"
+                # Different URI for by ID number
+                $Uri = "api.ashx/v2/user.json"
+                $ProcessMethod = "Show"
+            }
+            'All Users *' {
+                Write-Verbose -Message "Detected Search for All Users"
+                Write-Warning -Message "Collecting all users can be time consuming.  You've been warned."
+                $ProcessMethod = "List"
+                # Overriding the Batch File size to speed up processing
+                $UriParameters["PageSize"] = 100
+            }
         }
-        PROCESS {
-            switch ( $pscmdlet.ParameterSetName ) {
-                'Username' { 
-                    if ( $Username -is [array] ) {
-                        $Uri = "api.ashx/v2/user.json"
-                        $UriParameterSet = @()
-                        For ( $i = 0 ; $i -lt $Username.Count; $i++ ) {
-                            $TempUriSet = $UriParameters.Clone()
-                            $TempUriSet["Username"] = $Username[$i]
-                            $UriParameterSet += $TempUriSet
-                        }
-                    }
-                    else {
-                        Write-Verbose -Message "Get-VtUser: Using the username [$Username] for the lookup"
-                        $Uri = "api.ashx/v2/user.json"
-                        $LookupKey = "Username: $Username"
-                        $UriParameters["Username"] = $Username
-                    }
-                }
-                'Email Address' {
-                    if ( $EmailAddress -is [array] ) {
-                        $Uri = "api.ashx/v2/user.json"
-                        $UriParameterSet = @()
-                        For ( $i = 0 ; $i -lt $EmailAddress.Count; $i++ ) {
-                            $TempUriSet = $UriParameters.Clone()
-                            $TempUriSet["EmailAddress"] = $EmailAddress[$i]
-                            $UriParameterSet += $TempUriSet
-                        }
-                    }
-                    else {
-                        Write-Verbose -Message "Get-VtUser: Using the Email Address [$EmailAddress] for the lookup"
-                        $Uri = "api.ashx/v2/user.json"
-                        $LookupKey = "Email Address: $EmailAddress"
-                        $UriParameters["EmailAddress"] = $EmailAddress
-                    }
-                }
-                'User Id' {
-                    if ( $UserId -is [array] ) {
-                        $Uri = "api.ashx/v2/user.json"
-                        $UriParameterSet = @()
-                        For ( $i = 0 ; $i -lt $UserId.Count; $i++ ) {
-                            $TempUriSet = $UriParameters.Clone()
-                            $TempUriSet["Id"] = $UserId[$i]
-                            $UriParameterSet += $TempUriSet
-                        }
-                    }
-                    else {
-                        Write-Verbose -Message "Get-VtUser: Using the UserId [$UserId] for the lookup"
-                        $Uri = "api.ashx/v2/user.json"
-                        $LookupKey = "UserId: $UserId"
-                        $UriParameters["Id"] = $UserId
-                    }
-                    
-                }
-    
+        
+        if ( $ProcessMethod -eq "Show" ) {
+            # Using the "SHOW" API
+
+            if ( $UserId ) {
+                $RecordType = "Id"
+                $Records = $UserId
+            } else {
+                $RecordType = "EmailAddress"
+                $Records = $EmailAddress
             }
-            if ( $UriParameterSet ) {
-                # Cycle through things
-                ForEach ( $ParameterSet in $UriParameterSet ) {
-                    try {
-                        if ( $pscmdlet.ShouldProcess("Lookup User", $VtCommunity ) ) {
-                            $UserResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $ParameterSet | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
-                            if ( $UserResponse -and $ReturnDetails ) {
-                                # We found a matching user, return everything with no pretty formatting
-                                $UserResponse.User
-                            }
-                            elseif ( $UserResponse ) {
-                                #implies '-not $ReturnDetails'
-                                # Return abbreviated data
-                                # We found a matching user, build a custom PowerShell Object for it
-                                [PSCustomObject]@{
-                                    #[VtUser]@{
-                                    UserId           = $UserResponse.User.id
-                                    Username         = $UserResponse.User.Username
-                                    EmailAddress     = $UserResponse.User.PrivateEmail
-                                    Status           = $UserResponse.User.AccountStatus
-                                    ModerationStatus = $UserResponse.User.ModerationLevel
-                                    IsIgnored        = $UserResponse.User.IsIgnored -eq "true"
-                                    CurrentPresence  = $UserResponse.User.Presence
-                                    JoinDate         = $UserResponse.User.JoinDate
-                                    LastLogin        = $UserResponse.User.LastLoginDate
-                                    LastVisit        = $UserResponse.User.LastVisitedDate
-                                    LifetimePoints   = $UserResponse.User.Points
-                                    EmailEnabled     = $UserResponse.User.ReceiveEmails -eq "true"
-                                    # Need to strip out the dashes from the GUIDs
-                                    MentionText      = "[mention:$( $UserResponse.User.ContentId.Replace('-', '') ):$( $UserResponse.User.ContentTypeId.Replace('-', '') )]"
-                                }
-                            }
-                        }
-                        else {
-                            Write-Warning -Message "No results returned for users matching [$LookupKey]"
-                        }
-                    }
-                    catch {
-                        Write-Warning -Message "No results returned for users matching [$LookupKey]"
-                    }
-                }
-            }
-            else {
-                $UserResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
-                if ( $UserResponse -and $ReturnDetails ) {
-                    # We found a matching user, return everything with no pretty formatting
-                    $UserResponse.User
-                }
-                elseif ( $UserResponse ) {
-                    #implies '-not $ReturnDetails'
-                    # Return abbreviated data
-                    # We found a matching user, build a custom PowerShell Object for it
-                    [PSCustomObject]@{
-                        UserId           = $UserResponse.User.id
-                        Username         = $UserResponse.User.Username
-                        EmailAddress     = $UserResponse.User.PrivateEmail
-                        Status           = $UserResponse.User.AccountStatus
-                        ModerationStatus = $UserResponse.User.ModerationLevel
-                        IsIgnored        = $UserResponse.User.IsIgnored
-                        CurrentPresence  = $UserResponse.User.Presence
-                        JoinDate         = $UserResponse.User.JoinDate
-                        LastLogin        = $UserResponse.User.LastLoginDate
-                        LastVisit        = $UserResponse.User.LastVisitedDate
-                        LifetimePoints   = $UserResponse.User.Points
-                        EmailEnabled     = $UserResponse.User.ReceiveEmails
-                        MentionText      = "[mention:$( $UserResponse.User.ContentId ):$( $UserResponse.User.ContentTypeId )]"
+            For ( $i = 0; $i -lt $Records.Count; $i++ ) {
+                # Use none of the 'filtering' parameters
+                Write-Progress -Activity "Retrieving Users from $Community" -CurrentOperation "Retrieving User with ID: $( $Records[$i] )" -Status "[$i/$( $Records.Count)] records retrieved" -PercentComplete ( ( $i / $Records.Count ) * 100 )
+                Write-Verbose -Message "Making call for: $( $Records[$i] )"
+                $UserResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + "$RecordType=$( $Records[$i])" ) -Headers $AuthHeaders
+                if ( $UserResponse ) {
+                    if ( $ReturnDetails ) {
+                        $UserResponse.User
+                    } else {
+                        $UserResponse.User | Select-Object -Property $PropertiesToReturn
                     }
                 }
                 else {
-                    Write-Warning -Message "No results returned for users matching [$LookupKey]"
+                    Write-Warning -Message "No record found for $( $Records[$i] )"
                 }
             }
         }
-        END {
-            # Nothing to see here
+        else {
+            # Using the "LIST" API
+            #region process the calls
+            $TotalReturned = 0
+            do {
+                Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
+                if ( $TotalReturned ) {
+                    Write-Progress -Activity "Retrieving Users from $Community" -CurrentOperation ( "Retrieving $BatchSize records of $( $UsersResponse.TotalCount )" ) -Status "[$TotalReturned/$( $UsersResponse.TotalCount )] records retrieved" -PercentComplete ( ( $TotalReturned / $UsersResponse.TotalCount ) * 100 )
+                }
+                $UsersResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
+                if ( $UsersResponse ) {
+                    $TotalReturned += $UsersResponse.Users.Count
+                    if ( $ReturnDetails ) {
+                        $UsersResponse.Users
+                    }
+                    else {
+                        $UsersResponse.Users | Select-Object -Property $PropertiesToReturn
+                    }
+                }
+                $UriParameters["PageIndex"]++
+            } while ($TotalReturned -lt $UsersResponse.TotalCount)
+            #endregion
         }
+        # Either process kicks off the progress bar, so shut it down here
+        Write-Progress -Activity "Retrieving Users from $Community" -Completed
     }
+    END {
+        # Nothing to see here
+    }
+}

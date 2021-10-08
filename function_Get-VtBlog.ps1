@@ -140,7 +140,7 @@ function Get-VtBlog {
             }
             
             if ( $Type -eq 'Single' ) {
-                $BlogsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Headers $VtAuthHeader
+                $BlogsResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders
                 if ( $BlogsResponse ) {
                     if ( $ReturnDetails ) {
                         $BlogsResponse.Blog
@@ -159,7 +159,7 @@ function Get-VtBlog {
                 $TotalReturned = 0
                 do {
                     Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
-                    $BlogsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                    $BlogsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                     if ( $BlogsResponse ) {
                         $TotalReturned += $BlogsResponse.Blogs.Count
                         if ( $ReturnDetails ) {

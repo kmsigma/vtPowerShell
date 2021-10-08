@@ -6,7 +6,7 @@ function Set-VtBlog {
         This uses the REST API to update a blog.  It can update the Name, Description, Key (slug used in URL), Authors, and enable/disable the blog.
     .EXAMPLE
         $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-    PS > $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+    PS > $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
     
     PS > $Blog = Get-VtBlog | Where-Object { $_.Name -eq "My Community Blog" } 
     PS > $Blog | Set-VtBlog -GroupId 11
@@ -43,7 +43,7 @@ function Set-VtBlog {
     
         You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
         Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-            $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+            $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
     .COMPONENT
         TBD
     .ROLE
@@ -159,7 +159,7 @@ function Set-VtBlog {
                     $UriParameters["Enabled"] = $true
                 }
     
-                switch ( $pscmdlet.ParameterSetName ) {
+                switch ( $PSCmdlet.ParameterSetName ) {
                     'Add/Remove Authors' { 
                         # Get Current List of Authors - we must use an ArrayList type or the .Add and .Remove methods are blocked
                         $WorkingAuthorList = New-Object -TypeName System.Collections.ArrayList
@@ -211,10 +211,10 @@ function Set-VtBlog {
                 }
     
                 if ( $UriParameters.Count -gt 0 ) {
-                    if ( $pscmdlet.ShouldProcess("Blog: '$( $Blog.Name )' in '$( $Blog.GroupName )'", "Update $( $UriParameters.Keys -join ", " )") ) {
+                    if ( $PSCmdlet.ShouldProcess("Blog: '$( $Blog.Name )' in '$( $Blog.GroupName )'", "Update $( $UriParameters.Keys -join ", " )") ) {
                         $Uri = "api.ashx/v2/blogs/$BlogId.json"
     
-                        $Result = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Method "Post" -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod "Put" -WhatIf:$false )
+                        $Result = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Method "Post" -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod "Put" -WhatIf:$false )
                         if ( $Result ) {
                             $Result.Blog | Select-Object -Property @{ Name = "BlogId"; Expression = { $_.Id } }, Name, Key, Url, Description, Enabled, PostCount, CommentCount, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Name ) } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "Authors"; Expression = { ( $_.Authors | ForEach-Object { $_ | Select-Object -ExpandProperty DisplayName } ) } }
                         }

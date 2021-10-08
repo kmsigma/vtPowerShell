@@ -1,4 +1,4 @@
-function Get-VtAuthHeader {
+function ConvertTo-VtAuthHeader {
     <#
     .Synopsis
         Get the necessary authentication header for Verint | Telligent Community
@@ -6,7 +6,7 @@ function Get-VtAuthHeader {
         Using the username and API key, we'll build an authentication header required to access Verint | Telligent Communities.
         Note this creation does NOT validate that the authentication works - it just builds the header.
     .EXAMPLE
-        Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+        ConverTo-VtAuthheader -Username "CommAdmin" -Key "absgedgeashdhsns"
     
         Name                           Value
         ----                           -----
@@ -31,7 +31,6 @@ function Get-VtAuthHeader {
         HelpUri = 'https://community.telligent.com/community/10/w/developer-training/53138/authentication#Using_an_API_Key_and_username_to_authenticate_REST_requests',
         ConfirmImpact = 'Medium')
     ]
-    [Alias("New-VtAuthHeader")]
     param (
         # Username for the call to the REST endpoint
         [Parameter(Mandatory = $true, 
@@ -57,7 +56,7 @@ function Get-VtAuthHeader {
     }
     
     process {
-        if ( $pscmdlet.ShouldProcess("", "Generate Authentication Header") ) {
+        if ( $PSCmdlet.ShouldProcess("", "Generate Authentication Header") ) {
             $Base64Key = [Convert]::ToBase64String( [Text.Encoding]::UTF8.GetBytes( "$( $ApiKey ):$( $Username )" ) )
             # Return the header with the token only
             @{

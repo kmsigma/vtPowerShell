@@ -124,7 +124,7 @@ function Get-VtGroup {
     }
         
     PROCESS {
-        switch ( $pscmdlet.ParameterSetName ) {
+        switch ( $PSCmdlet.ParameterSetName ) {
             'By Name' {
                 ForEach ( $Name in $GroupName ) {
                     $Uri = 'api.ashx/v2/groups.json'
@@ -134,7 +134,7 @@ function Get-VtGroup {
                     do {
                         Write-Verbose -Message "Making call with '$Uri'"
                         # Get the list of groups with matching name from the call
-                        $GroupsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader -Verbose:$false
+                        $GroupsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
     
                         if ( $GroupsResponse ) {
                             $GroupCount += $GroupsResponse.Groups.Count
@@ -173,7 +173,7 @@ function Get-VtGroup {
     
                     # Because everything is encoded in the URI, we don't need to send any $UriParameters
                     Write-Verbose -Message "Making call with '$Uri'"
-                    $GroupsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri ) -Headers $VtAuthHeader -Verbose:$false
+                    $GroupsResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders -Verbose:$false
                         
                     if ( $ResolveParentName ) {
                         # This calls itself to get the parent group name
@@ -203,7 +203,7 @@ function Get-VtGroup {
                 $Uri = 'api.ashx/v2/groups.json'
                 $GroupCount = 0
                 do {
-                    $GroupsResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader -Verbose:$false
+                    $GroupsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders -Verbose:$false
     
                     if ( $ResolveParentName ) {
                         # This calls itself to get the parent group name
@@ -227,7 +227,7 @@ function Get-VtGroup {
                 } while ( $GroupCount -lt $GroupsResponse.TotalCount )
             }
         }
-        if ( $pscmdlet.ShouldProcess( "On this target --> Target", "Did this thing --> Operation" ) ) {
+        if ( $PSCmdlet.ShouldProcess( "On this target --> Target", "Did this thing --> Operation" ) ) {
                 
         }
     

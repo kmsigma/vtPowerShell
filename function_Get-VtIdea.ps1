@@ -19,7 +19,7 @@ function Get-VtIdea {
 .NOTES
     You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
     Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-        $Global:VtAuthHeader = Get-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+        $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
 .COMPONENT
     TBD
 .ROLE
@@ -138,7 +138,7 @@ function Get-VtIdea {
     }
     PROCESS {
         if ( $AllIdeas ) {
-            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about all Ideas'") ) {
+            if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Get info about all Ideas'") ) {
                 $Uri = 'api.ashx/v2/ideas/ideas.json'
                 $IdeaCount = 0
                 do {
@@ -148,7 +148,7 @@ function Get-VtIdea {
                     else {
                         Write-Progress -Activity "Querying for Ideas" -Status "Making first call for first $( $UriParameters["PageSize"] ) ideas"
                     }
-                    $IdeaResponse = Invoke-RestMethod -Uri ( $VtCommunity + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $VtAuthHeader
+                    $IdeaResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                     if ( $IdeaResponse ) {
                         if ( -not $ReturnDetails ) {
                             $IdeaResponse.Ideas | Select-Object -Property @{ Name = "IdeaId"; Expression = { $_.Id } }, @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } }, @{ Name = "Status"; Expression = { $_.Status.Name } }, @{ Name = "Author"; Expression = { $_.AuthorUser.Username } }, CreatedDate, LastUpdatedDate, Url, Score, @{ Name = "StatusNote"; Expression = { $_.CurrentStatus.Note } }
@@ -164,7 +164,7 @@ function Get-VtIdea {
             }
         }
         else {
-            if ( $pscmdlet.ShouldProcess("$VtCommunity", "Get info about Idea ID: $IdeaId'") ) {
+            if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Get info about Idea ID: $IdeaId'") ) {
                 $Uri = "api.ashx/v2/Ideas/$IdeaId.json"
             }
         }
