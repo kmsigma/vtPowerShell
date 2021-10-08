@@ -370,7 +370,8 @@ function Get-VtUser {
                 Write-Warning -Message "Collecting all users can be time consuming.  You've been warned."
                 $ProcessMethod = "List"
                 # Overriding the Batch File size to speed up processing
-                $UriParameters["PageSize"] = 100
+                $BatchSize = 100
+                $UriParameters["PageSize"] = $BatchSize
             }
         }
         
