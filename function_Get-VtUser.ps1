@@ -326,6 +326,11 @@ function Get-VtUser {
             $UriParameters["AccountStatus"] = $AccountStatus
         }
 
+        $Uris = @{
+            'List' = 'api.ashx/v2/users.json'
+            'Show' = 'api.ashx/v2/user.json'
+        }
+
         # Uri is the same except for by User Id
         $Uri = "api.ashx/v2/users.json"
 
@@ -351,24 +356,22 @@ function Get-VtUser {
             'Username *' { 
                 Write-Verbose -Message "Detected Search by Username"
                 $UriParameters["Usernames"] = $Username -join ','
-                $ProcessMethod = "Show"
+                $ProcessMethod = 'List'
             }
             
             'Email Address *' {
                 Write-Verbose -Message "Detected Search by Email Address"
-                $Uri = "api.ashx/v2/user.json"
-                $ProcessMethod = "Show"
+                $ProcessMethod = 'Show'
             }
             'User Id *' {
                 Write-Verbose -Message "Detected Search by User ID"
                 # Different URI for by ID number
-                $Uri = "api.ashx/v2/user.json"
-                $ProcessMethod = "Show"
+                $ProcessMethod = 'Show'
             }
             'All Users *' {
                 Write-Verbose -Message "Detected Search for All Users"
                 Write-Warning -Message "Collecting all users can be time consuming.  You've been warned."
-                $ProcessMethod = "List"
+                $ProcessMethod = 'List'
                 # Overriding the Batch File size to speed up processing
                 $BatchSize = 100
                 $UriParameters["PageSize"] = $BatchSize
@@ -377,7 +380,7 @@ function Get-VtUser {
         
         if ( $ProcessMethod -eq "Show" ) {
             # Using the "SHOW" API
-
+            $Uri = $Uris[$ProcessMethod]
             if ( $UserId ) {
                 $RecordType = "Id"
                 $Records = $UserId
@@ -405,6 +408,7 @@ function Get-VtUser {
         else {
             # Using the "LIST" API
             #region process the calls
+            $Uri = $Uris[$ProcessMethod]
             $TotalReturned = 0
             do {
                 Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
