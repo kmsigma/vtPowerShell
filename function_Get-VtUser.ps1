@@ -277,8 +277,11 @@ function Get-VtUser {
             ValueFromRemainingArguments = $false
         )]
         [ValidateSet('All', 'Online', 'Offline')]
-        [string]$Presence = 'All'
+        [string]$Presence = 'All',
 
+        # Suppress the progress bar
+        [Parameter()]
+        [switch]$SuppressProgressBar
     )
     
     BEGIN {
@@ -384,19 +387,23 @@ function Get-VtUser {
             if ( $UserId ) {
                 $RecordType = "Id"
                 $Records = $UserId
-            } else {
+            }
+            else {
                 $RecordType = "EmailAddress"
                 $Records = $EmailAddress
             }
             For ( $i = 0; $i -lt $Records.Count; $i++ ) {
                 # Use none of the 'filtering' parameters
-                Write-Progress -Activity "Retrieving Users from $Community" -CurrentOperation "Retrieving User with ID: $( $Records[$i] )" -Status "[$i/$( $Records.Count)] records retrieved" -PercentComplete ( ( $i / $Records.Count ) * 100 )
+                if ( -not ( $SuppressProgressBar ) ) {
+                    Write-Progress -Activity "Retrieving Users from $Community" -CurrentOperation "Retrieving User with ID: $( $Records[$i] )" -Status "[$i/$( $Records.Count)] records retrieved" -PercentComplete ( ( $i / $Records.Count ) * 100 )
+                }
                 Write-Verbose -Message "Making call for: $( $Records[$i] )"
                 $UserResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + "$RecordType=$( $Records[$i])" ) -Headers $AuthHeaders
                 if ( $UserResponse ) {
                     if ( $ReturnDetails ) {
                         $UserResponse.User
-                    } else {
+                    }
+                    else {
                         $UserResponse.User | Select-Object -Property $PropertiesToReturn
                     }
                 }
@@ -412,7 +419,7 @@ function Get-VtUser {
             $TotalReturned = 0
             do {
                 Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
-                if ( $TotalReturned ) {
+                if ( $TotalReturned -and -not $SuppressProgressBar ) {
                     Write-Progress -Activity "Retrieving Users from $Community" -CurrentOperation ( "Retrieving $BatchSize records of $( $UsersResponse.TotalCount )" ) -Status "[$TotalReturned/$( $UsersResponse.TotalCount )] records retrieved" -PercentComplete ( ( $TotalReturned / $UsersResponse.TotalCount ) * 100 )
                 }
                 $UsersResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
@@ -430,7 +437,9 @@ function Get-VtUser {
             #endregion
         }
         # Either process kicks off the progress bar, so shut it down here
-        Write-Progress -Activity "Retrieving Users from $Community" -Completed
+        if ( -not $SuppressProgressBar ) {
+            Write-Progress -Activity "Retrieving Users from $Community" -Completed
+        }
     }
     END {
         # Nothing to see here

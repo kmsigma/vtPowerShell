@@ -15,15 +15,15 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
     Context 'Single User with Stored Credentials' {
         
         It "Get Single User by Username ($Self)" {
-            $User = Get-VtUser -Username $Self
+            $User = Get-VtUser -Username $Self -SuppressProgressBar
             $User.Count | Should -Be 1
         }
         It "Get Single User by User Id ($( $User.UserId ))" {
-            $UserById = Get-VtUser -UserId ( $User.UserId )
+            $UserById = Get-VtUser -UserId ( $User.UserId ) -SuppressProgressBar
             $UserById.Count | Should -Be 1
         }
         It "Get Single User by Email Address ($Self)" {
-            $UserByEmail = Get-VtUser -EmailAddress ( $User.EmailAddress )
+            $UserByEmail = Get-VtUser -EmailAddress ( $User.EmailAddress ) -SuppressProgressBar
             $UserByEmail.Count | Should -Be 1
         }
     }
@@ -33,13 +33,13 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
         Mock -CommandName Get-VtUser -MockWith { returns 1 }
         
         It "Multiple Users by Username" {
-            Get-VtUser -Username "user1", "user2" | Should -Be 2
+            Get-VtUser -Username "user1", "user2" -SuppressProgressBar | Should -Be 2
         }
         It "Multiple Users by User ID" {
-            Get-VtUser -UserId 2100, 2101 | Should -Be 2
+            Get-VtUser -UserId 2100, 2101 -SuppressProgressBar | Should -Be 2
         }
         It "Multiple Users by Email Address" {
-            Get-VtUser -EmailAddress "me@here.com", "you@there.com" | Should -Be 2
+            Get-VtUser -EmailAddress "me@here.com", "you@there.com" -SuppressProgressBar | Should -Be 2
         }
 
     }
