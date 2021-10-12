@@ -89,6 +89,7 @@ function Get-VtAbuseReport {
         $UriParameters["PageSize"] = $BatchSize
         $UriParameters["PageIndex"] = 0
     
+        Write-Verbose -Message "Assigning User GUID for query"
         if ( $UserId ) {
             $UriParameters["AuthorUserId"] = $UserGuid
         }
@@ -99,6 +100,7 @@ function Get-VtAbuseReport {
         $TotalAbuseReports = 0
         if ( $PSCmdlet.ShouldProcess("Target", "Operation") ) {
             do {
+                Write-Verbose -Message "Making call for Abuse Reports"
                 $AbuseReportsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                 if ( $AbuseReportsResponse ) {
                     $TotalAbuseReports += $AbuseReportsResponse.SystemNotifications.Count

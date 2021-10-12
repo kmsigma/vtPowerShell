@@ -44,7 +44,7 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$Module Module Tests" {
     } # 'Module Setup'
 
     $functions = @( 
-        'Connect-VtCommunity',
+        'New-VtConnection',
         'Get-VtAbuseReport',
         'ConvertTo-VtAuthHeader',
         'Get-VtBlog',
@@ -62,7 +62,7 @@ Describe -Tags ( 'Unit', 'Acceptance' ) "$Module Module Tests" {
         'New-VtPointTransaction',
         'Remove-VtPointTransaction',
         'Remove-VtUser',
-        'Set-VtAuthHeader',
+        'Update-VtAuthHeader',
         'Set-VtBlog',
         'Set-VtForumThread',
         'Set-VtGallery',
