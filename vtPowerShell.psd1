@@ -86,13 +86,14 @@
         'function_New-VtConnection.ps1',
         'function_Remove-VtPointTransaction.ps1',
         'function_Remove-VtUser.ps1',
-        'function_Set-VtAuthHeader.ps1',
+        'function_Update-VtAuthHeader.ps1',
         'function_Set-VtBlog.ps1',
         'function_Set-VtForumThread.ps1',
         'function_Set-VtGallery.ps1',
         'function_Set-VtGalleryMedia.ps1',
         'function_Set-VtUser.ps1',
-        'function_Test-VtConnection.ps1'
+        'function_Test-VtConnection.ps1',
+        'vtPowerShell.psm1'
     )
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
@@ -121,7 +122,8 @@
         'Set-VtGalleryMedia',
         'Get-VtChallenge',
         'Get-VtAbuseReport',
-        'Test-VtConnection'
+        'Test-VtConnection',
+        'ConvertTo-QueryString'
     )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

@@ -42,7 +42,7 @@ function Test-VtConnection {
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
         [Alias("Community")]
-        [string]$VtCommunity = $Global:VtCommunity,
+        [string]$CommunityUrl,
     
         # Authentication Header for the community
         [Parameter(
@@ -51,7 +51,7 @@ function Test-VtConnection {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader,
+        [System.Collections.Hashtable]$AuthHeader,
 
         [Parameter(
             ParameterSetName = 'Connection Profile',
@@ -81,10 +81,10 @@ function Test-VtConnection {
                 Write-Verbose -Message "Extracting Community URL and Authentication Headers from '$ProfilePath'"
                 try {
                     $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json -Depth $JsonDepth
-                    $Community = $VtConnection.Community
+                    $CommunityUrl = $VtConnection.Community
                     # Check to see if the VtAuthHeader is empty
-                    $AuthHeader = @{ }
-                    $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeader[$_.Name] = $_.Value }
+                    $AuthenticationHeaders = @{ }
+                    $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthenticationHeaders[$_.Name] = $_.Value }
                 }
                 catch {
                     $_
@@ -92,28 +92,31 @@ function Test-VtConnection {
             }
             'Connection Profile' {
                 Write-Verbose -Message "Extracing Community URL and Authentication headers from Connection Profile"
-                $Community  = $ConnectionProfile.Community
-                $AuthHeader = $ConnectionProfile.Authentication
+                $CommunityUrl = $ConnectionProfile.Community
+                $AuthenticationHeaders = $ConnectionProfile.Authentication
             }
         
             'Authentication Header' {
                 Write-Verbose -Message "Extracting Community URL and Authentication Headers from Parameters"
-                $Community = $VtCommunity
-                $Authheader = $VtAuthHeader
             }
         }
 
-        if ( $PSCmdlet.ShouldProcess("$Community", "Test Connection") ) {
+        if ( $PSCmdlet.ShouldProcess("$CommunityUrl", "Test Connection") ) {
             try {
-                Write-Verbose -Message "Attemtping to connect to '$Community'"
-                Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeader | Out-Null
+                Write-Verbose -Message "Attemtping to connect to '$CommunityUrl'"
+                if ( $PSCmdlet.ParameterSetName -eq 'Authentication Header' ) {
+                    Invoke-RestMethod -Uri ( $CommunityUrl + $Uri ) -Headers $AuthHeader | Out-Null 
+                }
+                else {
+                    Invoke-RestMethod -Uri ( $CommunityUrl + $Uri ) -Headers $AuthenticationHeaders | Out-Null 
+                }
                 # We 'Out-Null' this because we actually don't need anything.
-                Write-Verbose -Message "Connected to '$Community' successfully!"
+                Write-Verbose -Message "Connected to '$CommunityUrl' successfully!"
                 $true
             }
             catch {
-                $_
-                Write-Error -Message "Connection to '$Community' failed!" -ErrorAction Stop
+                Write-Error -Message "Connection to '$CommunityUrl' failed!" -RecommendedAction "Validate the URL, username, and API Key" -CategoryTargetType "InvalidCredentials"
+                $false
             }
         }
     }

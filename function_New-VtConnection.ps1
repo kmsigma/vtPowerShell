@@ -50,7 +50,7 @@ function New-VtConnection {
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
         [Alias("Community")]
-        [string]$VtCommunity,
+        [string]$CommunityUrl,
     
         # Authentication Header for the community
         [Parameter(
@@ -58,9 +58,10 @@ function New-VtConnection {
             ParameterSetName = 'Authentication Header',
             Position = 1
         )]
+        [Parameter(ParameterSetName = 'Profile File')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader,
+        [System.Collections.Hashtable]$AuthHeader,
 
         # Username for Connection to Community
         [Parameter(
@@ -68,6 +69,7 @@ function New-VtConnection {
             ParameterSetName = 'Username/API Key',
             Position = 1
         )]
+        [Parameter(ParameterSetName = 'Profile File')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string]$Username,
@@ -78,6 +80,7 @@ function New-VtConnection {
             ParameterSetName = 'Username/API Key',
             Position = 2
         )]
+        [Parameter(ParameterSetName = 'Profile File')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidateLength(20, 20)]
@@ -109,23 +112,23 @@ function New-VtConnection {
     PROCESS { 
         if ( $PSCmdlet.ParameterSetName -eq 'Username/API Key' ) {
             Write-Verbose -Message "Using Username ($Username) and API Key"
-            $VtAuthHeader = ConvertTo-VtAuthHeader -Username $Username -ApiKey $ApiKey -WhatIf:$false
+            $Authentication = ConvertTo-VtAuthHeader -Username $Username -ApiKey $ApiKey -WhatIf:$false
         }
 
-        if ( $PSCmdlet.ShouldProcess("$vtCommunity", "Build connection information") ) {
-            Write-Verbose -Message "Building connection information for $VtCommunity"
+        if ( $PSCmdlet.ShouldProcess("$CommunityUrl", "Build connection information") ) {
+            Write-Verbose -Message "Building connection information for $CommunityUrl"
             # Build the Object
             $AuthObject = [PSCustomObject]@{
-                Community      = $VtCommunity
-                Authentication = $VtAuthHeader
+                Community      = $CommunityUrl
+                Authentication = $Authentication
                 CreateDate     = Get-Date
                 CreatedBy      = $env:USERPROFILE ? "$( $env:USERDOMAIN )\$( $env:USERNAME )" : $env:USER
                 CreatedOn      = $env:USERPROFILE ? $env:COMPUTERNAME : $env:NAME
             }
             
             if ( $Save ) {
-                Write-Verbose -Message "Path not provided.  Using the default location (USERPROFILE)\.vtPowerShell\DefaultCommunity.json"
                 if ( -not $ProfilePath ) {
+                    Write-Verbose -Message "Path not provided.  Using the default location (USERPROFILE)\.vtPowerShell\DefaultCommunity.json"
                     if ( $env:HOME ) {
                         # Linux
                         Write-Verbose -Message "Operating System Detection: Non-Windows (macOS / Linux)"

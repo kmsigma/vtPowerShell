@@ -11,11 +11,12 @@ Write-Host "`tRemoving any 'vt' variables (if exist)" -ForegroundColor Yellow
 Get-Variable -Name "vt*" | Remove-Variable -ErrorAction SilentlyContinue
 
 Write-Host "`tLoading the vtPowerShell Module (if exist)" -ForegroundColor Yellow
-Get-Module -Name vtPowerShell -ListAvailable | Import-Module -Force
+Get-Module -Name vtPowerShell -ListAvailable | Import-Module -Force -Verbose
 
 Write-Host "All done" -ForegroundColor Green
 
 # Some simple tests
+<#
 $ConnectionProfile = New-VtConnection -VtCommunity ( "https://staging-thwack.solarwinds.com/" ) -Username ( Get-Content -Path .\myUsername.txt -Raw ) -ApiKey ( Get-Content -Path .\myApiKey.txt -Raw )
 New-VtConnection -VtCommunity ( "https://staging-thwack.solarwinds.com/" ) -Username ( Get-Content -Path .\myUsername.txt -Raw ) -ApiKey ( Get-Content -Path .\myApiKey.txt -Raw ) -Save
 New-VtConnection -VtCommunity ( "https://staging-thwack.solarwinds.com/" ) -Username ( Get-Content -Path .\myUsername.txt -Raw ) -ApiKey ( Get-Content -Path .\myApiKey.txt -Raw ) -Save -ProfilePath "D:\source\_scratch\TestCreds.json"
@@ -26,4 +27,4 @@ Test-VtConnection -ProfilePath "D:\source\_scratch\TestCreds.json" -Verbose
 Test-VtConnection -Verbose
 
 Get-VtUser -Username "KMSigma"
-
+#>

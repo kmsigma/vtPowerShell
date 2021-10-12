@@ -238,7 +238,7 @@ function Get-VtUser {
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
-        [ValidateSet('JoinedDate', 'Username', 'DisplayName', 'Website', 'LastVisitedDate', 'Posts', 'Eamil', 'RecentPosts', 'Score', 'ContentIdsOrder')]
+        [ValidateSet('JoinedDate', 'Username', 'DisplayName', 'Website', 'LastVisitedDate', 'Posts', 'Email', 'RecentPosts', 'Score', 'ContentIdsOrder')]
         [string]$SortBy = 'JoinedDate',
 
         # Sort Order
@@ -345,9 +345,9 @@ function Get-VtUser {
             @{ Name = "ModerationStatus"; Expression = { $_.ModerationLevel } }
             @{ Name = "IsIgnored"; Expression = { $_.IsIgnored -eq "true" } }
             @{ Name = "CurrentPresence"; Expression = { $_.Presence } }
-            @{ Name = "JoinDate"; Expression = { $_.JoinDate } }
-            @{ Name = "LastLogin"; Expression = { $_.LastLoginDate } }
-            @{ Name = "LastVisit"; Expression = { $_.LastVisitedDate } }
+            @{ Name = "JoinedDate"; Expression = { $_.JoinDate } }
+            @{ Name = "LastLoginDate"; Expression = { $_.LastLoginDate } }
+            @{ Name = "LastVisitedDate"; Expression = { $_.LastVisitedDate } }
             @{ Name = "LifetimePoints"; Expression = { $_.Points } }
             @{ Name = "EmailEnabled"; Expression = { $_.ReceiveEmails -eq "true" } }
             @{ Name = "MentionText"; Expression = { "[mention:$( $_.ContentId.Replace('-', '') ):$( $_.ContentTypeId.Replace('-', '') )]" } }
