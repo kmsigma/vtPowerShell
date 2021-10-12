@@ -1,4 +1,4 @@
-function Set-VtAuthHeader {
+function Update-VtAuthHeader {
     <#
     .Synopsis
         Update an existing authentication header for Verint | Telligent Community
@@ -97,11 +97,13 @@ function Set-VtAuthHeader {
             if ( $h["Rest-User-Token"] ) {
                 if ( $PSCmdlet.ShouldProcess("Header with 'Rest-User-Token: $( $h["Rest-User-Token"] )'", "Update Rest-Method to $RestMethod type") ) {
                     if ( $RestMethod -ne "Get" ) {
+                        Write-Verbose -Message "Updating the Header to use the '$RestMethod' method"
                         # Add a Rest-Method to the Token
                         $h["Rest-Method"] = $RestMethod.ToUpper()
                     }
                     else {
                         # 'Get' does not require the additional Rest-Method, so we'll remove it
+                        Write-Verbose -Message "Updating the Header to use the 'Get' [Default] method"
                         if ( $h["Rest-Method"] ) {
                             $h.Remove("Rest-Method")
                         }

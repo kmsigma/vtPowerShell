@@ -5,9 +5,11 @@ $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path) -replace '\.Tests\.', '.'
 Write-Host "`$here: $here" -ForegroundColor Yellow
 Write-Host "`$sut: $sut" -ForegroundColor Yellow
 
+<#
 $VtCommunity = Get-Content -Path ( Join-Path -Path $here -ChildPath "myCommunity.txt")
 $VtUsername = Get-Content -Path ( Join-Path -Path $here -ChildPath "myUsername.txt")
 $VtApiKey = Get-Content -Path ( Join-Path -Path $here -ChildPath "myApiKey.txt")
+#>
 
 Describe -Tags ( 'Unit', 'Acceptance' ) "$sut function Tests" {
     Context 'Group 1' {
