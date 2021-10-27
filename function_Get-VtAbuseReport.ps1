@@ -28,7 +28,7 @@ function Get-VtAbuseReport {
         Online REST API Documentation: 
     #>
     [CmdletBinding(
-        DefaultParameterSetName = 'UserGuid',
+        DefaultParameterSetName = 'Abuse Report  with Connection File',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64478/abuse-report-rest-endpoints',
@@ -38,16 +38,76 @@ function Get-VtAbuseReport {
     (
         # User ID to use for abuse lookup
         [Parameter(
-            Mandatory = $false, 
+            Mandatory = $true, 
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false, 
-            ParameterSetName = 'UserGuid')]
+            ParameterSetName = 'Abuse Report by Author GUID with Authentication Header'
+        )]
+        [Parameter(
+            Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Abuse Report by Author GUID with Connection Profile'
+        )]
+        [Parameter(
+            Mandatory = $true, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Abuse Report by Author GUID with Connection File'
+        )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [guid]$UserGuid,
     
-        # Content URL to use for lookup
+        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(
+            Mandatory = $true, 
+            ParameterSetName = 'Abuse Report with Authentication Header'
+        )]
+        [Parameter(
+            Mandatory = $true, 
+            ParameterSetName = 'Abuse Report by Author GUID with Authentication Header'
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [Alias("Community")]
+        [string]$VtCommunity,
+        
+        # Authentication Header for the community
+        [Parameter(Mandatory = $true, ParameterSetName = 'Abuse Report with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Abuse Report by Author GUID with Authentication Header')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$VtAuthHeader,
+    
+        [Parameter(Mandatory = $true, ParameterSetName = 'Abuse Report with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Abuse Report by Author GUID with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+    
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Abuse Report with Connection File')]
+        [Parameter(ParameterSetName = 'Abuse Report by Author GUID with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
+
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$NormalizeHtml,
+
+        # Should we return all details?
+        [Parameter()]
+        [switch]$ReturnDetails,
+
+        # Size of Batches to Query from the API
         [Parameter(
             Mandatory = $false,
             ValueFromPipeline = $false,
@@ -55,31 +115,32 @@ function Get-VtAbuseReport {
             ValueFromRemainingArguments = $false
         )]
         [ValidateRange(1, 100)]
-        [int]$BatchSize = 20,
-    
-        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
-        # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
-    
+        [int]$BatchSize = 20
     )
     
     BEGIN {
     
-        # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
     
         # Set the Uri for the target
         $Uri = 'api.ashx/v2/abusereports.json'
@@ -90,24 +151,54 @@ function Get-VtAbuseReport {
         $UriParameters["PageIndex"] = 0
     
         Write-Verbose -Message "Assigning User GUID for query"
-        if ( $UserId ) {
+        if ( $UserGuid ) {
             $UriParameters["AuthorUserId"] = $UserGuid
         }
     
+        $PropertiesToReturn = @(
+            'AbuseReportId',
+            'AbuseScore',
+            'AbuseReasonId',
+            'AppealId',
+            @{ Name = 'Author'; Expression = { $_.AuthorUser.DisplayName } },
+            @{ Name = 'Url'; Expression = { $_.Content.Url } },
+            @{ Name = 'ReportedBy'; Expression = { $_.CreatedUser.DisplayName } },
+            'CreatedDate',
+            'LastUpdatedDate',
+            'ProcessedDate'
+        )
+        if ( $NormalizeHtml ) {
+            $PropertiesToReturn += @(
+                @{ Name = 'Name'; Expression = { $_.Content.HtmlName | ConvertFrom-Html -Verbose:$false } },
+                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription | ConvertFrom-Html -Verbose:$false } }
+            )
+        }
+        else {
+            $PropertiesToReturn += @(
+                @{ Name = 'Name'; Expression = { $_.Content.HtmlName } },
+                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription } }
+            )
+        }
     }
     PROCESS {
     
-        $TotalAbuseReports = 0
+        $TotalAbusiveContent = 0
         if ( $PSCmdlet.ShouldProcess("Target", "Operation") ) {
             do {
                 Write-Verbose -Message "Making call for Abuse Reports"
                 $AbuseReportsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                 if ( $AbuseReportsResponse ) {
-                    $TotalAbuseReports += $AbuseReportsResponse.SystemNotifications.Count
-                    $AbuseReportsResponse.Reports
+                    $TotalAbusiveContent += $AbuseReportsResponse.Reports.Count
+                    if ( $ReturnDetails ) {
+                        $AbuseReportsResponse.Reports
+                    }
+                    else {
+                        $AbuseReportsResponse.Reports | Select-Object -Property $PropertiesToReturn
+                    }
+                    
                     $UriParameters["PageIndex"]++
                 }
-            } while ( $TotalAbuseReports -lt $AbuseReportsResponse.TotalCount )
+            } while ( $TotalAbusiveContent -lt $AbuseReportsResponse.TotalCount )
         }
     }
     

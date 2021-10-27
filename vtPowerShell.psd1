@@ -93,12 +93,14 @@
         'function_Set-VtGalleryMedia.ps1',
         'function_Set-VtUser.ps1',
         'function_Test-VtConnection.ps1',
+        'function_ConvertFrom-Html.ps1',
         'vtPowerShell.psm1'
     )
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport    = @(
         'ConvertTo-VtAuthHeader',
+        'ConvertFrom-Html',
         'Set-VtAuthHeader',
         'Get-VtUser',
         'Set-VtUser',
@@ -123,6 +125,7 @@
         'Get-VtChallenge',
         'Get-VtAbuseReport',
         'Test-VtConnection',
+        'Update-VtAuthHeader',
         'ConvertTo-QueryString'
     )
 

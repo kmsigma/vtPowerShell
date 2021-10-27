@@ -102,7 +102,7 @@ function ConvertFrom-HtmlString {
     }
     
     PROCESS {
-        [System.Web.HttpUtility]::HtmlDecode( ( $HtmlString -replace "<[^>]*?>|<[^>]*>", "" ) )
+        [System.Web.HttpUtility]::HtmlDecode( ( ( $HtmlString -replace "<br />", "`n" ) -replace "<[^>]*?>|<[^>]*>", "" ) )
     }
     
     END {

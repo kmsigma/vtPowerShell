@@ -1,33 +1,32 @@
 function Get-VtGalleryMedia {
     <#
     .Synopsis
-    
+        List the media in a media gallery
     .DESCRIPTION
-    
+        TBD
     .EXAMPLE
-    
+        TBD
     .EXAMPLE
-    
+        TBD
     .EXAMPLE
-    
+        TBD
     .EXAMPLE
-    
+        TBD
     .INPUTS
-    
+        TBD
     .OUTPUTS
-    
+        TBD
     .NOTES
-        You can optionally store the VtCommunity and the VtAuthHeader as global variables and omit passing them as parameters
-        Eg: $Global:VtCommunity = 'https://myCommunityDomain.domain.local/'
-            $Global:VtAuthHeader = ConvertTo-VtAuthHeader -Username "CommAdmin" -Key "absgedgeashdhsns"
+        TBD
     .COMPONENT
         TBD
     .ROLE
         TBD
     .LINK
-        Online REST API Documentation: 
+        Online REST API Documentation: https://community.telligent.com/community/11/w/api-documentation/64766/list-media-rest-endpoint
     #>
     [CmdletBinding(
+        DefaultParameterSetName = 'All Galleries with Connection File',    
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64763/media-rest-endpoints',
@@ -37,89 +36,136 @@ function Get-VtGalleryMedia {
     (
         # Gallery Id for Media Lookup
         [Parameter(
-            Mandatory = $false, 
+            ParameterSetName = 'All Galleries with Connection File',
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id with Connection Profile',
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id with Connection File',
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and Group Id with Authentication Header',
+            Mandatory = $true,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false,
-            ParameterSetName = 'By Gallery ID'
+            Position = 0
         )]
-        #[ValidateNotNull()]
-        #[ValidateNotNullOrEmpty()]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and Group Id with Connection Profile',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and Group Id with Connection File',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
         [Alias("Id")] 
-        [int64]$GalleryId,
+        [int64[]]$GalleryId,
     
-        # Group Id for Lookup
+        # Group Id for Media Lookup
         [Parameter(
+            ParameterSetName = 'Group Id with Authentication Header',
             Mandatory = $false,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $true, 
-            ValueFromRemainingArguments = $false,
-            ParameterSetName = 'By Group ID'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [int64]$GroupId,
-    
-        # All Media (Use with caution)
-        [Parameter(
-            Mandatory = $false,
-            ValueFromPipeline = $false,
-            ValueFromPipelineByPropertyName = $false, 
-            ValueFromRemainingArguments = $false,
-            ParameterSetName = 'All Media'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [switch]$AllMedia,
-                    
-    
-        # Filter for a an Author by ID
-        [Parameter(
-            Mandatory = $false
-        )]
-        [int]$AuthorId,
-    
-        # Filter for a an Author by Name
-        [Parameter(
-            Mandatory = $false
-        )]
-        [string]$AuthorName,
-    
-        # Filter for minimum download count
-        [Parameter(
-            Mandatory = $false
-        )]
-        [int]$MinimumDownloadCount,
-    
-        # Filter for maximum download count
-        [Parameter(
-            Mandatory = $false
-        )]
-        [int]$MaximumDownloadCount,
-    
-        # Sort by type (Post Date is default)
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateSet("Author", "Comments", "Downloads", "PostDate", "Rating", "Subject", "Views", "Score:SCORE_ID", "ContentIdsOrder")]
-        [string]$SortBy = "PostDate",
-    
-        # Sort Order (Ascending is default for all except Scores)
-        [Parameter(
-            Mandatory = $false
-        )]
-        [switch]$Descending,
-    
-        # Hide the progress bar
-        [Parameter(
-            Mandatory = $false,
-            ValueFromPipeline = $false,
-            ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
-        [switch]$HideProgress,
+        [Parameter(
+            ParameterSetName = 'Group Id with Connection Profile',
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false
+        )]
+        [Parameter(
+            ParameterSetName = 'Group Id with Connection File',
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and Group Id with Authentication Header',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and Group Id with Connection Profile',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and Group Id with Connection File',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false
+        )]
+        [int64[]]$GroupId,
     
-        # Return all details in the JSON call?
+        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and Group Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Galleries with Authentication Header')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [Alias("Community")]
+        [string]$VtCommunity,
+
+        # Authentication Header for the community
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and Group Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Galleries with Authentication Header')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$VtAuthHeader,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and Group Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Galleries with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Gallery Id and Group Id with Connection File')]
+        [Parameter(ParameterSetName = 'Group Id with Connection File')]
+        [Parameter(ParameterSetName = 'Gallery Id with Connection File')]
+        [Parameter(ParameterSetName = 'All Galleries with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
+
         [Parameter(
             Mandatory = $false,
             ValueFromPipeline = $false,
@@ -134,74 +180,100 @@ function Get-VtGalleryMedia {
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
+        [switch]$ReturnFileInfo,
+
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
         [ValidateRange(1, 100)]
-        [int]$BatchSize = 20, 
-    
-        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [int]$BatchSize = 20,
+
         [Parameter(
-            Mandatory = $false
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
         )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
-        # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
+        [switch]$HideProgress
     
     )
     
     BEGIN {
     
-        # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
     
         # Set default page index, page size, and add any other filters
         $UriParameters = @{}
         $UriParameters["PageIndex"] = 0
         $UriParameters["PageSize"] = $BatchSize
     
-        # Setup the other parameters
-        if ( $AuthorName ) {
-            # We need author ID's, so we'll look up this author and store the ID
-            $AuthorId = Get-VtUser -Username $AuthorName -Community $VtCommunity -AuthHeader $AuthorId -Verbose:$false | Select-Object -ExpandProperty Id
-        }
-    
-        if ( $AuthorId ) {
-            $UriParameters["AuthorId"] = $AuthorId
-        }
-    
-        if ( $MinimumDownloadCount ) {
-            $UriParameters["MinimumDownloadCount"] = $MinimumDownloadCount
-        }
-    
-        if ( $MaximumDownloadCount ) {
-            $UriParameters["MaximumDownloadCount"] = $MaximumDownloadCount
-        }
-    
-        $UriParameters["SortBy"] = $SortBy
-    
-        if ( $Descending ) {
-            $UriParameters["SortOrder"] = "Descending"
-        }
-        else {
-            $UriParameters["SortOrder"] = "Ascending"
-        }
+        $PropertiesToReturn = @(
+            @{ Name = "FileId"; Expression = { $_.Id } }
+            @{ Name = "GalleryId"; Expression = { $_.MediaGalleryId } }
+            'GroupId'
+            @{ Name = "Author"; Expression = { $_.Author.Username } }
+            'Date'
+            @{ Name = "Title"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Title ) } }
+            @{ Name = "Tags"; Expression = { ( $_.Tags | ForEach-Object { $_ | Select-Object -ExpandProperty Value } ) } }
+            'Url'
+            'CommentCount'
+            'Views'
+            'Downloads'
+            'RatingCount'
+            'RatingSum'
+
+            )
+            if ( $ReturnFileInfo ) {
+                $PropertiesToReturn += @{ Name = "FileName"; Expression = { $_.File.FileName } }
+                $PropertiesToReturn += @{ Name = "FileType"; Expression = { $_.File.ContentType } }
+                $PropertiesToReturn += @{ Name = "FileSize"; Expression = { $_.File.FileSize } }
+                $PropertiesToReturn += @{ Name = "FileUrl"; Expression = { $_.File.FileUrl } }
+            }
+            if ( $IncludeDescription ) {
+                @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
+            }
+
     }
     PROCESS {
-        if ( $PSCmdlet.ShouldProcess( $VtCommunity, "Query Media Gallery Files on" ) ) {
+        if ( $PSCmdlet.ShouldProcess( $Community, "Query Media Gallery Files" ) ) {
             
-            switch ( $PSCmdlet.ParameterSetName ) {
-                
-                'All Media' { $Uri = "api.ashx/v2/media/files.json" }
-                'By Group ID' { $Uri = "api.ashx/v2/groups/$GroupId/media/files.json" }
-                'By Gallery ID' { $Uri = "api.ashx/v2/media/$GalleryId/files.json" }
+            if ( $GalleryId -and $GroupId ) {
+                $Uri = "api.ashx/v2/media/$GalleryId/files.json"
+                if ( $GroupId ) {
+                    $UriParameters["GroupId"] = $GroupId 
+                }
             }
+            elseif ( $GalleryId -and -not $GroupId ) {
+                $Uri = "api.ashx/v2/media/$GalleryId/files.json"
+            }
+            elseif ( -not $GalleryId -and $GroupId ) {
+                $Uri = "api.ashx/v2/groups/$GroupId/media/files.json"
+            }
+            else { $Uri = 'api.ashx/v2/media/files.json' }
+
             
             $TotalReturned = 0
             do {
@@ -216,11 +288,11 @@ function Get-VtGalleryMedia {
                         $MediaResponse.MediaPosts
                     }
                     else {
-                        $MediaResponse.MediaPosts | Select-Object -Property @{ Name = "MediaFileId"; Expression = { $_.Id } }, @{ Name = "GalleryId"; Expression = { $_.MediaGalleryId } }, GroupId, @{ Name = "Author"; Expression = { $_.Author.Username } }, Date, @{ Name = "Name"; Expression = { $_.Title } }, Description, @{ Name = "Tags"; Expression = { ( $_.Tags | ForEach-Object { $_ | Select-Object -ExpandProperty Value } ) } }, Url, @{ Name = "FileName"; Expression = { $_.File.FileName } }, @{ Name = "FileType"; Expression = { $_.File.ContentType } }, @{ Name = "FileSize"; Expression = { $_.File.FileSize } }, @{ Name = "FileUrl"; Expression = { $_.File.FileUrl } }, CommentCount, Views, Downloads, RatingCount, RatingSum
+                        $MediaResponse.MediaPosts | Select-Object -Property $PropertiesToReturn
                     }
                 }
                 $UriParameters["PageIndex"]++
-            } while ($TotalReturned -lt $MediaResponse.TotalCount)
+            } while ( $TotalReturned -lt $MediaResponse.TotalCount )
             if ( -not $HideProgress ) {
                 Write-Progress -Activity "Querying for Media Gallery Items" -Completed
             }

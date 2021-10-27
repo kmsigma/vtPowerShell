@@ -92,7 +92,7 @@ function New-VtConnection {
         [Parameter(ParameterSetName = 'Profile File')]
         [switch]$Save,
 
-        # File to Store.  By default is stores in your user profile \.vtCommunity\vtCredentials.json
+        # File to Store.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
         [Parameter(ParameterSetName = 'Authentication Header')]
         [Parameter(ParameterSetName = 'Username/API Key')]
         [Parameter(ParameterSetName = 'Profile File')]

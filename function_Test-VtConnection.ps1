@@ -59,9 +59,9 @@ function Test-VtConnection {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Management.Automation.PSObject]$ConnectionProfile,
+        [System.Management.Automation.PSObject]$Connection,
 
-        # File holding credentials.  By default is stores in your user profile \.vtCommunity\vtCredentials.json
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
         [Parameter(
             ParameterSetName = 'Profile File',
             Position = 0)]
@@ -92,8 +92,8 @@ function Test-VtConnection {
             }
             'Connection Profile' {
                 Write-Verbose -Message "Extracing Community URL and Authentication headers from Connection Profile"
-                $CommunityUrl = $ConnectionProfile.Community
-                $AuthenticationHeaders = $ConnectionProfile.Authentication
+                $CommunityUrl = $Connection.Community
+                $AuthenticationHeaders = $Connection.Authentication
             }
         
             'Authentication Header' {

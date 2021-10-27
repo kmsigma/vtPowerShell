@@ -21,7 +21,7 @@ function Get-VtGroup {
     .FUNCTIONALITY
         The functionality that best describes this cmdlet
     #>
-    [CmdletBinding(DefaultParameterSetName = 'Default', 
+    [CmdletBinding(DefaultParameterSetName = 'Group by Name with Connection File', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64699/group-rest-endpoints',
@@ -31,43 +31,60 @@ function Get-VtGroup {
     Param
     (
         # Get group by name
-        [Parameter(
-            ParameterSetName = 'By Name')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Connection File')]
         [Alias("Name")]
         [string[]]$GroupName,
     
         # Group name exact match
-        [Parameter(
-            ParameterSetName = 'By Name')]
-        [switch]$ExactMatch = $false,
+        [Parameter(Mandatory = $false, ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Group by Name with Connection Profile')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Group by Name with Connection File')]
+        [switch]$ExactMatch,
     
         # Get group by id number
-        [Parameter(
-            ParameterSetName = 'By Group Id')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Connection File')]
         [Alias("Id")]
         [int[]]$GroupId,
     
-        # Get group by parent id number
-        [Parameter()]
-        [Alias("ParentId")]
-        [int]$ParentGroupId,
-    
-        # Return limited details
-        [Parameter()]
+        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [Alias("Details")]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [Alias("Community")]
+        [string]$VtCommunity,
+        
+        # Authentication Header for the community
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Authentication Header')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$VtAuthHeader,
+    
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+    
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Group by Name Connection File')]
+        [Parameter(ParameterSetName = 'Group by Id with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
+    
+        # Should we return all details?
+        [Parameter()]
         [switch]$ReturnDetails,
     
         # Number of entries to get per batch (default of 20)
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter()]
         [ValidateRange(1, 100)]
         [int]$BatchSize = 20, 
-    
-        # Resolve the parent id to a name
-        [switch]$ResolveParentName,
     
         # Get all groups
         [Parameter()]
@@ -75,41 +92,62 @@ function Get-VtGroup {
         [Alias("Type")]
         [string]$GroupType = "All",
     
-        <#
-            # Should I recurse into child groups?  Default is false
-            [Parameter(
-                ParameterSetName = 'By Group Id'
-            )]
-            [Parameter(
-                ParameterSetName = 'By Name'
-            )]
-            [switch]$Recurse,
-            #>
-    
-        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
-        # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
-    
         
+        # Should I recurse into child groups?  Default is false
+        [Parameter(ParameterSetName = 'Group by Id with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Id with Connection Profile')]
+        [Parameter(ParameterSetName = 'Group by Id with Connection File')]
+        [switch]$Recurse,
+
+        # Sort By
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [ValidateSet('Name', 'SortOrder', 'LastUpdate', 'ContentIdsOrder')]
+        [string]$SortBy = 'Name',
+        
+        # Sort Order
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [ValidateSet('Ascending', 'Descending')]
+        [string]$SortOrder = 'Ascending'
+
+    
     )
         
     BEGIN {
             
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
+
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        $VtAuthHeader = $AuthHeaders | Update-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
         $UriParameters = @{}
         $UriParameters['PageSize'] = $BatchSize
         $UriParameters['PageIndex'] = 0
@@ -117,15 +155,34 @@ function Get-VtGroup {
         if ( $ParentGroupId ) {
             $UriParameters['ParentGroupId'] = $ParentGroupId
         }
-        $OutputProperties = @{ Name = "GroupId"; Expression = { $_.Id } }, @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } }, "Key", @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }, "DateCreated", "Url", "GroupType", "ParentGroupId"
-        if ( $ResolveParentName ) {
-            $OutputProperties += "ParentGroupName"
+        if ( $Recurse ) {
+            $UriParameters['IncludeAllSubGroups'] = 'true'
         }
+
+        if ( $SortOrder ) {
+            $UriParameters['SortOrder'] = $SortOrder
+        }
+        if ( $SortBy ) {
+            $UriParameters['SortBy'] = $SortBy
+        }
+
+        $PropertiesToReturn = @(
+            @{ Name = "GroupId"; Expression = { $_.Id } },
+            @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } },
+            "Key",
+            @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } },
+            "DateCreated",
+            "Url",
+            "GroupType",
+            "ParentGroupId"
+        )
+
+        
     }
         
     PROCESS {
-        switch ( $PSCmdlet.ParameterSetName ) {
-            'By Name' {
+        switch -Wildcard ( $PSCmdlet.ParameterSetName ) {
+            'Group by Name *' {
                 ForEach ( $Name in $GroupName ) {
                     $Uri = 'api.ashx/v2/groups.json'
                     $UriParameters['GroupNameFilter'] = $Name
@@ -142,16 +199,12 @@ function Get-VtGroup {
                             if ( $ExactMatch ) {
                                 $GroupsResponse.Groups = $GroupsResponse.Groups | Where-Object { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) -eq $Name }
                             }
-                            if ( $ResolveParentName ) {
-                                # This calls itself to get the parent group name
-                                $GroupsResponse.Groups | Add-Member -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId -VtCommunity $VtCommunity -VtAuthHeader $VtAuthHeader | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
-                            }
                             # Should we return everything?
                             if ( $ReturnDetails ) {
                                 $GroupsResponse.Groups
                             }
                             else {
-                                $GroupsResponse.Groups | Select-Object -Property $OutputProperties
+                                $GroupsResponse.Groups | Select-Object -Property $PropertiesToReturn
                             }
                         }
                         
@@ -161,7 +214,7 @@ function Get-VtGroup {
                         
                 }
             }
-            'By Group Id' {
+            'Group by Id *' {
                 ForEach ( $Id in $GroupId ) {
                     # Setup the URI - depends on if we are using a parent ID or not
                     if ( $ParentGroupId ) {
@@ -175,11 +228,6 @@ function Get-VtGroup {
                     Write-Verbose -Message "Making call with '$Uri'"
                     $GroupsResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders -Verbose:$false
                         
-                    if ( $ResolveParentName ) {
-                        # This calls itself to get the parent group name
-                        $GroupsResponse.Groups | Add-Member -MemberType ScriptProperty -Name "ParentGroupName" -Value { Get-VtGroup -GroupId $this.ParentGroupId | Select-Object -Property @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } } | Select-Object -ExpandProperty Name } -Force
-                    }
-    
                     # Filter if we are using the parent group id
                     if ( $ParentGroupId ) {
                         $GroupsResponse.Group = $GroupsResponse.Group | Where-Object { $_.ParentGroupId -eq $ParentGroupId }
@@ -190,11 +238,11 @@ function Get-VtGroup {
                             $GroupsResponse.Group
                         }
                         else {
-                            $GroupsResponse.Group | Select-Object -Property $OutputProperties
+                            $GroupsResponse.Group | Select-Object -Property $PropertiesToReturn
                         }
                     }
                     else {
-                        Write-Warning -Message "No matching groups found."
+                        Write-Warning -Message "No matching groups found for ID: $Id"
                     }
                 }
             }
@@ -219,7 +267,7 @@ function Get-VtGroup {
                             $GroupsResponse.Groups
                         }
                         else {
-                            $GroupsResponse.Groups | Select-Object -Property $OutputProperties
+                            $GroupsResponse.Groups | Select-Object -Property $PropertiesToReturn
                         }
                     }
                     $UriParameters['PageIndex']++
