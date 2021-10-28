@@ -1,1 +1,7 @@
 DefaultPostImageUrl="/cfs-filesystemfile/__key/communityserver-components-sitefiles/blog_5F00_images/Blog_5F00_CommunityAnnouncement.png"
+
+https://community.telligent.com/community/11/w/api-documentation/64554/upload-cfs-rest-endpoint
+
+https://community.telligent.com/community/11/w/api-documentation/64553/show-cfs-rest-endpoint
+
+DefaultPostImageUrl="/~/cfs-file/__key/communityserver-blogs-components-weblogfiles/00-00-00-00-04/Blog_5F00_ProductBlog.png"
