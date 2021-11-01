@@ -34,6 +34,35 @@ function Get-VtGalleryMedia {
     )]
     Param
     (
+
+        # Gallery Id and File Id for Media Lookup
+        [Parameter(
+            ParameterSetName = 'Gallery Id and File Id with Authentication Header',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and File Id with Connection Profile',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and File Id with Connection File',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Alias("Id")]
+        [int64[]]$FileId,
+    
         # Gallery Id for Media Lookup
         [Parameter(
             ParameterSetName = 'All Galleries with Connection File',
@@ -55,6 +84,30 @@ function Get-VtGalleryMedia {
             ParameterSetName = 'Gallery Id with Connection File',
             Mandatory = $false,
             ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and File Id with Authentication Header',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and File Id with Connection Profile',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            Position = 0
+        )]
+        [Parameter(
+            ParameterSetName = 'Gallery Id and File Id with Connection File',
+            Mandatory = $true,
+            ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false,
             Position = 0
@@ -83,7 +136,7 @@ function Get-VtGalleryMedia {
             ValueFromRemainingArguments = $false,
             Position = 0
         )]
-        [Alias("Id")] 
+
         [int64[]]$GalleryId,
     
         # Group Id for Media Lookup
@@ -132,6 +185,7 @@ function Get-VtGalleryMedia {
         [int64[]]$GroupId,
     
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and File Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and Group Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Group Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id with Authentication Header')]
@@ -143,6 +197,7 @@ function Get-VtGalleryMedia {
         [string]$VtCommunity,
 
         # Authentication Header for the community
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and File Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and Group Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Group Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id with Authentication Header')]
@@ -151,6 +206,7 @@ function Get-VtGalleryMedia {
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable]$VtAuthHeader,
 
+        [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and File Id with Connection Profile')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id and Group Id with Connection Profile')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Group Id with Connection Profile')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Gallery Id with Connection Profile')]
@@ -160,6 +216,7 @@ function Get-VtGalleryMedia {
         [System.Management.Automation.PSObject]$Connection,
 
         # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Gallery Id and File Id with Connection File')]
         [Parameter(ParameterSetName = 'Gallery Id and Group Id with Connection File')]
         [Parameter(ParameterSetName = 'Group Id with Connection File')]
         [Parameter(ParameterSetName = 'Gallery Id with Connection File')]
@@ -237,30 +294,34 @@ function Get-VtGalleryMedia {
             @{ Name = "Author"; Expression = { $_.Author.Username } }
             'Date'
             @{ Name = "Title"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Title ) } }
-            @{ Name = "Tags"; Expression = { ( $_.Tags | ForEach-Object { $_ | Select-Object -ExpandProperty Value } ) } }
+            @{ Name = "Tags"; Expression = { ( $_.Tags | ForEach-Object { [System.Web.HttpUtility]::HtmlDecode( $_.Value ) } ) } }
             'Url'
             'CommentCount'
             'Views'
             'Downloads'
             'RatingCount'
             'RatingSum'
-
-            )
-            if ( $ReturnFileInfo ) {
-                $PropertiesToReturn += @{ Name = "FileName"; Expression = { $_.File.FileName } }
-                $PropertiesToReturn += @{ Name = "FileType"; Expression = { $_.File.ContentType } }
-                $PropertiesToReturn += @{ Name = "FileSize"; Expression = { $_.File.FileSize } }
-                $PropertiesToReturn += @{ Name = "FileUrl"; Expression = { $_.File.FileUrl } }
-            }
-            if ( $IncludeDescription ) {
-                @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
-            }
+        )
+        
+        if ( $ReturnFileInfo ) {
+            $PropertiesToReturn += @{ Name = "FileName"; Expression = { $_.File.FileName } }
+            $PropertiesToReturn += @{ Name = "FileType"; Expression = { $_.File.ContentType } }
+            $PropertiesToReturn += @{ Name = "FileSize"; Expression = { $_.File.FileSize } }
+            $PropertiesToReturn += @{ Name = "FileUrl"; Expression = { $_.File.FileUrl } }
+        }
+        if ( $IncludeDescription ) {
+            @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
+        }
 
     }
     PROCESS {
         if ( $PSCmdlet.ShouldProcess( $Community, "Query Media Gallery Files" ) ) {
             
-            if ( $GalleryId -and $GroupId ) {
+            if ( $GalleryID -and $FileId ) {
+                $Uri = "api.ashx/v2/media/$GalleryId/files/$FileId.json"
+                $DoSingleCall = $true
+            }
+            elseif ( $GalleryId -and $GroupId ) {
                 $Uri = "api.ashx/v2/media/$GalleryId/files.json"
                 if ( $GroupId ) {
                     $UriParameters["GroupId"] = $GroupId 
@@ -275,26 +336,42 @@ function Get-VtGalleryMedia {
             else { $Uri = 'api.ashx/v2/media/files.json' }
 
             
-            $TotalReturned = 0
-            do {
-                if ( $TotalReturned -and -not $HideProgress ) {
-                    Write-Progress -Activity "Querying for Media Gallery Items" -Status "Retrieved $TotalReturned of $( $MediaResponse.TotalCount ) items" -CurrentOperation "Making call #$( $UriParameters["PageIndex"] + 1 )" -PercentComplete ( 100 * ( $TotalReturned / $MediaResponse.TotalCount ) )
+            if ( -not $DoSingleCall ) {
+                $TotalReturned = 0
+                do {
+                    if ( $TotalReturned -and -not $HideProgress ) {
+                        Write-Progress -Activity "Querying for Media Gallery Items" -Status "Retrieved $TotalReturned of $( $MediaResponse.TotalCount ) items" -CurrentOperation "Making call #$( $UriParameters["PageIndex"] + 1 )" -PercentComplete ( 100 * ( $TotalReturned / $MediaResponse.TotalCount ) )
+                    }
+                    Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
+                    $MediaResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
+                    if ( $MediaResponse ) {
+                        $TotalReturned += $MediaResponse.MediaPosts.Count
+                        if ( $ReturnDetails ) {
+                            $MediaResponse.MediaPosts
+                        }
+                        else {
+                            $MediaResponse.MediaPosts | Select-Object -Property $PropertiesToReturn
+                        }
+                    }
+                    $UriParameters["PageIndex"]++
+                } while ( $TotalReturned -lt $MediaResponse.TotalCount )
+                if ( -not $HideProgress ) {
+                    Write-Progress -Activity "Querying for Media Gallery Items" -Completed
                 }
-                Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
-                $MediaResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
+            } else {
+                $MediaResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders
                 if ( $MediaResponse ) {
-                    $TotalReturned += $MediaResponse.MediaPosts.Count
+                    $TotalReturned += $MediaResponse.Media.Count
                     if ( $ReturnDetails ) {
-                        $MediaResponse.MediaPosts
+                        $MediaResponse.Media
                     }
                     else {
-                        $MediaResponse.MediaPosts | Select-Object -Property $PropertiesToReturn
+                        $MediaResponse.Media | Select-Object -Property $PropertiesToReturn
                     }
                 }
-                $UriParameters["PageIndex"]++
-            } while ( $TotalReturned -lt $MediaResponse.TotalCount )
-            if ( -not $HideProgress ) {
-                Write-Progress -Activity "Querying for Media Gallery Items" -Completed
+                else {
+                    Write-Error -Message "Unable to find media for $GalleryId and $FileId"
+                }
             }
             
         } #end of 'should process'

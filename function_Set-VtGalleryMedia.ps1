@@ -28,6 +28,7 @@ function Set-VtGalleryMedia {
         Online REST API Documentation: 
     #>
     [CmdletBinding(
+        DefaultParameterSetName = 'File Id and Gallery Id with Connection File',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64768/update-media-rest-endpoint',
@@ -36,43 +37,144 @@ function Set-VtGalleryMedia {
     Param
     (
         # File Id on which to Operate
-        [Parameter(
-            Mandatory = $true, 
+        [Parameter(Mandatory = $true, 
             ValueFromPipeline = $false,
-            ValueFromPipelineByPropertyName = $true, 
-            ValueFromRemainingArguments = $false
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id with Authentication Header'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id with Connection Profile'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id with Connection File'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection Profile'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection File'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Tags List) with Authentication Header'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection Profile'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection File'
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [Alias("FileId", "MediaId")] 
-        [int64]$MediaFileId,
+        [Alias("MediaFileId", "MediaId")] 
+        [int64[]]$FileId,
     
         # Gallery Id on which to operate
-        [Parameter(
-            Mandatory = $true, 
+        [Parameter(Mandatory = $true, 
             ValueFromPipeline = $false,
-            ValueFromPipelineByPropertyName = $true, 
-            ValueFromRemainingArguments = $false
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id with Authentication Header'
         )]
-        [int64]$GalleryId,
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id with Connection Profile'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id with Connection File'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection Profile'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection File'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Tags List) with Authentication Header'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection Profile'
+        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $true,
+            ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection File'
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]        
+        [int64[]]$GalleryId,
     
         # The Title of the media
-        [Parameter(
-            Mandatory = $false 
-        )]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id with Connection File')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection File')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection File')]
         [Alias("Title")] 
         [string]$Name,
     
         # Media Description [HTML formatted]
-        [Parameter(
-            Mandatory = $false 
-        )]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id with Connection File')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection File')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection File')]
         [string]$Description,
     
-        # Comma-separated list of tags
-        [Parameter(
-            Mandatory = $false 
-        )]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection File')]
+        [string[]]$AddTag,
+    
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection File')]
+        [string[]]$RemoveTag,
+    
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Authentication Header')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection Profile')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection File')]
         [string[]]$Tags,
     
         # If enabled, then return the new object, otherwise return nothing
@@ -85,60 +187,186 @@ function Set-VtGalleryMedia {
         [switch]$PassThru,
     
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id (Tags List) with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
+        [Alias("Community")]
+        [string]$VtCommunity,
+
         # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id (Tags List) with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'File Id and Gallery Id with Connection File')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Connection File')]
+        [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
+
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$ReturnDetails
     
     )
     
     BEGIN {
-    
-        # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
-    
-        # Setup the parameters
-        $UriParameters = @{}
-    
-        if ( $Name ) {
-            $UriParameters["Name"] = $Name
-        }
-    
-        if ( $Description ) {
-            $UriParameters["Description"] = $Description
-        }
-    
-        if ( $Tags ) {
-            if ( $Tags -is [System.Array] ) {
-                $UriParameters["Tags"] = $Tags -join "," 
+        Write-Verbose -Message "Detected Parameter Set: $( $PSCmdlet.ParameterSetName )"
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
             }
-            else { $UriParameters["Tags"] = $Tags }
-        } 
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
+
+        $PropertiesToReturn = @(
+            @{ Name = "FileId"; Expression = { $_.Id } }
+            @{ Name = "GalleryId"; Expression = { $_.MediaGalleryId } }
+            'GroupId'
+            @{ Name = "Author"; Expression = { $_.Author.Username } }
+            'Date'
+            @{ Name = "Title"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Title ) } }
+            @{ Name = "Tags"; Expression = { ( $_.Tags | ForEach-Object { [System.Web.HttpUtility]::HtmlDecode( $_.Value ) } ) } }
+            'Url'
+            'CommentCount'
+            'Views'
+            'Downloads'
+            'RatingCount'
+            'RatingSum'
+        )
+
+
     
     }
     
     PROCESS {
+        
+        Write-Verbose -Message "Retrieving File Details"
+        $File = Get-VtGalleryMedia -GalleryId $GalleryId -FileId $FileId -VtCommunity $Community -VtAuthHeader $AuthHeaders -WhatIf:$false
+        
+        Write-Verbose -Message "Current Tag List: $( $File.Tags -join ", " )"
+
+        # Setup the parameters
+        $UriParameters = @{}
+    
+        if ( $Name ) {
+            Write-Verbose -Message "Writing '$Name' to 'Name' Uri Parameters"
+            $UriParameters["Name"] = $Name
+        }
+            
+        if ( $Description ) {
+            Write-Verbose -Message "Writing '$Description' to 'Description' Uri Parameters"
+            $UriParameters["Description"] = $Description
+        }
+            
+        switch -Wildcard ( $PSCmdlet.ParameterSetName ) {
+            '*(Add/Remove Tags)*' { 
+                Write-Verbose -Message "Found Tags to Add/Remove"
+                # Get Current List of Tags - we must use an ArrayList type or the .Add and .Remove methods are blocked
+                $WorkingTagList = New-Object -TypeName System.Collections.ArrayList
+                $OriginalTagList = New-Object -TypeName System.Collections.ArrayList
+                $File.Tags | ForEach-Object { $WorkingTagList.Add($_) | Out-Null }
+                $File.Tags | ForEach-Object { $OriginalTagList.Add($_) | Out-Null }
+                Write-Verbose -Message "Current Tag List: $( $OriginalTagList -join ',' )"
+                ForEach ( $R in $RemoveTag ) {
+                    if ( $WorkingTagList -contains $R ) {
+                        Write-Verbose -Message "Removing '$R' from the Tag list"
+                        $WorkingTagList.Remove($R) | Out-Null
+                    }
+                    else {
+                        Write-Verbose -Message "Account '$R' is not listed as an Tag"
+                    }
+                }
+                ForEach ( $A in $AddTag ) {
+                    if ( $WorkingTagList -contains $A ) {
+                        Write-Verbose -Message "Account '$A' already listed as an Tag"
+                    }
+                    else {
+                        Write-Verbose -Message "Adding '$A' to the Tag list"
+                        $WorkingTagList.Add( [System.Web.HttpUtility]::UrlEncode($A) ) | Out-Null
+                    }
+                }
+                # Build the list of Tags as a comma separated list (sorted is not necessary, but nice)
+                $TagList = ( $WorkingTagList | Sort-Object ) -join ","
+                # Add it to the parameter list for the URI
+                if ( Compare-Object -ReferenceObject $OriginalTagList -DifferenceObject $WorkingTagList  ) {
+                    Write-Verbose -Message "Updated Tag List: $( $WorkingTagList -join ',' )"
+                    $UriParameters["Tags"] = $TagList
+                }
+                else {
+                    Write-Warning -Message "Processed Tags: No change detected"
+                }
+    
+            }
+            '*(Tags List)*' {
+                Write-Verbose -Message "Found Tags to Update"
+                $Tags = $Tags | Sort-Object
+                if ( Compare-Object -ReferenceObject $File.Tags -DifferenceObject $Tags ) {
+                    # Build the list of Tags as a comma separated list (sorted is not necessary, but nice)
+                    $TagList = ( $Tags | Sort-Object ) -join ','
+                    # Add it to the parameter list for the URI
+                    $UriParameters["Tags"] = $TagList
+                }
+                else {
+                    Write-Warning -Message "Processed Tags: No change detected"
+                }
+            }
+            Default { Write-Verbose -Message "No Tag change detected" }
+        }
+        
+        $Uri = "api.ashx/v2/media/$GalleryId/files/$FileId.json"
+
         if ( -not $UriParameters ) {
             # If we have no parameters to change, then there's nothing to do
             Write-Error -Message "Function requires Name, Description, or Tags parameter" -RecommendedAction "Pass -Name, -Description, or -Tags parameters."
         }
         else {
-            if ( $PSCmdlet.ShouldProcess( $VtCommunity, "Update Media ID '$MediaFileId' in Gallery ID '$( $GalleryId )'" ) ) {
-                $Uri = "api.ashx/v2/media/$GalleryId/files/$MediaFileId.json"
-                $Response = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod Put -ErrorAction SilentlyContinue -WhatIf:$false )
-                if ( $Response -and $PassThru ) {
-                    $Response.Media | Select-Object -Property @{ Name = "MediaFileId"; Expression = { $_.Id } }, @{ Name = "GalleryId"; Expression = { $_.MediaGalleryId } }, GroupId, @{ Name = "Author"; Expression = { $_.Author.Username } }, Date, @{ Name = "Name"; Expression = { $_.Title } }, Description, @{ Name = "Tags"; Expression = { ( $_.Tags | ForEach-Object { $_ | Select-Object -ExpandProperty Value } ) } }, Url, @{ Name = "FileName"; Expression = { $_.File.FileName } }, @{ Name = "FileType"; Expression = { $_.File.ContentType } }, @{ Name = "FileSize"; Expression = { $_.File.FileSize } }, @{ Name = "FileUrl"; Expression = { $_.File.FileUrl } }, CommentCount, Views, Downloads, RatingCount, RatingSum
+            if ( $PSCmdlet.ShouldProcess("Update '$( $File.Title )'", "Update $( $UriParameters.Keys -join ", " )") ) {
+                $Response = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod "Put" -WhatIf:$false )
+                if ( $Response ) {
+                    if ( $PassThru ) {
+                        if ( $ReturnDetails ) {
+                            $Response.Media
+                        }
+                        else {
+                            $Response.Media | Select-Object -Property $PropertiesToReturn
+                        }
+                    }
+                }
+                else {
+                    Write-Error -Message "Unable to update '$FileId' in Gallery ID '$GalleryId'"
                 }
             }
         }
