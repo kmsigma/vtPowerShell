@@ -27,7 +27,7 @@ function Get-VtBlogPost {
 .LINK
     Online REST API Documentation: 
 #>
-    [CmdletBinding(DefaultParameterSetName = 'Filter By Blog Id', 
+    [CmdletBinding(DefaultParameterSetName = 'All Blogs Posts with Connection File', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64540/update-blog-rest-endpoint',
@@ -35,31 +35,13 @@ function Get-VtBlogPost {
     Param
     (
 
-        # Blog Post Id for Lookup
-        [Parameter(
-            Mandatory = $false, 
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
-            ValueFromRemainingArguments = $false,
-            ParameterSetName = 'Filter By Blog Post Id'
-        )]
-        [ValidateRange("Positive")]
-        [Alias("Id")] 
-        [int64[]]$BlogPostId,
-
         # Blog Id for Lookup
         [Parameter(
             Mandatory = $false, 
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false,
-            ParameterSetName = 'Filter By Blog Id'
-        )]
-        [Parameter(
-            ParameterSetName = 'Filter By Author Name'
-        )]
-        [Parameter(
-            ParameterSetName = 'Filter By Blog Post Id'
+            ParameterSetName = 'All Blogs Posts with Connection File'
         )]
         [ValidateRange("Positive")]
         [int64[]]$BlogId,
@@ -70,34 +52,10 @@ function Get-VtBlogPost {
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false,
-            ParameterSetName = 'Filter By Group Id'
-        )]
-        [Parameter(
-            ParameterSetName = 'Filter By Author Name'
+            ParameterSetName = 'All Blogs Posts with Connection File'
         )]
         [ValidateRange("Positive")]
         [int64]$GroupId,
-
-        # Filter to a specific author (by id)
-        [Parameter(
-            Mandatory = $false, 
-            ValueFromPipeline = $false,
-            ValueFromPipelineByPropertyName = $true, 
-            ValueFromRemainingArguments = $false,
-            ParameterSetName = 'Filter By Author Id'
-        )]
-        [ValidateRange("Positive")]
-        [int64]$AuthorId,
-
-        # Filter to a specific author name
-        [Parameter(
-            Mandatory = $false, 
-            ValueFromPipeline = $false,
-            ValueFromPipelineByPropertyName = $true, 
-            ValueFromRemainingArguments = $false,
-            ParameterSetName = 'Filter By Author Name'
-        )]
-        [string]$Author,
 
         # Do we want to include the Body of posts?
         [Parameter()]
@@ -110,8 +68,6 @@ function Get-VtBlogPost {
         # Do we want to include unpublished posts?
         [Parameter()]
         [switch]$IncludeUnpublished,
-
-
 
         # Do we want to return the entire JSON entry?
         [Parameter()]
@@ -128,26 +84,58 @@ function Get-VtBlogPost {
         [int]$BatchSize = 20, 
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Post Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Blogs Posts with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-        
+        [Alias("Community")]
+        [string]$VtCommunity,
+
         # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Post Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Blogs Posts with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Blogs Posts with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Blog Id with Connection File')]
+        [Parameter(ParameterSetName = 'All Blogs Posts with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) )
         
     )
 
     BEGIN {
 
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
+        
         # List of properties we'd like to pull
         $PropertyList = @{ Name = "BlogPostId"; Expression = { $_.Id } },
         "BlogId",
@@ -191,19 +179,6 @@ function Get-VtBlogPost {
             "MetaTitle"
         }
 
-        if ( $Author ) {
-            if ( -not ( Get-VtCommand -Name "Get-VtUser" -ErrorAction SilentlyContinue) ) {
-                . .\func_Users.ps1
-            }
-            $AuthorId = Get-VtUser -Username $Author -Community $VtCommunity -AuthHeader $VtAuthHeader -Confirm:$false -Verbose:$false -WhatIf:$false | Select-Object -ExpandProperty UserId
-        }
-
-        if ( $AuthorId ) {
-            $UriParameters["AuthorId"] = $AuthorId
-        }
-        #if ( $BlogPostId -and ( $BlogId -is [System.Array] ) ) {
-        #    Write-Error -Message "When retrieving multiple blogs by id, you cannot send multiple blog Id numbers"
-        #}
     }
 
     PROCESS {
@@ -218,7 +193,7 @@ function Get-VtBlogPost {
 
                 $TotalReturned = 0
                 $UriParameters["PageIndex"] = 0
-                Remove-VtVtVariable -Name BlogPostsResponse -ErrorAction SilentlyContinue
+                Remove-Variable -Name BlogPostsResponse -ErrorAction SilentlyContinue
                 do {
                     if ( $BlogPostsResponse ) {
                         Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records [$TotalReturned / $( $BlogPostsResponse.TotalCount )]"
@@ -281,7 +256,7 @@ function Get-VtBlogPost {
 
             $TotalReturned = 0
             $UriParameters["PageIndex"] = 0
-            Remove-VtVtVariable -Name BlogPostsResponse -ErrorAction SilentlyContinue
+            Remove-Variable -Name BlogPostsResponse -ErrorAction SilentlyContinue
             do {
                 if ( $BlogPostsResponse ) {
                     Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records [$TotalReturned / $( $BlogPostsResponse.TotalCount )]"
