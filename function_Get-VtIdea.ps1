@@ -113,7 +113,7 @@ function Get-VtIdea {
     BEGIN {
 
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        $VtAuthHeader = $VtAuthHeader | Update-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
         $UriParameters = @{}
         $UriParameters['PageSize'] = $BatchSize
         $UriParameters['PageIndex'] = 0

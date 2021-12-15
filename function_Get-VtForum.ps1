@@ -28,7 +28,7 @@ function Get-VtForum {
         Online REST API Documentation: 
     #>
     [CmdletBinding(
-        DefaultParameterSetName = 'Thread By Forum Id',
+        DefaultParameterSetName = 'All Forums with Connection File',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64656/Show-Vtforum-rest-endpoint',
@@ -38,106 +38,158 @@ function Get-VtForum {
             
         # Forum ID for the lookup
         [Parameter(
-            Mandatory = $true,
+            Mandatory = $false,
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $false, 
+            ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false, 
-            ParameterSetName = 'Forum Id'
+            ParameterSetName = 'Forum Id with Authentication Header'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Forum Id with Connection Profile'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Forum Id with Connection File'
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [Alias("Id")]
         [int64[]]$ForumId,
             
-        [Parameter(
-            Mandatory = $true,
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $false, 
-            ValueFromRemainingArguments = $false, 
-            ParameterSetName = 'All Forums'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [Alias("All")]
-        [switch]$AllForums,
-    
         [Parameter()]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
         [Alias("Details")]
         [switch]$ReturnDetails,
     
         # Number of entries to get per batch (default of 20)
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter()]
         [ValidateRange(1, 100)]
         [int]$BatchSize = 20, 
         
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Forum Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Forums with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
+        [Alias("Community")]
+        [string]$VtCommunity,
+                
         # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Forum Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Forums with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader,
+            
+        [Parameter(Mandatory = $true, ParameterSetName = 'Forum Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Forums with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+            
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Forum Id with Connection File')]
+        [Parameter(ParameterSetName = 'All Forums with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
+
+        # Suppress the progress bar
+        [Parameter()]
+        [switch]$SuppressProgressBar
     )
         
     BEGIN {
             
-        # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
-        $UriParameters = @{}
-        $UriParameters['PageSize'] = $BatchSize
-        $UriParameters['PageIndex'] = 0
-            
-    }
-    PROCESS {
-        if ( $AllForums ) {
-            if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Get info about all forums'") ) {
-                $Uri = 'api.ashx/v2/forums.json'
-                $ForumCount = 0
-                do {
-                    $ForumResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
-                    if ( $ForumResponse ) {
-                        if ( -not $ReturnDetails ) {
-                            $ForumResponse.Forums | Select-Object -Property @{ Name = 'ForumId'; Expression = { $_.Id } }, Title, Key, Url, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode($_.Group.Name) } }, @{ Name = "GroupKey"; Expression = { $_.Group.Key } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "AllowedThreadTypes"; Expression = { ( $_.AllowedThreadTypes.Value | Sort-Object ) -join ", " } }, DefaultThreadType, LatestPostDate, Enabled, ThreadCount, ReplyCount
-                        }
-                        else {
-                            $ForumResponse.Forums
-                        }
-                        $ForumCount += $ForumResponse.Forums.Count
-                    }
-                    $UriParameters["PageIndex"]++
-                } while ($ForumCount -lt $ForumResponse.TotalCount )
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
             }
         }
-        else {
-            if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Get info about Forum ID: $ForumId'") ) {
+        
+        # Set default page index, page size, and add any other filters
+        $UriParameters = @{}
+        $UriParameters["PageIndex"] = 0
+        $UriParameters["PageSize"] = $BatchSize
+
+        $PropertiesToReturn = @(
+            @{ Name = "ForumId"; Expression = { $_.Id } }
+            'Name'
+            @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
+            'Url'
+            'Enabled'
+            'ThreadCount'
+            'ReplyCount'
+            'AutoLockingEnabled'
+            'AutoLockingDefaultInterval'
+            @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Name ) } }
+            @{ Name = "GroupId"; Expression = { $_.Group.Id } }
+            @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }
+            'LatestPostDate'
+        )
+    }
+    PROCESS {
+        if ( $PSCmdlet.ShouldProcess( $Community, "Get Forums on" ) ) {
+            If ( $ForumId ) {
+                # Single call to the API
                 $Uri = "api.ashx/v2/forums/$ForumId.json"
                 $ForumResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders
-                if ( $ForumResponse ) {
-                    if ( -not $ReturnDetails ) {
-                        $ForumResponse.Forum | Select-Object -Property @{ Name = 'ForumId'; Expression = { $_.Id } }, Title, Key, Url, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode($_.Group.Name) } }, @{ Name = "GroupKey"; Expression = { $_.Group.Key } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "AllowedThreadTypes"; Expression = { ( $_.AllowedThreadTypes.Value | Sort-Object ) -join ", " } }, DefaultThreadType, LatestPostDate, Enabled, ThreadCount, ReplyCount
-                    }
-                    else {
-                        $ForumResponse.Forum
-                    }
+                if ( $ForumResponse -and $ReturnDetails ) {
+                    $ForumResponse.Forum
                 }
+                elseif ( $ForumResponse ) {
+                    $ForumResponse.Forum | Select-Object -Property $PropertiesToReturn
+                }
+                
+                else {
+                    Write-Error -Message "Unable to find a matching gallery"
+                }
+            
+
+            } else {
+                # Get all forums
+                $TotalReturned = 0
+                $Uri = 'api.ashx/v2/forums.json'
+                do {
+                    Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
+                    $ForumResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
+                    if ( $ForumResponse ) {
+                        $TotalReturned += $ForumResponse.Forums.Count
+                        if ( $ReturnDetails ) {
+                            $ForumResponse.Forums
+                        }
+                        else {
+                            $ForumResponse.Forums | Select-Object -Property $PropertiesToReturn
+                        }
+                    }
+                    $UriParameters["PageIndex"]++
+                } while ($TotalReturned -lt $ForumResponse.TotalCount)
             }
         }
     }
         
     END {
-            
+        # Nothing to see here
     }
 }

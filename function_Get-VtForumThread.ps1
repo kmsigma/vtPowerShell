@@ -28,7 +28,7 @@ function Get-VtForumThread {
         Online REST API Documentation: 
     #>
     [CmdletBinding(
-        DefaultParameterSetName = 'Thread By Forum Id',
+        DefaultParameterSetName = 'Threads in all Forums with Connection File',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64661/list-forum-thread-rest-endpoint',
@@ -38,39 +38,40 @@ function Get-VtForumThread {
     (
         # Forum ID for the lookup
         [Parameter(
-            Mandatory = $true,
+            Mandatory = $false,
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $false, 
+            ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false, 
-            ParameterSetName = 'Thread By Forum Id'
+            ParameterSetName = 'Thread by Forum Id with Authentication Header'
         )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Thread by Forum Id with Connection Profile'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Thread by Forum Id with Connection File'
+        )]
         [Alias("Id")]
         [int64[]]$ForumId,
     
-        [Parameter(
-            Mandatory = $true,
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $false, 
-            ValueFromRemainingArguments = $false, 
-            ParameterSetName = 'All Forums'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [Alias("All")]
-        [switch]$AllForums,
-    
+        <# Filtering to add later
         # Username to use for filtering the lookup
         [Parameter(
             Mandatory = $false, 
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [string]$Username,
+        [string[]]$Username,
     
         # Email address to use for filtering the lookup
         [Parameter(
@@ -93,129 +94,188 @@ function Get-VtForumThread {
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [int64]$UserId,
-    
+        #>
+
         # Query Type
-        [Parameter(Mandatory = $false)]
-        [AllowNull()]
+        [Parameter()]
         [ValidateSet('All', 'Moderated', 'Answered', 'Unanswered', 'AnsweredNotVerified', 'AnsweredWithNotVerified', 'Unread', 'MyThreads', 'Authored', 'NoResponse')]
         [string]$QueryType = 'All',
-            
+
+        # Sort Order
+        [Parameter()]
+        [ValidateSet('LastPost', 'ThreadAuthor', 'TotalReplies', 'TotalViews', 'TotalRatings', 'FirstPost', 'Subject', 'Votes', 'TotalQualityVotes', 'QualityScore', 'Score', 'ContentIdsOrder')]
+        [string]$SortBy = 'LastPost',
+
         # Number of entries to get per batch (default of 20)
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter()]
         [ValidateRange(1, 100)]
         [int]$BatchSize = 20, 
     
         # Created after this Date/time
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter()]
         [datetime]$CreatedAfterDate,
     
         # Created before this Date/time
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter()]
         [datetime]$CreatedBeforeDate,
             
         # Do we want to return everything?
         [Parameter()]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
         [Alias("Details")]
         [switch]$ReturnDetails,
+
+        # Do we want to include the body in the simplified output?
+        [Parameter()]
+        [switch]$IncludeBody,
     
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Forum Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Threads in all Forums with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
+        [Alias("Community")]
+        [string]$VtCommunity,
+                
         # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Forum Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Threads in all Forums with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
+        [System.Collections.Hashtable]$VtAuthHeader,
+            
+        [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Forum Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Threads in all Forums with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+            
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Threads by Forum Id with Connection File')]
+        [Parameter(ParameterSetName = 'Threads in all Forums with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
+
+        # Suppress the progress bar
+        [Parameter()]
+        [switch]$SuppressProgressBar
+
+
     )
     BEGIN {
     
-        # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $VtAuthHeader = $VtAuthHeader | Set-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
-    
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
+        
         # Set default page index, page size, and add any other filters
         $UriParameters = @{}
-    
         $UriParameters["PageIndex"] = 0
         $UriParameters["PageSize"] = $BatchSize
-    
-        if ( $UserId ) {
-            $UriParameters["AuthorId"] = $UserId
-        }
-        elseif ( $Username ) {
-            $UriParameters["AuthorId"] = Get-VtUser -Username $Username -Community $VtCommunity -AuthHeader $VtAuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExpandProperty UserId
-        }
-        elseif ( $EmailAddress ) {
-            $UriParameters["AuthorId"] = Get-VtUser -EmailAddress $EamilAddress -Community $VtCommunity -AuthHeader $VtAuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExpandProperty UserId
-        }
-        if ( $QueryType ) {
-            $UriParameters['ForumThreadQueryType'] = $QueryType
-        }
-        if ( $CreatedAfterDate ) {
-            $UriParameters['CreatedAfterDate'] = $CreatedAfterDate
-        }
+
+        # Additional Parameters
         if ( $CreatedBeforeDate ) {
-            $UriParameters['CreatedBeforeDate'] = $CreatedBeforeDate
+            $UriParameters["CreatedBeforeDate"] = $CreatedBeforeDate
         }
+
+        if ( $CreatedAfterDate ) {
+            $UriParameters["CreatedAfterDate"] = $CreatedAfterDate
+        }
+
+        $PropertiesToReturn = @(
+            @{ Name = "ThreadId"; Expression = { $_.Id } }
+            @{ Name = "GroupId"; Expression = { $_.GroupId } }
+            @{ Name = "ForumId"; Expression = { $_.ForumId } }
+            'ThreadStatus'
+            'ThreadType'
+            'Date'
+            'LatestPostDate'
+            'Url'
+            'Subject'
+            'IsLocked'
+            @{ Name = 'Author'; Expression = { $_.Author.DisplayName } }
+            'ViewCount'
+            'ReplyCount'
+            @{ Name = "Tags"; Expression = { $_.Tags.Value -join ", " } }
+        )
+
+        if ( $IncludeBody ) {
+            $PropertiesToReturn += @{ Name = "Body"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Body ) } }
+        }
+
+        $UriParameters["ForumThreadQueryType"] = $QueryType
+        $UriParameters["SortBy"] = $SortBy
+
+        #Uses the same URI for everything
+        $Uri = 'api.ashx/v2/forums/threads.json'
+
     }
     PROCESS {
-        if ( -not $AllForums ) {
-            $ActionName = "Enumerate Threads in Forum ID '$( $ForumId )'"
-        }
-        else {
-            $ActionName = "Enumerate Threads for all forums"
-        }
-        ForEach ( $f in $ForumId ) {
-            if ( $PSCmdlet.ShouldProcess("$VtCommunity", $ActionName) ) {
-                # Reset the PageIndex
-                $UriParameters["PageIndex"] = 0
-                # Remove the ThreadsReponse
-                Remove-VtVtVariable -Name ThreadsResponse -ErrorAction SilentlyContinue
-    
-                $TotalThreads = 0
-                $ForumDetails = Get-VtForum -ForumId $f -Community $VtCommunity -AuthHeader $VtAuthHeader | Select-Object -Property Title, GroupName
-                $ForumTitle = $ForumDetails.Title
-                $GroupName = $ForumDetails.GroupName
+        if ( $PSCmdlet.ShouldProcess($Community, "Get Forum Threads from") ) {
+            if ( $ForumId ) {
+                ForEach ( $f in $ForumId ) {
+                    # If we have a forum ID, we should pass it as a parameter
+                    $UriParameters["ForumID"] = $f
+                    $ForumName = Get-VtForum -ForumId $f -VtCommunity $Community -VtAuthHeader $AuthHeaders | Select-Object -Property @{ Name = "FullName"; Expression = { "'$( $_.Name )' in '$( $_.GroupName)'" } } | Select-Object -ExpandProperty FullName
+                    $TotalReturned = 0
+                    do {
+                        if ( $TotalReturned -and -not $SuppressProgressBar) {
+                            Write-Progress -Activity "Getting Threads for $ForumName" -Status "Returned $( $TotalReturned ) / $( $ForumThreadResponse.TotalCount ) Records" -CurrentOperation "Making Call #$( $UriParameters["PageIndex"] + 1 ) for $BatchSise records" -PercentComplete ( $TotalReturned / $ForumThreadResponse.TotalCount * 100 )
+                        }
+                        Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
+                        $ForumThreadResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
+                        if ( $ForumThreadResponse ) {
+                            $TotalReturned += $ForumThreadResponse.Threads.Count
+                            if ( $ReturnDetails ) {
+                                $ForumThreadResponse.Threads
+                            }
+                            else {
+                                $ForumThreadResponse.Threads | Select-Object -Property $PropertiesToReturn
+                            }
+                        }
+                        $UriParameters["PageIndex"]++
+                    } while ($TotalReturned -lt $ForumThreadResponse.TotalCount)
+                    Write-Progress -Activity "Getting Threads for $ForumName" -Completed
+                }
+            }
+            else {
+                # Get all forums
+                $TotalReturned = 0
                 do {
-                    if ( -not $ThreadsResponse ) {
-                        Write-Progress -Activity "Pulling Threads in $GroupName / $ForumTitle" -CurrentOperation "Pulling $BatchSize threads [initial call]" -PercentComplete 0
+                    if ( $TotalReturned -and -not $SuppressProgressBar) {
+                        Write-Progress -Activity "Getting Threads for All Forums" -Status "Returned $( $TotalReturned ) / $( $ForumThreadResponse.TotalCount ) Records" -CurrentOperation "Making Call #$( $UriParameters["PageIndex"] + 1 ) for $BatchSise records" -PercentComplete ( $TotalReturned / $ForumThreadResponse.TotalCount * 100 )
                     }
-                    else {
-                        Write-Progress -Activity "Pulling Threads in $GroupName / $ForumTitle" -CurrentOperation "Pulling $BatchSize threads [$( $TotalThreads )/$( $ThreadsResponse.TotalCount )]" -PercentComplete ( ( $TotalThreads / $ThreadsResponse.TotalCount ) * 100 )
-                    }
-                    if ( -not $AllForums ) {
-                        $Uri = "api.ashx/v2/forums/$( $f )/threads.json"
-                    }
-                    else {
-                        $Uri = 'api.ashx/v2/forums/threads.json'
-                    }
-                    $ThreadsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
-                    $TotalThreads += $ThreadsResponse.Threads.Count
-                    if ( $ReturnDetails ) {
-                        $ThreadsResponse.Threads
-                    }
-                    else {
-                        $ThreadsResponse.Threads | Select-Object -Property @{ Name = "GroupId"; Expression = { $_.GroupId } }, @{ Name = "GroupName"; Expression = { $GroupName } }, @{ Name = "ForumId"; Expression = { $_.ForumId } }, @{ Name = "ForumTitle"; Expression = { $ForumTitle } }, @{ Name = "ThreadId"; Expression = { $_.Id } }, Url, Subject, Body, @{ Name = 'Author'; Expression = { $_.Author.DisplayName } }, Date, LatestPostDate, ThreadStatus, ThreadType, ViewCount, ReplyCount, @{ Name = "Tags"; Expression = { $_.Tags.Value -join ", " } }
+                    Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
+                    $ForumThreadResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
+                    if ( $ForumThreadResponse ) {
+                        $TotalReturned += $ForumThreadResponse.Threads.Count
+                        if ( $ReturnDetails ) {
+                            $ForumThreadResponse.Threads
+                        }
+                        else {
+                            $ForumThreadResponse.Threads | Select-Object -Property $PropertiesToReturn
+                        }
                     }
                     $UriParameters["PageIndex"]++
-                } while ( $TotalThreads -lt $ThreadsResponse.TotalCount )
-                Write-Progress -Activity "Pulling Threads in $GroupName / $ForumTitle" -Completed
-    
+                } while ($TotalReturned -lt $ForumThreadResponse.TotalCount)
+                Write-Progress -Activity "Getting Threads for All Forums" -Completed
             }
         }
     }
