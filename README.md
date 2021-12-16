@@ -6,6 +6,12 @@ These may or may not ever see the light of day, but I figured I should put them 
 
 I've never written a proper PowerShell Module before, so I'm starting the way I know - with functions to do the things I need.
 
+## Latest updates
+
+This repo is all over the place, and I apologize to anyone that's using it.  I've just discovered (re-discovered technically) the ability to use Web Sessions, so I might be redoing a whole bunch of this work.  Sorry for the state of everything, but like I said earlier, this is my first PowerShell module and the first time I've dug into another vendor's web API to this degree.
+
+Please bear with me as I try to devote the necessary time to make this a fully functional API.
+
 ## Getting Started
 
 To use these functions, you'll need your **username** and an **API key** from your community.
