@@ -163,7 +163,7 @@ function Get-VtForum {
                 }
                 
                 else {
-                    Write-Error -Message "Unable to find a matching gallery"
+                    Write-Error -Message "Unable to find a matching forum"
                 }
             
 

@@ -42,6 +42,13 @@ function Get-VtForumThread {
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Thread by Forum Id with Connection File'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
             ParameterSetName = 'Thread by Forum Id with Authentication Header'
         )]
         [Parameter(
@@ -50,13 +57,6 @@ function Get-VtForumThread {
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false, 
             ParameterSetName = 'Thread by Forum Id with Connection Profile'
-        )]
-        [Parameter(
-            Mandatory = $false,
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
-            ValueFromRemainingArguments = $false, 
-            ParameterSetName = 'Thread by Forum Id with Connection File'
         )]
         [Alias("Id")]
         [int64[]]$ForumId,
@@ -101,10 +101,14 @@ function Get-VtForumThread {
         [ValidateSet('All', 'Moderated', 'Answered', 'Unanswered', 'AnsweredNotVerified', 'AnsweredWithNotVerified', 'Unread', 'MyThreads', 'Authored', 'NoResponse')]
         [string]$QueryType = 'All',
 
-        # Sort Order
+        # Sort Field
         [Parameter()]
         [ValidateSet('LastPost', 'ThreadAuthor', 'TotalReplies', 'TotalViews', 'TotalRatings', 'FirstPost', 'Subject', 'Votes', 'TotalQualityVotes', 'QualityScore', 'Score', 'ContentIdsOrder')]
         [string]$SortBy = 'LastPost',
+
+        # Sort Order
+        [Parameter()]
+        [switch]$Descending,
 
         # Number of entries to get per batch (default of 20)
         [Parameter()]
@@ -127,7 +131,17 @@ function Get-VtForumThread {
         # Do we want to include the body in the simplified output?
         [Parameter()]
         [switch]$IncludeBody,
-    
+
+        <# doesn't work yet - still need to do something in function_Get-VtForum.ps1
+        # Do we want to include the Group Name in the simplified output?
+        [Parameter()]
+        [switch]$IncludeGroupName,
+
+        # Do we want to include the Forum Name in the simplified output?
+        [Parameter()]
+        [switch]$IncludeForumName,
+        #>
+
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Forum Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Threads in all Forums with Authentication Header')]
@@ -199,6 +213,13 @@ function Get-VtForumThread {
             $UriParameters["CreatedAfterDate"] = $CreatedAfterDate
         }
 
+        if ( $Descending ) {
+            $UriParameters["SortOrder"] = 'desc'
+        }
+        else {
+            $UriParameters["SortOrder"] = 'asc'
+        }
+
         $PropertiesToReturn = @(
             @{ Name = "ThreadId"; Expression = { $_.Id } }
             @{ Name = "GroupId"; Expression = { $_.GroupId } }
@@ -219,6 +240,20 @@ function Get-VtForumThread {
         if ( $IncludeBody ) {
             $PropertiesToReturn += @{ Name = "Body"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Body ) } }
         }
+        if ( $IncludeGroupName -or $IncludeForumName ) {
+            $ForumList = @{}
+            $GroupList = @{}
+            Get-VtForum -VtCommunity $Community -VtAuthHeader $AuthHeaders | ForEach-Object {
+                $ForumList[$_.ForumId] = $_.Name
+                $GroupList[$_.GroupId] = $_.GroupName
+            }
+            if ( $IncludeGroupName ) {
+                $PropertiesToReturn += @{ Name = "GroupName"; Expression = { $GroupList[$_.GroupId] } }
+            }
+            if ( $IncludeForumName ) {
+                $PropertiesToReturn += @{ Name = "ForumName"; Expression = { $ForumList[$_.ForumId] } }
+            }
+        }
 
         $UriParameters["ForumThreadQueryType"] = $QueryType
         $UriParameters["SortBy"] = $SortBy
@@ -238,6 +273,8 @@ function Get-VtForumThread {
                     do {
                         if ( $TotalReturned -and -not $SuppressProgressBar) {
                             Write-Progress -Activity "Getting Threads for $ForumName" -Status "Returned $( $TotalReturned ) / $( $ForumThreadResponse.TotalCount ) Records" -CurrentOperation "Making Call #$( $UriParameters["PageIndex"] + 1 ) for $BatchSise records" -PercentComplete ( $TotalReturned / $ForumThreadResponse.TotalCount * 100 )
+                        } elseif ( -not $SuppressProgressBar ) {
+                            Write-Progress -Activity "Getting Threads for $ForumName" -Status "Making first call for $BatchSize records" -CurrentOperation "Making first call for $BatchSize records"
                         }
                         Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
                         $ForumThreadResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
