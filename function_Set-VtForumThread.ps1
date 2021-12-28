@@ -181,7 +181,7 @@ function Set-VtForumThread {
             'ThreadStatus'
             'ThreadType'
             'Date'
-            'LatestPostDate'
+            @{ Name = "LastPostDate"; Expression = { $_.LatestPostDate } }
             'Url'
             'Subject'
             'IsLocked'
