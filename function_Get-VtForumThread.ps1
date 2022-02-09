@@ -132,6 +132,10 @@ function Get-VtForumThread {
         [Parameter()]
         [switch]$IncludeBody,
 
+        # Do we want to include the body in the simplified output?
+        [Parameter()]
+        [switch]$IncludeBodyFormatted,
+
         <# doesn't work yet - still need to do something in function_Get-VtForum.ps1
         # Do we want to include the Group Name in the simplified output?
         [Parameter()]
@@ -238,7 +242,10 @@ function Get-VtForumThread {
         )
 
         if ( $IncludeBody ) {
-            $PropertiesToReturn += @{ Name = "Body"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Body ) } }
+            $PropertiesToReturn += 'Body'
+        }
+        if ( $IncludeBodyFormatted ) {
+            $PropertiesToReturn += @{ Name = "BodyFormatted"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Body ) } }
         }
         if ( $IncludeGroupName -or $IncludeForumName ) {
             $ForumList = @{}
