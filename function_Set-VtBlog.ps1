@@ -189,7 +189,6 @@ function Set-VtBlog {
         [Parameter(ParameterSetName = 'Blog By Id with Connection Profile')]
         [Parameter(ParameterSetName = 'Blog By Id with Connection File')]
         [switch]$Disabled,
-    
             
         [Parameter(ParameterSetName = 'Blog By Id (Add/Remove Author) with Authentication Header')]
         [Parameter(ParameterSetName = 'Blog By Id (Add/Remove Author) with Connection Profile')]
@@ -208,6 +207,8 @@ function Set-VtBlog {
     
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id (Authors List) with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id (Add/Remove Author) with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
@@ -216,17 +217,23 @@ function Set-VtBlog {
         
         # Authentication Header for the community
         [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id (Authors List) with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id (Add/Remove Author) with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable]$VtAuthHeader,
     
         [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id (Authors List) with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id (Add/Remove Author) with Connection Profile')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSObject]$Connection,
     
         # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
-        [Parameter(ParameterSetName = 'Blog By Id with Connection File')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id (Add/Remove Author) with Connection File')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id (Authors List) with Connection File')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog By Id with Connection File')]
         [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) )
             
     )
@@ -256,7 +263,7 @@ function Set-VtBlog {
         }
     
         # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $AuthHeaders = $AuthHeaders | Update-VtAuthHeader -RestMethod Put -Verbose:$false -WhatIf:$false
+        $AuthHeaders = $AuthHeaders | Update-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
 
         $UriParameters = @{}
         if ( $GroupId ) { $UriParameters["GroupId"] = $GroupId }
@@ -267,7 +274,7 @@ function Set-VtBlog {
     PROCESS {
         ForEach ( $b in $BlogId ) {
             # Get the blog because we'll want it for some later things
-            $Blog = Get-VtBlog -BlogId $b -VtCommunity $Community -VtAuthHeader $AuthHeader -Verbose:$false -WhatIf:$false
+            $Blog = Get-VtBlog -BlogId $b -VtCommunity $Community -VtAuthHeader $AuthHeaders -Verbose:$false -WhatIf:$false
     
             # Is the blog enabled and so we want to disable it?
             if ( $Blog.Enabled -and $Disabled ) {
@@ -279,7 +286,7 @@ function Set-VtBlog {
             }
     
             switch -Wildcard ( $PSCmdlet.ParameterSetName ) {
-                '*(Add/Remove Authors)*' { 
+                '*(Add/Remove Author)*' { 
                     # Get Current List of Authors - we must use an ArrayList type or the .Add and .Remove methods are blocked
                     $WorkingAuthorList = New-Object -TypeName System.Collections.ArrayList
                     $OriginalAuthorList = New-Object -TypeName System.Collections.ArrayList
@@ -333,7 +340,7 @@ function Set-VtBlog {
                 if ( $PSCmdlet.ShouldProcess("Blog: '$( $Blog.Name )' in '$( $Blog.GroupName )'", "Update $( $UriParameters.Keys -join ", " )") ) {
                     $Uri = "api.ashx/v2/blogs/$BlogId.json"
     
-                    $Result = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Method "Post" -Headers ( $AuthHeader | Set-VtAuthHeader -RestMethod "Put" -WhatIf:$false )
+                    $Result = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Method "Post" -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod "Put" -WhatIf:$false )
                     if ( $Result ) {
                         $Result.Blog | Select-Object -Property @{ Name = "BlogId"; Expression = { $_.Id } }, Name, Key, Url, Description, Enabled, PostCount, CommentCount, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Name ) } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "Authors"; Expression = { ( $_.Authors | ForEach-Object { $_ | Select-Object -ExpandProperty DisplayName } ) } }
                     }
