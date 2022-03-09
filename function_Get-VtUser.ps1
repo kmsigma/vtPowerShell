@@ -185,6 +185,7 @@ function Get-VtUser {
         [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
+        [Alias("AuthHeader")]
         [System.Collections.Hashtable]$VtAuthHeader,
     
         [Parameter(Mandatory = $true, ParameterSetName = 'Username with Connection Profile')]
@@ -327,9 +328,7 @@ function Get-VtUser {
         if ( $Presence -ne 'All' ) {
             $UriParameters["Presence"] = $Presence
         }
-        if ( $AccountStatus -ne 'All' ) {
-            $UriParameters["AccountStatus"] = $AccountStatus
-        }
+        $UriParameters["AccountStatus"] = $AccountStatus
 
         # Possible Uris based on the lookup type
         $Uris = @{
