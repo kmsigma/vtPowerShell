@@ -79,7 +79,7 @@ function Set-VtUser {
         # if the account status is updated to 'Banned', when are they allowed back - defaults to 1 year from now
         [Parameter(Mandatory = $false)]
         [AllowNull()]
-        [datetime]$BannedUntil = ( Get-VtDate ).AddYears(1),
+        [datetime]$BannedUntil = ( Get-Date ).AddYears(1),
     
         # the reason the user was banned
         [Parameter(Mandatory = $false)]

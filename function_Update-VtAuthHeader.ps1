@@ -69,6 +69,7 @@ function Update-VtAuthHeader {
         HelpUri = 'https://community.telligent.com/community/10/w/developer-training/53138/authentication#Using_an_API_Key_and_username_to_authenticate_REST_requests',
         ConfirmImpact = 'Medium')
     ]
+    [Alias("Set-VtAuthHeader")]
     param (
         # Existing authentication header
         [Parameter(Mandatory = $true, 
