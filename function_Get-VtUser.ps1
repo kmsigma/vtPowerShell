@@ -251,7 +251,7 @@ function Get-VtUser {
         )]
         [switch]$Descending,
 
-        # Include Hidden
+        # Include Hidden Users
         [Parameter(
             Mandatory = $false,
             ValueFromPipeline = $false,
@@ -259,6 +259,15 @@ function Get-VtUser {
             ValueFromRemainingArguments = $false
         )]
         [switch]$IncludeHidden,
+
+        # Include 'Mention' HTML Code
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$IncludeMentionCode,
 
         # Filter for Recent
         [Parameter(
@@ -354,6 +363,9 @@ function Get-VtUser {
             @{ Name = "EmailEnabled"; Expression = { $_.ReceiveEmails -eq "true" } }
         )
     
+        if ( $IncludeMentionCode ) {
+            $PropertiesToReturn += @{ Name = "MentionHtml"; Expression = { "[mention:$( $_.ContentId.Replace('-', '') ):$( $_.ContentTypeId.Replace('-', '') )]" } }
+        }
     }
     PROCESS {
         switch -wildcard ( $PSCmdlet.ParameterSetName ) {
