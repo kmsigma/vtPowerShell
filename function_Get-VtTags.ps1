@@ -173,11 +173,12 @@ function Get-VtTag {
                     $PbCurrentOperation = ( "Retrieving $BatchSize records of $( $TagsResponse.TotalCount )" )
                     $PbStatus = "[$TotalReturned/$( $TagsResponse.TotalCount )] records retrieved"
                     $PbPercent = ( ( $TotalReturned / $TagsResponse.TotalCount ) * 100 )
-                    $PbSecondsRemaining = [int64]( ( $TagsResponse.TotalCount - $TotalReturned ) * ( $TagsResponse.TotalCount / $StopWatch.Elapsed.TotalSeconds ) )
+                    $PbSecondsRemaining = [int64]( ( $UriParameters["PageIndex"] / $StopWatch.Elapsed.TotalSeconds ) * ( [math]::Ceiling(( $TagsResponse.TotalCount / $UriParameters["PageSize"] )) - $UriParameters["PageIndex"] ) )
                     if ( $PbSecondsRemaining -gt 2147483647 ) {
                             $PbSecondsRemaining = -1
                     }
                     Write-Progress -Activity $PbActivity -CurrentOperation $PbCurrentOperation -Status $PbStatus -PercentComplete $PbPercent -SecondsRemaining $PbSecondsRemaining
+
                 }
                 $TagsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                 if ( $TagsResponse ) {
