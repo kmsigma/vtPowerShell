@@ -122,6 +122,15 @@ function Get-VtForumThread {
         # Created before this Date/time
         [Parameter()]
         [datetime]$CreatedBeforeDate,
+
+
+        # Do we want to return the thread's SPAM details?
+        [Parameter()]
+        [switch]$IncludeSpamMetrics,
+
+        # Do we want to return the poster's IP?
+        [Parameter()]
+        [switch]$IncludeHostAddress,
             
         # Do we want to return everything?
         [Parameter()]
@@ -224,6 +233,7 @@ function Get-VtForumThread {
             $UriParameters["SortOrder"] = 'asc'
         }
 
+
         $PropertiesToReturn = @(
             @{ Name = "ThreadId"; Expression = { $_.Id } }
             @{ Name = "GroupId"; Expression = { $_.GroupId } }
@@ -241,11 +251,17 @@ function Get-VtForumThread {
             @{ Name = "Tags"; Expression = { $_.Tags.Value -join ", " } }
         )
 
+        if ( $IncludeHostAddress ) {
+            $PropertiesToReturn += 'UserHostAddress'
+        }
         if ( $IncludeBody ) {
             $PropertiesToReturn += 'Body'
         }
         if ( $IncludeBodyFormatted ) {
             $PropertiesToReturn += @{ Name = "BodyFormatted"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Body ) } }
+        }
+        if ( $IncludeSpamMetrics ) {
+            $PropertiesToReturn += 'SpamStatus', 'SpamScore'
         }
         if ( $IncludeGroupName -or $IncludeForumName ) {
             $ForumList = @{}
