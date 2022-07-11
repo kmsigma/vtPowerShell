@@ -191,9 +191,10 @@ function Get-VtPointTransaction {
             }
         }
     
+        $Community = $VtCommunity
         if ( $UriParameters["UserId"] -or $PSCmdlet.ParameterSetName -eq 'All Users' ) {
             if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Search for point transactions $LookupKey") ) {
-                $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
+                $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                 Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
                 Write-Progress -Activity "Querying $VtCommunity for Points Transactions" -CurrentOperation "Searching $LookupKey for the first $BatchSize entries" -PercentComplete 0
                 $TotalResponseCount = $PointsResponse.PointTransactions.Count
@@ -209,9 +210,10 @@ function Get-VtPointTransaction {
                 while ( $TotalResponseCount -lt $PointsResponse.TotalCount ) {
                     # Bump the page index counter
                         ( $UriParameters.PageIndex )++
+                    $Community = $VtCommunity
                     Write-Verbose -Message "Making call #$( $UriParameters.PageIndex ) to the API"
                     Write-Progress -Activity "Querying $VtCommunity for Points Transactions" -CurrentOperation "Making call #$( $UriParameters.PageIndex ) to the API [$TotalResponseCount / $( $PointsResponse.TotalCount )]" -PercentComplete ( ( $TotalResponseCount / $PointsResponse.TotalCount ) * 100 )
-                    $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
+                    $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                     Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
                     $TotalResponseCount += $PointsResponse.PointTransactions.Count
                     if ( $ActionFilter ) {
