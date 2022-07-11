@@ -165,6 +165,19 @@ function Set-VtBlog {
         [Parameter(ParameterSetName = 'Blog By Id with Connection File')]
         [ValidateLength(0, 999)] # Just noticed that the blog description is limited to 1000 characters
         [string]$Description,
+
+        # Update the blog's default image
+        [Parameter(ParameterSetName = 'Blog By Id (Add/Remove Author) with Authentication Header')]
+        [Parameter(ParameterSetName = 'Blog By Id (Add/Remove Author) with Connection Profile')]
+        [Parameter(ParameterSetName = 'Blog By Id (Add/Remove Author) with Connection File')]
+        [Parameter(ParameterSetName = 'Blog By Id (Authors List) with Authentication Header')]
+        [Parameter(ParameterSetName = 'Blog By Id (Authors List) with Connection Profile')]
+        [Parameter(ParameterSetName = 'Blog By Id (Authors List) with Connection File')]
+        [Parameter(ParameterSetName = 'Blog By Id with Authentication Header')]
+        [Parameter(ParameterSetName = 'Blog By Id with Connection Profile')]
+        [Parameter(ParameterSetName = 'Blog By Id with Connection File')]
+        [ValidateLength(0, 999)] # Just noticed that the blog description is limited to 1000 characters
+        [string]$DefaultPostImageUrl,
     
         # Update the blog's parent group (move the blog)
         [Parameter(ParameterSetName = 'Blog By Id (Add/Remove Author) with Authentication Header')]
@@ -270,6 +283,7 @@ function Set-VtBlog {
         if ( $Key ) { $UriParameters["Key"] = $Key.ToLower() }
         if ( $Name ) { $UriParameters["Name"] = $Name }
         if ( $Description ) { $UriParameters["Description"] = $Description }
+        if ( $DefaultPostImageUrl ) { $UriParameters["DefaultPostImageUrl"] = $DefaultPostImageUrl }
     }
     PROCESS {
         ForEach ( $b in $BlogId ) {
@@ -284,6 +298,7 @@ function Set-VtBlog {
             elseif ( ( -not ( $Blog.Enabled ) ) -and ( -not ( $Disabled ) ) ) {
                 $UriParameters["Enabled"] = $true
             }
+
     
             switch -Wildcard ( $PSCmdlet.ParameterSetName ) {
                 '*(Add/Remove Author)*' { 
