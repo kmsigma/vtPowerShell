@@ -111,35 +111,35 @@ function Get-VtUser {
     (
         # Username to use for lookup
         [Parameter(
-            Mandatory = $true, 
+            Mandatory = $false, 
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false, 
             ParameterSetName = 'Username with Authentication Header')]
         [Parameter(
-            Mandatory = $true,
+            Mandatory = $false,
             ParameterSetName = 'Username with Connection Profile'
         )]
         [Parameter(
-            Mandatory = $true, 
+            Mandatory = $false, 
             ParameterSetName = 'Username with Connection File'
         )]
         [string[]]$Username,
     
         # Email address to use for lookup
         [Parameter(
-            Mandatory = $true,
+            Mandatory = $false,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false, 
             ParameterSetName = 'Email Address with Authentication Header'
         )]
         [Parameter(
-            Mandatory = $true, 
+            Mandatory = $false, 
             ParameterSetName = 'Email Address with Connection Profile'
         )]
         [Parameter(
-            Mandatory = $true, 
+            Mandatory = $false, 
             ParameterSetName = 'Email Address with Connection File'
         )]
         [ValidateNotNull()]
@@ -148,24 +148,26 @@ function Get-VtUser {
     
         # User ID for the lookup
         [Parameter(
-            Mandatory = $true,
+            Mandatory = $false,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false, 
             ParameterSetName = 'User Id with Authentication Header'
         )]
-        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Connection Profile')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Connection File')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'User Id with Connection Profile')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'User Id with Connection File')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [Alias("Id")]
         [int64[]]$UserId,
 
+        <#
         [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Connection Profile')]
         [Parameter(Mandatory = $true, ParameterSetName = 'All Users with Connection File')]
         [Alias("AllUsers")]
         [switch]$All,
+        #>
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(Mandatory = $true, ParameterSetName = 'Username with Authentication Header')]
@@ -221,6 +223,15 @@ function Get-VtUser {
         [ValidateRange(1, 100)]
         [int]$BatchSize = 20,
 
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [Alias("CreatedOn", "JoinedOn")]
+        [datetime]$JoinDate,
+
         # Filter for Account Status
         [Parameter(
             Mandatory = $false,
@@ -259,6 +270,24 @@ function Get-VtUser {
             ValueFromRemainingArguments = $false
         )]
         [switch]$IncludeHidden,
+
+        # Has Default Avatar
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$IncludeAvatarCheck,
+
+        # Include Email Domain
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$IncludeEmailDomain,
 
         # Include 'Mention' HTML Code
         [Parameter(
@@ -339,6 +368,11 @@ function Get-VtUser {
         }
         $UriParameters["AccountStatus"] = $AccountStatus
 
+        if ( $JoinDate ) {
+            $UriParameters["JoinDate"] = $JoinDate
+        }
+
+
         # Possible Uris based on the lookup type
         $Uris = @{
             'List' = 'api.ashx/v2/users.json'
@@ -366,6 +400,12 @@ function Get-VtUser {
         if ( $IncludeMentionCode ) {
             $PropertiesToReturn += @{ Name = "MentionHtml"; Expression = { "[mention:$( $_.ContentId.Replace('-', '') ):$( $_.ContentTypeId.Replace('-', '') )]" } }
         }
+        if ( $IncludeAvatarCheck ) {
+            $PropertiesToReturn += @{ Name = "DefaultAvatar"; Expression = { $_.AvatarUrl -like "*/cfs-file/__key/communityserver-components-avatars/default.png" } }
+        }
+        if ( $IncludeEmailDomain ) {
+            $PropertiesToReturn += @{ Name = "EmailDomain"; Expression = { $_.PrivateEmail.Split('@')[1] } }
+        }
     }
     PROCESS {
         switch -wildcard ( $PSCmdlet.ParameterSetName ) {
@@ -384,7 +424,7 @@ function Get-VtUser {
                 # Different URI for by ID number
                 $ProcessMethod = 'Show'
             }
-            'All Users *' {
+            default {
                 Write-Verbose -Message "Detected Search for All Users"
                 Write-Warning -Message "Collecting all users can be time consuming.  You've been warned."
                 $ProcessMethod = 'List'
