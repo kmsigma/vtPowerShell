@@ -28,230 +28,308 @@ function Get-VtPointTransaction {
         Online REST API Documentation: 
     #>
     [CmdletBinding(
+        DefaultParameterSetName = 'All Transactions with Connection File',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64803/list-point-transactions-point-transaction-rest-endpoint',
-        ConfirmImpact = 'Medium')
+        ConfirmImpact = 'Low')
     ]
     Param
     (
         # Username to use for lookup
         [Parameter(
-            Mandatory = $true, 
+            Mandatory = $false, 
             ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
+            ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false, 
-            ParameterSetName = 'Username')]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [string]$Username,
+            ParameterSetName = 'Username with Authentication Header')]
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Username with Connection Profile')]
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Username with Connection File')]
+        [string[]]$Username,
     
         # Email address to use for lookup
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'Email Address'
-        )]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Email Address with Authentication Header')]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Email Address with Connection Profile')]
+        [Parameter(Mandatory = $true, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Email Address with Connection File')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [string]$EmailAddress,
+        [string[]]$EmailAddress,
+    
+        # User ID address to use for lookup
+        [Parameter(Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'User Id with Authentication Header')]
+        [Parameter(Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'User Id with Connection Profile')]
+        [Parameter(Mandatory = $true,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'User Id with Connection File')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [int64[]]$UserId,
     
         # Email address to use for lookup
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'User Id'
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Transaction ID with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Transaction ID with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Transaction ID with Connection File')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [int]$UserId,
-    
-        # Email address to use for lookup
-        [Parameter(
-            Mandatory = $true,
-            ParameterSetName = 'Transaction Id'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [int]$TransactionId,
-    
-        # Get all transactions
-        [Parameter(
-            Mandatory = $false,
-            ParameterSetName = 'All Users'
-        )]
-        [ValidateNotNull()]
-        [ValidateNotNullOrEmpty()]
-        [switch]$AllUsers = $false,
+        [int64[]]$TransactionId,
     
         # Start Date of Transaction Search
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter()]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [datetime]$StartDate,
     
         # End Date of Transaction Search - defaults to 'now'
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter()]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [datetime]$EndDate,
     
-        # Should we return all details or just the simplified version
-        [switch]$ReturnDetails = $false,
-    
-        # Optional Filter to set for the action.
-        [Parameter(
-            Mandatory = $false
-        )]
+        # Sort type for the results'
+        [Parameter()]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [string]$ActionFilter,
-    
-        # Optional page size grab for the call to the API. (Script defaults to 1000 per batch)
+        [ValidateSet("CreateDate", "Value")]
+        [string]$SortBy = 'CreatedDate',
+
+        # Optional page size grab for the call to the API. (Script defaults to 100 per batch)
         # Larger page sizes generally complete faster, but consume more memory
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter()]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [ValidateRange(100, 10000)]
-        [int]$BatchSize = 1000,
+        [ValidateRange(10, 10000)]
+        [int]$BatchSize = 100,
+
+        # Should we return all details?
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$ReturnDetails,
     
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Username with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Email Address with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Transaction ID with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Transactions with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
+        [Alias("Community")]
+        [string]$VtCommunity,
+        
         # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Username with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Email Address with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Transaction ID with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Transactions with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
+        [Alias("AuthHeader")]
+        [System.Collections.Hashtable]$VtAuthHeader,
+    
+        [Parameter(Mandatory = $true, ParameterSetName = 'Username with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Email Address with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Transaction ID with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'All Transactions with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+    
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(Mandatory = $false, ParameterSetName = 'Username with Connection File')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Email Address with Connection File')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'User Id with Connection File')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'Transaction ID with Connection File')]
+        [Parameter(Mandatory = $false, ParameterSetName = 'All Transactions with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
+
+        # Suppress the progress bar
+        [Parameter()]
+        [switch]$SuppressProgressBar
     )
         
     BEGIN {
-    
+
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
+
         $RestMethod = "GET"
     
-        # Base Uri for calls
-        $Uri = "api.ashx/v2/pointtransactions.json"
-            
         # Create an collection for the UriParameters
         $UriParameters = @{}
         $UriParameters.Add("PageIndex", 0)
         $UriParameters.Add("PageSize", $BatchSize)
+        $UriParameters.Add("SortBy", $SortBy)
         if ( $EndDate ) {
             $UriParameters.Add("EndDate", $EndDate)
         }
         if ( $StartDate ) {
             $UriParameters.Add("StartDate", $StartDate)
         }
+    
+        $PropertiesToReturn = @(
+            @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } },
+            @{ Name = "Username"; Expression = { $_.User.Username } },
+            @{ Name = "UserId"; Expression = { $_.User.Id } },
+            'Value',
+            @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } },
+            @{ Name = "Date"; Expression = { $_.CreatedDate } },
+            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } },
+            @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
+        )
     }
         
     
     PROCESS {
             
-        switch ( $PSCmdlet.ParameterSetName ) {
-            'User Id' {
-                Write-Verbose -Message "Get-VtPointTransaction: Using the user id [$UserId] for the lookup"
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+            'User ID *' {
+                Write-Verbose -Message "Get-VtPointTransaction: Using the user id for the lookup"
                 # Points Lookup requires the UserID, not the username
-                $UriParameters.Add("UserId", $UserId)
-                $LookupKey = "for User ID: [$UserId]"
+                $Users = $UserId
+                $ProcessMethod = "List"
             }
-            'Username' { 
-                Write-Verbose -Message "Get-VtPointTransaction: Using the username [$Username] for the lookup"
+            'Username *' { 
+                Write-Verbose -Message "Get-VtPointTransaction: Using the username for the lookup"
                 # Points Lookup requires the UserID, not the username
-                $User = Get-VtUser -Username $Username -Community $VtCommunity -AuthHeader ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
-                $UriParameters.Add("UserId", $User.UserId)
-                $LookupKey = "for Username: [$Username]"
+                $Users = Get-VtUser -Username $Username -Community $Community -AuthHeader ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false ) | Select-Object -ExpandProperty UserId
+                $ProcessMethod = "List"
             }
-            'Email Address' {
-                Write-Verbose -Message "Get-VtPointTransaction: Using the email [$EmailAddress] for the lookup"
+            'Email Address *' {
+                Write-Verbose -Message "Get-VtPointTransaction: Using the email for the lookup"
                 # Points Lookup requires the UserID, not the email address
-                $User = Get-VtUser -EmailAddress $EmailAddress -Community $VtCommunity -AuthHeader ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
-                $UriParameters.Add("UserId", $User.UserId)
-                $LookupKey = "for Email Address: [$EmailAddress]"
+                $Users = Get-VtUser -EmailAddress $EmailAddress -Community $Community -AuthHeader ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false ) | Select-Object -ExpandProperty UserId
+                $ProcessMethod = "List"
             }
-            'Transaction Id' {
-                Write-Verbose -Message "Get-VtPointTransaction: Using the TransactionID [$TransactionId] for the lookup"
+            'Transaction ID *' {
+                Write-Verbose -Message "Get-VtPointTransaction: Using the TransactionID for the lookup"
                 # Points Lookup requires the UserID, not the email address
-                $LookupKey = "for Transaction ID: [$TransactionId]"
+                $ProcessMethod = "Show"
             }
-            'All Users' {
+            default {
                 Write-Verbose -Message "Request all points for the lookup"
-                $LookupKey = "for [All Users]"
+                $ProcessMethod = "List"
             }
         }
     
-        $Community = $VtCommunity
-        if ( $UriParameters["UserId"] -or $PSCmdlet.ParameterSetName -eq 'All Users' ) {
-            if ( $PSCmdlet.ShouldProcess("$VtCommunity", "Search for point transactions $LookupKey") ) {
-                $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
-                Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
-                Write-Progress -Activity "Querying $VtCommunity for Points Transactions" -CurrentOperation "Searching $LookupKey for the first $BatchSize entries" -PercentComplete 0
-                $TotalResponseCount = $PointsResponse.PointTransactions.Count
-                if ( $ActionFilter ) {
-                    $PointTransactions = $PointsResponse.PointTransactions | Where-Object { ( $_.Description | ConvertFrom-HtmlString ) -like $ActionFilter }
-                    Write-Verbose -Message "Keeping $( $PointTransactions.Count ) total responses"
-                }
-                else {
-                    $PointTransactions = $PointsResponse.PointTransactions
-                    Write-Verbose -Message "Keeping all $( $PointTransactions.Count ) responses"
-                }
-    
-                while ( $TotalResponseCount -lt $PointsResponse.TotalCount ) {
-                    # Bump the page index counter
-                        ( $UriParameters.PageIndex )++
-                    $Community = $VtCommunity
-                    Write-Verbose -Message "Making call #$( $UriParameters.PageIndex ) to the API"
-                    Write-Progress -Activity "Querying $VtCommunity for Points Transactions" -CurrentOperation "Making call #$( $UriParameters.PageIndex ) to the API [$TotalResponseCount / $( $PointsResponse.TotalCount )]" -PercentComplete ( ( $TotalResponseCount / $PointsResponse.TotalCount ) * 100 )
-                    $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
-                    Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
-                    $TotalResponseCount += $PointsResponse.PointTransactions.Count
-                    if ( $ActionFilter ) {
-                        $PointTransactions += $PointsResponse.PointTransactions | Where-Object { ( $_.Description | ConvertFrom-HtmlString ) -like $ActionFilter }
-                        Write-Verbose -Message "Keeping $( $PointTransactions.Count ) total responses"
-                    }
-                    else {
-                        $PointTransactions += $PointsResponse.PointTransactions
-                        Write-Verbose -Message "Keeping all $( $PointTransactions.Count ) responses"
-                    }
-                }
-                Write-Progress -Activity "Querying $VtCommunity for Points Transactions" -Completed
-    
-                # If we want details, return everything
-                if ( $ReturnDetails ) {
-                    $PointTransactions
-                }
-                else {
-                    $PointTransactions | Select-Object -Property @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
-                }
-            }
+
+        if ( $ProcessMethod -eq "List ") {
+            # Cycle through each transaction ID
         }
-        elseif ( $PSCmdlet.ParameterSetName -eq 'Transaction Id' ) {
-            $Uri = "api.ashx/v2/pointtransaction/$( $TransactionId ).json"
-            $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false ) -Verbose:$false
-            if ( $PointsResponse.PointTransaction.User ) {
-                # If we want details, return everything
-                if ( $ReturnDetails ) {
-                    $PointsResponse.PointTransaction
-                }
-                else {
-                    $PointsResponse.PointTransaction | Select-Object -Property @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
+        else {
+            # cycle through something else (everything, or users)
+            $Uri = 'api.ashx/v2/pointtransactions.json'
+            if ( $Users ) {
+                # We are doing repeated transactions with provided UserID
+                ForEach ( $U in $Users ) {
+                    $UriParameters["UserId"] = $U
+                    # Reset the index for each user
+                    $UriParameters["PageIndex"] = 0
+                    $TotalReturned = 0
+                    do {
+                        Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
+                        if ( $TotalReturned -and -not $SuppressProgressBar ) {
+                            Write-Progress -Activity "Retrieving Point transactions from $Community [UserID: $U]" -CurrentOperation ( "Retrieving $BatchSize records of $( $PointsResponse.TotalCount )" ) -Status "[$TotalReturned/$( $PointsResponse.TotalCount )] records retrieved" -PercentComplete ( ( $TotalReturned / $PointsResponse.TotalCount ) * 100 )
+                        }
+                        $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
+                        if ( $PointsResponse ) {
+                            $TotalReturned += $PointsResponse.PointTransactions.Count
+                            if ( $ReturnDetails ) {
+                                $PointsResponse.PointTransactions
+                            }
+                            else {
+                                $PointsResponse.PointTransactions | Select-Object -Property $PropertiesToReturn
+                            }
+                        }
+                        $UriParameters["PageIndex"]++
+                    } while ( $TotalReturned -lt $PointsResponse.TotalCount )
                 }
             }
             else {
-                Write-Verbose -Message "No points transaction found matching #$TransactionId"
+                # We are pulling everything
+                $TotalReturned = 0
+                do {
+                    Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
+                    if ( $TotalReturned -and -not $SuppressProgressBar ) {
+                        Write-Progress -Activity "Retrieving Point transactions from $Community" -CurrentOperation ( "Retrieving $( $UriParameters["PageSize"]) records of $( $PointsResponse.TotalCount )" ) -Status "[$TotalReturned/$( $PointsResponse.TotalCount )] records retrieved" -PercentComplete ( ( $TotalReturned / $PointsResponse.TotalCount ) * 100 )
+                    }
+                    $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
+                    if ( $PointsResponse ) {
+                        $TotalReturned += $PointsResponse.PointTransactions.Count
+                        if ( $ReturnDetails ) {
+                            $PointsResponse.PointTransactions
+                        }
+                        else {
+                            $PointsResponse.PointTransactions | Select-Object -Property $PropertiesToReturn
+                        }
+                    }
+                    $UriParameters["PageIndex"]++
+                } while ( $TotalReturned -lt $PointsResponse.TotalCount )
             }
         }
+        # Either process kicks off the progress bar, so shut it down here
+        if ( -not $SuppressProgressBar ) {
+            Write-Progress -Activity "Retrieving Users from $Community" -Completed
+        }
+
+
     }
     END {
         # Nothing to see here

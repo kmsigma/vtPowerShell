@@ -388,7 +388,7 @@ function Get-VtUser {
             @{ Name = "EmailAddress"; Expression = { $_.PrivateEmail } }
             @{ Name = "Status"; Expression = { $_.AccountStatus } }
             @{ Name = "ModerationStatus"; Expression = { $_.ModerationLevel } }
-            @{ Name = "IsIgnored"; Expression = { $_.IsIgnored -eq "true" } }
+            @{ Name = "ContentHidden"; Expression = { $_.IsIgnored -eq "true" } }
             @{ Name = "CurrentPresence"; Expression = { $_.Presence } }
             @{ Name = "JoinedDate"; Expression = { $_.JoinDate } }
             @{ Name = "LastLoginDate"; Expression = { $_.LastLoginDate } }
@@ -455,7 +455,7 @@ function Get-VtUser {
                         Write-Progress -Activity "Retrieving Users from $Community" -CurrentOperation "Retrieving User with ID: $( $Records[$i] )" -Status "[$i/$( $Records.Count)] records retrieved" -PercentComplete ( ( $i / $Records.Count ) * 100 )
                     }
                     Write-Verbose -Message "Making call for: $( $Records[$i] )"
-                    $UserResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + "$RecordType=$( $Records[$i])" ) -Headers $AuthHeaders
+                    $UserResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + "$RecordType=$( $Records[$i])" ) -Headers $AuthHeaders -ErrorAction SilentlyContinue
                     if ( $UserResponse ) {
                         if ( $ReturnDetails ) {
                             $UserResponse.User

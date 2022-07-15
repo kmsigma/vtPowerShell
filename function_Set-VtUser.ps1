@@ -39,7 +39,7 @@ function Set-VtUser {
     .NOTES
         I haven't been able to test every single feature, but the logic should hold
     #>
-    [CmdletBinding(DefaultParameterSetName = 'User Id', 
+    [CmdletBinding(DefaultParameterSetName = 'User Id with Connection Profile', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64926/update-user-rest-endpoint',
@@ -48,11 +48,9 @@ function Set-VtUser {
     (
     
         # The user id on which to operate.  Because this operation can change the username and email address, neither should be considered authorotative
-        [Parameter(Mandatory = $true, 
-            ValueFromPipeline = $true,
-            ValueFromPipelineByPropertyName = $true, 
-            ValueFromRemainingArguments = $false, 
-            Position = 0)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, ParameterSetName = 'User Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, ParameterSetName = 'User Id with Connection Profile')]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true, Position = 0, ParameterSetName = 'User Id with Connection File')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [Alias("Id")] 
@@ -102,28 +100,35 @@ function Set-VtUser {
     
         # Do we want to ignore the user's content?
         [Parameter(Mandatory = $false)]
-        [switch]$IgnoreUser,
+        [switch]$HideContent = $false,
     
         # Do you want to return the new user object back to the original call?
         [Parameter(Mandatory = $false)]
         [switch]$PassThru = $false,
     
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
+        [Alias("Community")]
+        [string]$VtCommunity,
+        
         # Authentication Header for the community
-        [Parameter(
-            Mandatory = $false
-        )]
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [System.Collections.Hashtable]$VtAuthHeader = $Global:VtAuthHeader
+        [Alias("AuthHeader")]
+        [System.Collections.Hashtable]$VtAuthHeader,
+    
+        [Parameter(Mandatory = $true, ParameterSetName = 'User Id with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+    
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'User Id with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) )
     )
     
     BEGIN {
@@ -131,7 +136,28 @@ function Set-VtUser {
         # Rest-Method to use for the change
         $RestMethod = "Put"
     
-    
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
+
         # Parameters to pass to the URI
         $UriParameters = @{}
     
@@ -150,7 +176,7 @@ function Set-VtUser {
         else {
             $UriParameters.Add("ReceiveEmails", 'true')
         }
-        if ( $IgnoreUser ) {
+        if ( $HideContent ) {
             $UriParameters.Add("IsIgnored", 'true')
         }
     
@@ -168,7 +194,7 @@ function Set-VtUser {
             
         if ( $NewUsername ) {
             # Check to see if the username already exists in the community
-            $CheckUser = Get-VtUser -Username $NewUsername -Community $VtCommunity -AuthHeader $VtAuthHeader -WhatIf:$false -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
+            $CheckUser = Get-VtUser -Username $NewUsername -Community $Community -AuthHeader $AuthHeaders -WhatIf:$false -WarningAction SilentlyContinue -ErrorAction SilentlyContinue
             if ( -not ( $CheckUser ) ) {
                 $UriParameters.Add("Username", $NewUsername)
             }
@@ -183,7 +209,7 @@ function Set-VtUser {
         }
         if ( $NewEmailAddress ) {
             # Check to see if the email address already exists in the community
-            $CheckUser = Get-VtUser -EmailAddress $NewEmailAddress -Community $VtCommunity -AuthHeader $VtAuthHeader -WhatIf:$false -WarningAction SilentlyContinue
+            $CheckUser = Get-VtUser -EmailAddress $NewEmailAddress -Community $Community -AuthHeader $AuthHeaders -WhatIf:$false -WarningAction SilentlyContinue
             if ( -not ( $CheckUser ) ) {
                 $UriParameters.Add("PrivateEmail", $NewEmailAddress)
             }
@@ -198,7 +224,7 @@ function Set-VtUser {
         }
             
         ForEach ( $U in $UserId ) {
-            $User = Get-VtUser -UserId $U -Community $VtCommunity -AuthHeader $VtAuthHeader -WhatIf:$false -Verbose:$false | Select-Object -ExcludeProperty MentionText
+            $User = Get-VtUser -UserId $U -Community $Community -AuthHeader $AuthHeaders -WhatIf:$false -Verbose:$false
             if ( $UriParameters.Keys.Count ) {
                 if ( $User ) {
                     $Uri = "api.ashx/v2/users/$( $User.UserId ).json"
@@ -206,7 +232,7 @@ function Set-VtUser {
                     if ( $PSCmdlet.ShouldProcess($VtCommunity, "Update User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>") ) {
                         # Execute the Update
                         Write-Verbose -Message "Updating User: '$( $User.Username )' [ID: $( $User.UserId )] <$( $( $User.EmailAddress ) )>"
-                        $UpdateResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $VtAuthHeader | Set-VtAuthHeader -RestMethod $RestMethod ) -Verbose:$false
+                        $UpdateResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod ) -Verbose:$false
                         if ( $UpdateResponse ) {
                             $UserObject = [PSCustomObject]@{
                                 UserId           = $UpdateResponse.User.id
@@ -214,7 +240,7 @@ function Set-VtUser {
                                 EmailAddress     = $UpdateResponse.User.PrivateEmail
                                 Status           = $UpdateResponse.User.AccountStatus
                                 ModerationStatus = $UpdateResponse.User.ModerationLevel
-                                IsIgnored        = $UpdateResponse.User.IsIgnored -eq "true"
+                                ContentHidden    = $UpdateResponse.User.IsIgnored -eq "true"
                                 CurrentPresence  = $UpdateResponse.User.Presence
                                 JoinDate         = $UpdateResponse.User.JoinDate
                                 LastLogin        = $UpdateResponse.User.LastLoginDate
