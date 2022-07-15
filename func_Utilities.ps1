@@ -84,36 +84,36 @@ function ConvertFrom-HtmlString {
 .DESCRIPTION
     Calcuate the hash for a string
 .EXAMPLE
-    Get-StringHash -string "I need this encoded in MD5"
+    Get-StringHash -String "I need this encoded in SHA256"
 
-    String                     Algorithm Hash
-    ------                     --------- ----
-    I need this encoded in MD5 MD5       37270d9e130f64894899c84aeb8ebc3a
+    Algorithm Hash                                                             String
+    --------- ----                                                             ------
+    SHA256    7c339cc3454632a82887dba8d2fe5f4d09d0cf4634b1da4661b821ae0d5c496f I need this encoded in SHA256
 
     Encodes a single string using the default algorithm (MD5)
 .EXAMPLE
      "Can We Encode in SHA512?" | Get-StringHash -Algorithm SHA512
 
-     String                   Algorithm Hash
-     ------                   --------- ----
-     Can We Encode in SHA512? SHA512    dad33df67684440440b9e5f0ce93b6518be876c3a01c9443cafbc5f1b434837b320eaaaeed88db73f5b624fd12b7b128a5383ecc1da066b29a643c7c8fed836f
+     Algorithm Hash                                                                                                                             String
+     --------- ----                                                                                                                             ------
+     SHA512    dad33df67684440440b9e5f0ce93b6518be876c3a01c9443cafbc5f1b434837b320eaaaeed88db73f5b624fd12b7b128a5383ecc1da066b29a643c7c8fed836f Can We Encode in SHA512?
 
      Pipeline example encoding to SHA512
 .EXAMPLE
      "Can We Encode in SHA1?", "Do this one as well please." | Get-StringHash -Algorithm SHA1    
 
-     String                      Algorithm Hash
-     ------                      --------- ----
-     Can We Encode in SHA1?      SHA1      9c8c3ab1869f22a96efa4be14484d8c36ee5b72c
-     Do this one as well please. SHA1      5ba38be8160fc9e57ac1e13992ab97535fa6a39f
+     Algorithm Hash                                     String
+     --------- ----                                     ------
+     SHA1      9c8c3ab1869f22a96efa4be14484d8c36ee5b72c Can We Encode in SHA1?
+     SHA1      5ba38be8160fc9e57ac1e13992ab97535fa6a39f Do this one as well please.
 
      Encodes multiple strings (from the pipeline) using the prescribed algorithm
 .INPUTS
     string, or an array of strings
 .OUTPUTS
-    Custom object with String and hashed value
+    Custom object with algorithm, hashed value, and string
 .NOTES
-    inspired by https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/generating-md5-hashes-from-text   
+    Inspired by https://community.idera.com/database-tools/powershell/powertips/b/tips/posts/generating-md5-hashes-from-text   
 #>
 Function Get-StringHash 
 {
