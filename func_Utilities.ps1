@@ -128,7 +128,7 @@ Function Get-StringHash
         [string[]]$String,
         
         [ValidateSet('MD5', 'SHA', 'SHA1', 'SHA256', 'SHA384', 'SHA512')]
-        $Algorithm = "MD5" # MD5 is the default to match the Get-FileHash action
+        $Algorithm = "SHA256" # SHA256 is the default to match the Get-FileHash action
     )
 
     begin {
