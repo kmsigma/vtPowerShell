@@ -134,6 +134,7 @@ function Get-VtBlog {
         $PropertiesToReturn = @(
             @{ Name = "BlogId"; Expression = { $_.Id } }
             'Name'
+            'Description'
             'Key'
             'Url'
             'Enabled'

@@ -21,7 +21,7 @@ function Get-VtGroup {
     .FUNCTIONALITY
         The functionality that best describes this cmdlet
     #>
-    [CmdletBinding(DefaultParameterSetName = 'Group by Name with Connection File', 
+    [CmdletBinding(DefaultParameterSetName = 'All groups with Connection File', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64699/group-rest-endpoints',
@@ -31,28 +31,29 @@ function Get-VtGroup {
     Param
     (
         # Get group by name
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Authentication Header')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Connection Profile')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Connection File')]
+        [Parameter(ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Name with Connection Profile')]
+        [Parameter(ParameterSetName = 'Group by Name with Connection File')]
         [Alias("Name")]
         [string[]]$GroupName,
     
         # Group name exact match
-        [Parameter(Mandatory = $false, ParameterSetName = 'Group by Name with Authentication Header')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'Group by Name with Connection Profile')]
-        [Parameter(Mandatory = $false, ParameterSetName = 'Group by Name with Connection File')]
+        [Parameter(ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Name with Connection Profile')]
+        [Parameter(ParameterSetName = 'Group by Name with Connection File')]
         [switch]$ExactMatch,
     
         # Get group by id number
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Authentication Header')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Connection Profile')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Connection File')]
+        [Parameter(ParameterSetName = 'Group by Id with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Id with Connection Profile')]
+        [Parameter(ParameterSetName = 'Group by Id with Connection File')]
         [Alias("Id")]
         [int[]]$GroupId,
     
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Authentication Header')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Authentication Header')]
+        [Parameter(ParameterSetName = 'All groups with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Id with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
@@ -60,20 +61,23 @@ function Get-VtGroup {
         [string]$VtCommunity,
         
         # Authentication Header for the community
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Authentication Header')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Authentication Header')]
+        [Parameter(ParameterSetName = 'All groups with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Id with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable]$VtAuthHeader,
     
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Name with Connection Profile')]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Group by Id with Connection Profile')]
+        [Parameter(ParameterSetName = 'All groups with Connection Profile')]
+        [Parameter(ParameterSetName = 'Group by Name with Connection Profile')]
+        [Parameter(ParameterSetName = 'Group by Id with Connection Profile')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSObject]$Connection,
     
         # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
-        [Parameter(ParameterSetName = 'Group by Name Connection File')]
+        [Parameter(ParameterSetName = 'All groups with Connection File')]
+        [Parameter(ParameterSetName = 'Group by Name with Connection File')]
         [Parameter(ParameterSetName = 'Group by Id with Connection File')]
         [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
     
@@ -246,7 +250,7 @@ function Get-VtGroup {
                     }
                 }
             }
-            'Default' {
+            default {
                 # No ForEach loop needed here because we are pulling all groups
                 $Uri = 'api.ashx/v2/groups.json'
                 $GroupCount = 0
