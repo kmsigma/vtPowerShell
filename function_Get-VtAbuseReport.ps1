@@ -95,13 +95,14 @@ function Get-VtAbuseReport {
         [Parameter(ParameterSetName = 'Abuse Report by Author GUID with Connection File')]
         [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
 
+        # Should we return the raw HTML and not the normalized HTML
         [Parameter(
             Mandatory = $false,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
-        [switch]$NormalizeHtml,
+        [switch]$RawHtml,
 
         # Should we return all details?
         [Parameter()]
@@ -167,16 +168,16 @@ function Get-VtAbuseReport {
             'LastUpdatedDate',
             'ProcessedDate'
         )
-        if ( $NormalizeHtml ) {
+        if ( $RawHtml ) {
             $PropertiesToReturn += @(
-                @{ Name = 'Name'; Expression = { $_.Content.HtmlName | ConvertFrom-Html -Verbose:$false } },
-                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription | ConvertFrom-Html -Verbose:$false } }
+                @{ Name = 'Name'; Expression = { $_.Content.HtmlName } },
+                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription } }
             )
         }
         else {
             $PropertiesToReturn += @(
-                @{ Name = 'Name'; Expression = { $_.Content.HtmlName } },
-                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription } }
+                @{ Name = 'Name'; Expression = { $_.Content.HtmlName | ConvertFrom-Html -Verbose:$false } },
+                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription | ConvertFrom-Html -Verbose:$false } }
             )
         }
     }
