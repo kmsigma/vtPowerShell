@@ -27,7 +27,7 @@
     CompanyName          = 'No company, just me.'
 
     # Copyright statement for this module
-    Copyright            = '(c) 2021 Kevin M. Sparenberg. All rights reserved.'
+    Copyright            = '(c) 2022 Kevin M. Sparenberg. All rights reserved.'
 
     # Description of the functionality provided by this module
     Description          = 'Collection of PowerShell Functions for working with Verint/Telligent Communities via their API'
@@ -68,7 +68,7 @@
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     NestedModules        = @(
         'function_Get-VtAbuseReport.ps1',
-        'function_Get-VtAbuseReport.ps1',
+        'function_Get-VtAbusiveContent.ps1',
         'function_ConvertTo-VtAuthHeader.ps1',
         'function_Get-VtBlog.ps1',
         'function_Get-VtBlogPost.ps1',
@@ -124,6 +124,7 @@
         'Set-VtGalleryMedia',
         'Get-VtChallenge',
         'Get-VtAbuseReport',
+        'Get-VtAbusiveContent',
         'Test-VtConnection',
         'Update-VtAuthHeader',
         'ConvertTo-QueryString'
