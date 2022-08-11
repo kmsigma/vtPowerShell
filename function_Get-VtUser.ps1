@@ -455,7 +455,13 @@ function Get-VtUser {
                         Write-Progress -Activity "Retrieving Users from $Community" -CurrentOperation "Retrieving User with ID: $( $Records[$i] )" -Status "[$i/$( $Records.Count)] records retrieved" -PercentComplete ( ( $i / $Records.Count ) * 100 )
                     }
                     Write-Verbose -Message "Making call for: $( $Records[$i] )"
-                    $UserResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + "$RecordType=$( $Records[$i])" ) -Headers $AuthHeaders -ErrorAction SilentlyContinue
+                    $UserResponse = $null; # need to reset this or we get duplicates when there's an error on looking the next account up
+                    try {
+                        $UserResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + "$RecordType=$( $Records[$i])" ) -Headers $AuthHeaders -ErrorAction SilentlyContinue
+                    }
+                    catch {
+                        Write-Warning -Message "Unable to find a match for $( $RecordType ): $( $Records[$i] )"
+                    }
                     if ( $UserResponse ) {
                         if ( $ReturnDetails ) {
                             $UserResponse.User
