@@ -69,6 +69,8 @@
     NestedModules        = @(
         'function_Get-VtAbuseReport.ps1',
         'function_Get-VtAbusiveContent.ps1',
+        'function_Get-VtAchievement.ps1',
+        'function_Get-VtAchievementSummary.ps1',
         'function_ConvertTo-VtAuthHeader.ps1',
         'function_Get-VtBlog.ps1',
         'function_Get-VtBlogPost.ps1',
@@ -125,6 +127,8 @@
         'Get-VtChallenge',
         'Get-VtAbuseReport',
         'Get-VtAbusiveContent',
+        'Get-VtAchievement',
+        'Get-VtAchievementSummary'
         'Test-VtConnection',
         'Update-VtAuthHeader',
         'ConvertTo-QueryString'
