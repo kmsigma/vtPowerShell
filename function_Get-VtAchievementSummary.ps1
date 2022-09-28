@@ -103,7 +103,7 @@ function Get-VtAchievementSummary {
         [Parameter()]
         [datetime]$CreatedAfterDate,
 
-<#
+        <#
         # Yet unimplemented
         [Paremeter()]
         [int]$GroupId
@@ -151,12 +151,11 @@ function Get-VtAchievementSummary {
         # Set the Uri for the target
         $Uri = 'api.ashx/v2/achievement/summaries.json'
     
-        # Set default page index, page size, and add any other filters
-        $UriParameters = @{}
-        $UriParameters["PageSize"] = $BatchSize
-        $UriParameters["PageIndex"] = 0
-    
-
+        Write-Verbose -Message "Assigning Achievement ID"
+        if ( $AchievementId ) {
+            $UriParameters["AchievementId"] = $AchievementId
+        }
+        
         Write-Verbose -Message "Assigning sort field"
         if ( $SortBy ) {
             $UriParameters["SortBy"] = $SortBy
@@ -165,10 +164,15 @@ function Get-VtAchievementSummary {
         Write-Verbose -Message "Assigning sort order"
         if ( $Descending ) {
             $UriParameters["SortOrder"] = 'Descending'
-        } else {
+        }
+        else {
             $UriParameters["SortOrder"] = 'Ascending'
         }
 
+        # Set default page index, page size, and add any other filters
+        $UriParameters = @{}
+        $UriParameters["PageSize"] = $BatchSize
+        $UriParameters["PageIndex"] = 0
 
         $PropertiesToReturn = @(
             @{ Name = 'AchievementSummaryId'; Expression = { $_.Id } },
