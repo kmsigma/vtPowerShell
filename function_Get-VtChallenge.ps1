@@ -30,55 +30,104 @@ function Get-VtChallenge {
     [OutputType()]
     Param
     (
-        # Community where you'll query for groups.  Protocol is required.
-        [Parameter(
-            Mandatory = $false,
-            ValueFromPipeline = $true,
-            Position = 0,
-            HelpMessage = 'Provide your community URL including the "http://" or "https://" and trailing slash' )]
-        [ValidateNotNullOrEmpty()]
-        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
-        [Alias("Community", "Domain")]
-        [string]$VtCommunity = $Global:VtCommunity,
-    
-        # Required authentication header
-        [Parameter(
-            Mandatory = $false,
-            Position = 1
-        )]
-        [ValidateNotNullOrEmpty()]
-        [Alias("Header")]
-        [hashtable]$VtAuthHeader = $Global:VtAuthHeader,
-    
+
         # Get challenge by name
         [Parameter(
             ParameterSetName = 'By Name')]
         [string]$Name,
-    
+        
         # Challenge name exact match
         [Parameter(
             ParameterSetName = 'By Name')]
         [switch]$ExactMatch = $false,
-    
+        
         # Get challenges by group id number
         [Parameter(
             ParameterSetName = 'By Id')]
         [int]$GroupId,
-    
+        
         # Should I recurse into child groups?  Default is false
         [Parameter(
             Mandatory = $false
         )]
-        [switch]$Recurse = $false
+        [switch]$Recurse = $false,
+
+        # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(
+            Mandatory = $true, 
+            ParameterSetName = 'Ideas with Authentication Header'
+        )]
+        [Parameter(
+            Mandatory = $true, 
+            ParameterSetName = 'Ideas by Author ID with Authentication Header'
+        )]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
+        [Alias("Community")]
+        [string]$VtCommunity,
+        
+        # Authentication Header for the community
+        [Parameter(Mandatory = $true, ParameterSetName = 'Challenges with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Ideas by Author ID with Authentication Header')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Collections.Hashtable]$VtAuthHeader,
+    
+        [Parameter(Mandatory = $true, ParameterSetName = 'Ideas with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Ideas by Author ID with Connection Profile')]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [System.Management.Automation.PSObject]$Connection,
+    
+        # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Ideas with Connection File')]
+        [Parameter(ParameterSetName = 'Ideas by Author ID with Connection File')]
+        [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
+
+        # Suppress the progress bar
+        [Parameter()]
+        [switch]$SuppressProgressBar
+    
+
     
         
     )
         
     BEGIN {
-        # Nothing to see here
+        switch -wildcard ( $PSCmdlet.ParameterSetName ) {
+
+            '* Connection File' {
+                Write-Verbose -Message "Getting connection information from Connection File ($ProfilePath)"
+                $VtConnection = Get-Content -Path $ProfilePath | ConvertFrom-Json
+                $Community = $VtConnection.Community
+                # Check to see if the VtAuthHeader is empty
+                $AuthHeaders = @{ }
+                $VtConnection.Authentication.PSObject.Properties | ForEach-Object { $AuthHeaders[$_.Name] = $_.Value }
+            }
+            '* Connection Profile' {
+                Write-Verbose -Message "Getting connection information from Connection Profile"
+                $Community = $Connection.Community
+                $AuthHeaders = $Connection.Authentication
+            }
+            '* Authentication Header' {
+                Write-Verbose -Message "Getting connection information from Parameters"
+                $Community = $VtCommunity
+                $AuthHeaders = $VtAuthHeader
+            }
+        }
+
+                # Set default page index, page size, and add any other filters
+                $UriParameters = @{}
+                $UriParameters["PageIndex"] = 0
+                $UriParameters["PageSize"] = $BatchSize
     }
         
     PROCESS {
+
+
+
+
         switch ($PSCmdlet.ParameterSetName) {
             "By Name" {
                 Write-Verbose -Message "Querying for Challenge by Name"
