@@ -101,6 +101,9 @@ function Get-VtGroup {
         [Parameter(ParameterSetName = 'Group by Id with Authentication Header')]
         [Parameter(ParameterSetName = 'Group by Id with Connection Profile')]
         [Parameter(ParameterSetName = 'Group by Id with Connection File')]
+        [Parameter(ParameterSetName = 'Group by Name with Authentication Header')]
+        [Parameter(ParameterSetName = 'Group by Name with Connection Profile')]
+        [Parameter(ParameterSetName = 'Group by Name with Connection File')]
         [switch]$Recurse,
 
         # Sort By
