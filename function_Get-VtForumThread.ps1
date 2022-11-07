@@ -36,7 +36,33 @@ function Get-VtForumThread {
     )]
     Param
     (
-        # Forum ID for the lookup
+
+        # Thread ID for the lookup
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Thread by Thread Id with Connection File'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Thread by Thread Id with Authentication Header'
+        )]
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false, 
+            ParameterSetName = 'Thread by Thread Id with Connection Profile'
+        )]
+        [int64[]]$ThreadId,
+
+
+       # Forum ID for the lookup
         [Parameter(
             Mandatory = $false,
             ValueFromPipeline = $true,
@@ -145,17 +171,19 @@ function Get-VtForumThread {
         [Parameter()]
         [switch]$IncludeBodyFormatted,
 
-        <# doesn't work yet - still need to do something in function_Get-VtForum.ps1
-        # Do we want to include the Group Name in the simplified output?
+        
+        # Do we want to include the details about any attached files?
         [Parameter()]
-        [switch]$IncludeGroupName,
+        [switch]$IncludeFileAttachment,
 
+        <# doesn't work yet - still need to do something in function_Get-VtForum.ps1
         # Do we want to include the Forum Name in the simplified output?
         [Parameter()]
         [switch]$IncludeForumName,
         #>
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Thread Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Forum Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Threads in all Forums with Authentication Header')]
         [ValidateNotNull()]
@@ -165,12 +193,14 @@ function Get-VtForumThread {
         [string]$VtCommunity,
                 
         # Authentication Header for the community
+        [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Thread Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Forum Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Threads in all Forums with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable]$VtAuthHeader,
             
+        [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Thread Id with Connection Profile')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Forum Id with Connection Profile')]
         [Parameter(Mandatory = $true, ParameterSetName = 'Threads in all Forums with Connection Profile')]
         [ValidateNotNull()]
@@ -178,6 +208,7 @@ function Get-VtForumThread {
         [System.Management.Automation.PSObject]$Connection,
             
         # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
+        [Parameter(ParameterSetName = 'Threads by Thread Id with Connection File')]
         [Parameter(ParameterSetName = 'Threads by Forum Id with Connection File')]
         [Parameter(ParameterSetName = 'Threads in all Forums with Connection File')]
         [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
@@ -254,6 +285,9 @@ function Get-VtForumThread {
         if ( $IncludeHostAddress ) {
             $PropertiesToReturn += 'UserHostAddress'
         }
+        if ( $IncludeFileAttachment ) {
+            $PropertiesToReturn += @{ Name = "Files"; Expression = { $_.File | ForEach-Object { $_ | Select-Object -Property FileName, ContentType, FileUrl } } }
+        }
         if ( $IncludeBody ) {
             $PropertiesToReturn += 'Body'
         }
@@ -287,7 +321,35 @@ function Get-VtForumThread {
     }
     PROCESS {
         if ( $PSCmdlet.ShouldProcess($Community, "Get Forum Threads from") ) {
-            if ( $ForumId ) {
+            if ( $ThreadId ) {
+                ForEach ( $t in $ThreadId ) {
+                    $Uri = "api.ashx/v2/forums/threads/$t.json"
+                    $UriParameters.Remove("SortOrder")
+                    $UriParameters.Remove("SortBy")
+                    $UriParameters.Remove("PageIndex")
+                    $UriParameters.Remove("PageSize")
+                    $UriParameters.Remove("ForumThreadQueryType")
+                    $TotalReturned = 0
+                        <#
+                        if ( $TotalReturned -and -not $SuppressProgressBar) {
+                            Write-Progress -Activity "Getting Threads with ID: $t" -Status "Returned $( $TotalReturned ) / $( $ForumThreadResponse.TotalCount ) Records" -CurrentOperation "Making Call #$( $UriParameters["PageIndex"] + 1 ) for $BatchSise records" -PercentComplete ( $TotalReturned / $ForumThreadResponse.TotalCount * 100 )
+                        } elseif ( -not $SuppressProgressBar ) {
+                            Write-Progress -Activity "Getting Threads with ID: $t" -Status "Making first call for $BatchSize records" -CurrentOperation "Making first call for $BatchSize records"
+                        }
+                        #>
+                        Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
+                        $ForumThreadResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders
+                        if ( $ForumThreadResponse ) {
+                            if ( $ReturnDetails ) {
+                                $ForumThreadResponse.Thread
+                            }
+                            else {
+                                $ForumThreadResponse.Thread | Select-Object -Property $PropertiesToReturn
+                            }
+                        }
+                }
+            }
+            elseif ( $ForumId ) {
                 ForEach ( $f in $ForumId ) {
                     # If we have a forum ID, we should pass it as a parameter
                     $UriParameters["ForumID"] = $f
