@@ -39,7 +39,7 @@ function Set-VtUser {
     .NOTES
         I haven't been able to test every single feature, but the logic should hold
     #>
-    [CmdletBinding(DefaultParameterSetName = 'User Id with Connection Profile', 
+    [CmdletBinding(DefaultParameterSetName = 'User Id with Connection File', 
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64926/update-user-rest-endpoint',
