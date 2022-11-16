@@ -8,7 +8,9 @@ Very rudimentary query check for possible spammers
 # What's the minimal confidence where we want to block the user?
 # Confidence here is %ChanceOfUsername + %ChanceOfEmailAddress
 $MinConfScore = 50
-$StartDate = ( Get-Date ).AddDays(-7)
+
+# What date span are we checking for spammers?
+$StartDate = ( Get-Date ).AddDays(-1)
 $EndDate   = Get-Date
 
 <#
@@ -22,9 +24,12 @@ $UserList = @()
 # Get a list of all users based on join date and add it to a collection
 For ( $Date = $StartDate; $Date -lt $EndDate ; $Date = $Date.AddDays(1) ) {
     Write-Host "Running for Day: $Date"
-    $UserList += Get-VtUser -JoinedOn $Date -WarningAction SilentlyContinue | Select-Object UserId, Username, EmailAddress, Status, ModerationStatus, ContentHidden, JoinedDate, SpamConfidenceUsername, SpamConfidenceEmail | Where-Object { $_.ModerationStatus -ne 'Moderated' }
+    $UserList += Get-VtUser -JoinedOn $Date -IncludeEmailDomain -WarningAction SilentlyContinue | Select-Object UserId, Username, EmailAddress, Status, ModerationStatus, ContentHidden, JoinedDate, SpamConfidenceUsername, SpamConfidenceEmail | Where-Object { $_.ModerationStatus -ne 'Moderated' }
 
 }
+# Filter off exceptions
+Write-Host "Filtering off members of excepted domains: $( $ExceptedEmailDomains -join ';' )"
+$UserList = $UserList | Where-Object { $_.EmailDomain -notin $ExceptedEmailDomains }
 
 # How many accounts were found
 Write-Verbose -Message "Found $( $UserList.Count ) accounts to check"
