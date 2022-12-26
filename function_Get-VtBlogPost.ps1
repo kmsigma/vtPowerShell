@@ -69,6 +69,15 @@ function Get-VtBlogPost {
         [Parameter()]
         [switch]$IncludeUnpublished,
 
+        # Sort Field
+        [Parameter()]
+        [ValidateSet('MostComments', 'MostRecent', 'MostViewed', 'Score:SCORE_ID', 'ContentIdsOrder')]
+        [string]$SortBy = 'MostRecent',
+
+        # Sort Order
+        [Parameter()]
+        [switch]$Ascending,
+
         # Do we want to return the entire JSON entry?
         [Parameter()]
         [switch]$ReturnDetails,
@@ -177,6 +186,13 @@ function Get-VtBlogPost {
             "MetaKeywords",
             "MetaDescription",
             "MetaTitle"
+        }
+
+        if ( $Ascending ) {
+            $UriParameters["SortOrder"] = 'Ascending'
+        }
+        else {
+            $UriParameters["SortOrder"] = 'Descending'
         }
 
     }
