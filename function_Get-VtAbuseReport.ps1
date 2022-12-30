@@ -95,6 +95,23 @@ function Get-VtAbuseReport {
         [Parameter(ParameterSetName = 'Abuse Report by Author GUID with Connection File')]
         [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
 
+        # Start Date filter for the Reports
+        [Parameter()]
+        [datetime]$StartDate,
+
+        # End Date filter for the Reports
+        [Parameter()]
+        [datetime]$EndDate = ( Get-Date ),
+
+        # Sort By
+        [Parameter()]
+        [ValidateSet('AuthorId', 'CreatedUtcDate', 'AbuseReportId')]
+        [string]$SortBy = 'AuthorId',
+
+        # Sort Order
+        [Parameter()]
+        [switch]$Descending,
+
         # Should we return the raw HTML and not the normalized HTML
         [Parameter(
             Mandatory = $false,
@@ -150,6 +167,21 @@ function Get-VtAbuseReport {
         $UriParameters = @{}
         $UriParameters["PageSize"] = $BatchSize
         $UriParameters["PageIndex"] = 0
+
+        # Set the Sort Order
+        $UriParameters["SortBy"] = $SortBy
+        if ( $Descending ) {
+            $UriParameters["SortOrder"] = 'Desc'
+        }
+
+        # Set the date boundaries
+        if ( $StartDate ) {
+            $UriParameters["StartDate"] = $StartDate
+        }
+
+        if ( $EndDate ) {
+            $UriParameters["EndDate"] = $EndDate
+        }
     
         Write-Verbose -Message "Assigning User GUID for query"
         if ( $UserGuid ) {
