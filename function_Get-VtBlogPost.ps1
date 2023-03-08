@@ -178,6 +178,16 @@ function Get-VtBlogPost {
             # If we also want unpublished, then we'll add that field to the property list to return
             $PropertyList += "IsPostEnabled"
         }
+
+<# TDB
+        if ( $IncludeGroup ) {
+            $UriParameters["IncludeUnpublished"] = 'true'
+            # If we also want unpublished, then we'll add that field to the property list to return
+            $PropertyList += @{ Name = "GroupId"; Expression = { } }
+            $PropertyList += @{ Name = "GroupName"; Expression = { } }
+
+        }
+#>
         if ( $IncludeMetaInfo ) {
             # if we want the meta info, then we'll add those fields to the property list to return
             $PropertyList += "OpenGraphTitle",
