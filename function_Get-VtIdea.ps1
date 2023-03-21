@@ -83,7 +83,7 @@ function Get-VtIdea {
 
         # Sort ideas in a specific order (Default is "Descending")
         [Parameter()]
-        [switch]$Descdencing,
+        [switch]$Descending,
 
         # Include the body
         [Parameter()]
@@ -177,7 +177,7 @@ function Get-VtIdea {
         }
         if ( $SortyBy ) {
             $UriParameters['SortBy'] = $SortyBy
-            if ( -not $Descdencing ) {
+            if ( -not $Descending ) {
                 $UriParameters['SortOrder'] = 'ascending'
             }
             else {

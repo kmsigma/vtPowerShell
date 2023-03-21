@@ -223,6 +223,15 @@ function Get-VtGalleryMedia {
         [Parameter(ParameterSetName = 'All Galleries with Connection File')]
         [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) ),
 
+        # Sort Field
+        [Parameter()]
+        [ValidateSet('Author', 'Comments', 'Downloads', 'PostDate', 'Rating', 'Subject', 'Views', 'Score', 'ContentIdsOrder')]
+        [string]$SortBy = 'PostDate',
+
+        # Sort Order
+        [Parameter()]
+        [switch]$Ascending,
+
         [Parameter(
             Mandatory = $false,
             ValueFromPipeline = $false,
@@ -311,6 +320,15 @@ function Get-VtGalleryMedia {
         }
         if ( $IncludeDescription ) {
             @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
+        }
+
+        $UriParameters['SortOrder'] = $SortOrder
+
+        if ( $Ascending ) {
+            $UriParameters["SortOrder"] = 'Ascending'
+        }
+        else {
+            $UriParameters["SortOrder"] = 'Descending'
         }
 
     }

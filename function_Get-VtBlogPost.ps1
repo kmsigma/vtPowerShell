@@ -198,6 +198,8 @@ function Get-VtBlogPost {
             "MetaTitle"
         }
 
+        $UriParameters['SortOrder'] = $SortOrder
+        
         if ( $Ascending ) {
             $UriParameters["SortOrder"] = 'Ascending'
         }

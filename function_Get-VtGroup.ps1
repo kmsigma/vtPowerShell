@@ -98,31 +98,15 @@ function Get-VtGroup {
     
         
         # Should I recurse into child groups?  Default is false
-        [Parameter(ParameterSetName = 'Group by Id with Authentication Header')]
-        [Parameter(ParameterSetName = 'Group by Id with Connection Profile')]
-        [Parameter(ParameterSetName = 'Group by Id with Connection File')]
-        [Parameter(ParameterSetName = 'Group by Name with Authentication Header')]
-        [Parameter(ParameterSetName = 'Group by Name with Connection Profile')]
-        [Parameter(ParameterSetName = 'Group by Name with Connection File')]
         [switch]$Recurse,
 
         # Sort By
-        [Parameter(
-            Mandatory = $false,
-            ValueFromPipeline = $false,
-            ValueFromPipelineByPropertyName = $false, 
-            ValueFromRemainingArguments = $false
-        )]
+        [Parameter()]
         [ValidateSet('Name', 'SortOrder', 'LastUpdate', 'ContentIdsOrder')]
         [string]$SortBy = 'Name',
         
         # Sort Order
-        [Parameter(
-            Mandatory = $false,
-            ValueFromPipeline = $false,
-            ValueFromPipelineByPropertyName = $false, 
-            ValueFromRemainingArguments = $false
-        )]
+        [Parameter()]
         [ValidateSet('Ascending', 'Descending')]
         [string]$SortOrder = 'Ascending'
 

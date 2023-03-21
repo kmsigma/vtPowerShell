@@ -84,7 +84,7 @@ function ConvertFrom-Theme {
             }
             else {
                 # JavaScript
-                $HeadExtension = ".ja"
+                $HeadExtension = ".js"
             }
             $HeadScript = $ThemeContents.theme.headScript.InnerText
             #endregion Head Script
@@ -95,7 +95,7 @@ function ConvertFrom-Theme {
             }
             else {
                 # JavaScript
-                $BodyExtension = ".ja"
+                $BodyExtension = ".js"
             }
             $BodyScript = $ThemeContents.theme.bodyScript.InnerText
             #endregion Body Script
