@@ -271,6 +271,16 @@ function Get-VtUser {
         )]
         [switch]$IncludeHidden,
 
+
+        # Include the member's profile URL in output (read-only)
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$IncludeProfileUrl,
+
         # Has Default Avatar
         [Parameter(
             Mandatory = $false,
@@ -396,7 +406,11 @@ function Get-VtUser {
             @{ Name = "LifetimePoints"; Expression = { $_.Points } }
             @{ Name = "EmailEnabled"; Expression = { $_.ReceiveEmails -eq "true" } }
         )
-    
+
+        if ( $IncludeProfileUrl ) {
+            $PropertiesToReturn += @{ Name = "Url"; Expression = { $_.Content.Url } }
+        }
+
         if ( $IncludeMentionCode ) {
             $PropertiesToReturn += @{ Name = "MentionHtml"; Expression = { "[mention:$( $_.ContentId.Replace('-', '') ):$( $_.ContentTypeId.Replace('-', '') )]" } }
         }
@@ -406,6 +420,7 @@ function Get-VtUser {
         if ( $IncludeEmailDomain ) {
             $PropertiesToReturn += @{ Name = "EmailDomain"; Expression = { $_.PrivateEmail.Split('@')[1] } }
         }
+
     }
     PROCESS {
         switch -wildcard ( $PSCmdlet.ParameterSetName ) {

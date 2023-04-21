@@ -4,6 +4,8 @@ $SpammersCSVPath = "\\kms-nas\Documents\SolarWinds\THWACK\spammers.csv"
 
 $SpammersToReport = Import-Csv -Path $SpammersCSVPath
 
+#$SpammersToReport | Select-Object -Property 'ip_addr' -Unique | Sort-Object
+
 $Uri = 'https://www.stopforumspam.com/add.php'
 
 For ( $i = 0; $i -lt $SpammersToReport.Count; $i ++ ) {
