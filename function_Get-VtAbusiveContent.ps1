@@ -60,7 +60,7 @@ function Get-VtAbusiveContent {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [int64]$UserId,
+        [guid]$UserId,
     
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(
