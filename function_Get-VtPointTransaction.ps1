@@ -115,9 +115,9 @@ function Get-VtPointTransaction {
         [Parameter()]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [datetime]$EndDate,
+        [datetime]$EndDate = ( Get-Date ),
     
-        # Sort type for the results'
+        # Sort type for the results
         [Parameter()]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
@@ -210,7 +210,7 @@ function Get-VtPointTransaction {
             }
         }
 
-        $RestMethod = "GET"
+        $RestMethod = "List"
     
         # Create an collection for the UriParameters
         $UriParameters = @{}
@@ -225,13 +225,13 @@ function Get-VtPointTransaction {
         }
     
         $PropertiesToReturn = @(
-            @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } },
+            @{ Name = "TransactionId"; Expression = { [int64]( $_.id ) } },
             @{ Name = "Username"; Expression = { $_.User.Username } },
             @{ Name = "UserId"; Expression = { $_.User.Id } },
             'Value',
-            @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } },
-            @{ Name = "Date"; Expression = { $_.CreatedDate } },
-            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } },
+            @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-Html } },
+            @{ Name = "CreatedDate"; Expression = { Get-Date ( $_.CreatedDate ) } },
+            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-Html } },
             @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
         )
     }
@@ -261,17 +261,35 @@ function Get-VtPointTransaction {
             'Transaction ID *' {
                 Write-Verbose -Message "Get-VtPointTransaction: Using the TransactionID for the lookup"
                 # Points Lookup requires the UserID, not the email address
-                $ProcessMethod = "Show"
+                $ProcessMethod = "Get"
             }
             default {
                 Write-Verbose -Message "Request all points for the lookup"
                 $ProcessMethod = "List"
+
             }
         }
     
 
-        if ( $ProcessMethod -eq "List ") {
+        if ( $ProcessMethod -eq "Get" ) {
             # Cycle through each transaction ID
+            ForEach ( $id in $TransactionID ) {
+                # Override Uri
+                $Uri = "api.ashx/v2/pointtransaction/$( $id ).json"
+                $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri ) -Headers $AuthHeaders
+                Write-Warning -Message "Querying for Points by transaction ID, ingores all filtering (ie. date spans)"
+                if ( $PointsResponse ) {
+                    if ( $ReturnDetails ) {
+                        # The 'Get' action returns PointTransaction (singular) elements, instead of PointsTransaction (plural) elements
+                        $PointsResponse.PointTransaction
+                    }
+                    else {
+                        $PointsResponse.PointTransaction | Select-Object -Property $PropertiesToReturn
+                    }
+                } else {
+                    Write-Error -Message "Unable to find points transaction with ID: $id" -RecommendedAction "Validate the ID and try again"
+                }
+            }
         }
         else {
             # cycle through something else (everything, or users)
@@ -290,7 +308,9 @@ function Get-VtPointTransaction {
                         }
                         $PointsResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                         if ( $PointsResponse ) {
+                            # The 'List' action returns PointsTransaction elements (plural), instead of PointTransaction (singular) elements
                             $TotalReturned += $PointsResponse.PointTransactions.Count
+                            
                             if ( $ReturnDetails ) {
                                 $PointsResponse.PointTransactions
                             }
