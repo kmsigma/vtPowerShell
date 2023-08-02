@@ -246,7 +246,7 @@ function Get-VtGalleryMedia {
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
-        [switch]$ReturnFileInfo,
+        [switch]$IncludeFileDetails,
 
         [Parameter(
             Mandatory = $false,
@@ -312,7 +312,7 @@ function Get-VtGalleryMedia {
             'RatingSum'
         )
         
-        if ( $ReturnFileInfo ) {
+        if ( $IncludeFileDetails ) {
             $PropertiesToReturn += @{ Name = "FileName"; Expression = { $_.File.FileName } }
             $PropertiesToReturn += @{ Name = "FileType"; Expression = { $_.File.ContentType } }
             $PropertiesToReturn += @{ Name = "FileSize"; Expression = { $_.File.FileSize } }

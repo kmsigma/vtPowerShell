@@ -281,6 +281,15 @@ function Get-VtUser {
         )]
         [switch]$IncludeProfileUrl,
 
+        # Include the member's activity URL in output (read-only)
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
+        [switch]$IncludeActivitiesUrl,
+
         # Has Default Avatar
         [Parameter(
             Mandatory = $false,
@@ -403,12 +412,19 @@ function Get-VtUser {
             @{ Name = "JoinedDate"; Expression = { $_.JoinDate } }
             @{ Name = "LastLoginDate"; Expression = { $_.LastLoginDate } }
             @{ Name = "LastVisitedDate"; Expression = { $_.LastVisitedDate } }
+            @{ Name = "TotalPosts"; Expression = { $_.TotalPosts } }
             @{ Name = "LifetimePoints"; Expression = { $_.Points } }
             @{ Name = "EmailEnabled"; Expression = { $_.ReceiveEmails -eq "true" } }
         )
 
         if ( $IncludeProfileUrl ) {
-            $PropertiesToReturn += @{ Name = "Url"; Expression = { $_.Content.Url } }
+            $PropertiesToReturn += @{ Name = "ProfileUrl"; Expression = { $_.ProfileUrl } }
+        }
+
+        if ( $IncludeActivitiesUrl ) {
+            # We need to extract the community name and URL from the ProfileUrl and then append the search parameter
+            #      <serverUrl>/search?q=user:<userId>
+            $PropertiesToReturn += @{ Name = "ActivitiesUrl"; Expression = { "$( ( [System.Uri]( $_.ProfileUrl ) ).Scheme )://$( ( [System.Uri]( $_.ProfileUrl ) ).Host )/search?q=user:$( $_.id )" } }
         }
 
         if ( $IncludeMentionCode ) {

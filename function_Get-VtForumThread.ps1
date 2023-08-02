@@ -176,11 +176,10 @@ function Get-VtForumThread {
         [Parameter()]
         [switch]$IncludeFileAttachment,
 
-        <# doesn't work yet - still need to do something in function_Get-VtForum.ps1
-        # Do we want to include the Forum Name in the simplified output?
+        # Do we want to include the client's IP?
         [Parameter()]
-        [switch]$IncludeForumName,
-        #>
+        [switch]$IncludeClientIP,
+        
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(Mandatory = $true, ParameterSetName = 'Thread by Thread Id with Authentication Header')]
@@ -297,6 +296,11 @@ function Get-VtForumThread {
         if ( $IncludeSpamMetrics ) {
             $PropertiesToReturn += 'SpamStatus', 'SpamScore'
         }
+
+        if ( $IncludeClientIP ) {
+            $PropertiesToReturn += @{ Name = "ClientIP"; Expression = { $_.UserHostAddress } }
+        }
+
         if ( $IncludeGroupName -or $IncludeForumName ) {
             $ForumList = @{}
             $GroupList = @{}

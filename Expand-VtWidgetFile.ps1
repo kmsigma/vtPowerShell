@@ -1,4 +1,4 @@
-﻿$WidgetFile = "C:\Path\To\Your\WidgetFile.xml"
+﻿$WidgetFile = "C:\Users\kevin.sparenberg\Downloads\EventCountdownWidget-Widget.xml"
 $OutputPath = Get-Item -Path $WidgetFile | Select-Object -Property @{ Name = "DirPlusBase"; Expression = { Join-Path -Path $_.Directory -ChildPath $_.BaseName } } | Select-Object -ExpandProperty DirPlusBase
 # Build the Output Folders
 if ( -not ( Test-Path -Path $OutputPath -ErrorAction SilentlyContinue ) ) {
