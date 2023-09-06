@@ -94,6 +94,7 @@
         'function_Set-VtGallery.ps1',
         'function_Set-VtGalleryMedia.ps1',
         'function_Set-VtUser.ps1',
+        'function_Set-VtAchievement.ps1',
         'function_Test-VtConnection.ps1',
         'function_ConvertFrom-Html.ps1',
         'vtPowerShell.psm1'
@@ -128,6 +129,7 @@
         'Get-VtAbuseReport',
         'Get-VtAbusiveContent',
         'Get-VtAchievement',
+        'Set-VtAchievement',
         'Get-VtAchievementSummary'
         'Test-VtConnection',
         'Update-VtAuthHeader',
