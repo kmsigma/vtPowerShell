@@ -88,6 +88,9 @@
         'function_New-VtPointTransaction.ps1',
         'function_New-VtConnection.ps1',
         'function_Remove-VtPointTransaction.ps1',
+        'function_Remove-VtComment.ps1',
+        'function_Remove-VtForumThread.ps1',
+        'function_Remove-VtForumThreadReply.ps1',
         'function_Remove-VtUser.ps1',
         'function_Update-VtAuthHeader.ps1',
         'function_Set-VtBlog.ps1',
@@ -135,7 +138,10 @@
         'Get-VtAchievementSummary'
         'Test-VtConnection',
         'Update-VtAuthHeader',
-        'ConvertTo-QueryString'
+        'ConvertTo-QueryString',
+        'Remove-VtComment',
+        'Remove-VtForumThread',
+        'Remove-VtForumThreadReply'
     )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
