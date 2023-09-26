@@ -121,8 +121,8 @@ function Remove-VtComment {
                 # Method: Post
                 # Rest-Method: Delete
                 try {
-                    $RemovePointsResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
-                    if ( $RemovePointsResponse ) {
+                    $RemoveCommentResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
+                    if ( $RemoveCommentResponse ) {
                         Write-Verbose -Message "Comment ID #$id removed"
                     }
                 }

@@ -116,8 +116,8 @@ function Remove-VtForumThreadReply {
                 # Method: Post
                 # Rest-Method: Delete
                 try {
-                    $RemovePointsResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
-                    if ( $RemovePointsResponse ) {
+                    $RemoveReplyResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
+                    if ( $RemoveReplyResponse ) {
                         Write-Verbose -Message "Forum Thread Reply with #$id removed"
                     }
                 }
