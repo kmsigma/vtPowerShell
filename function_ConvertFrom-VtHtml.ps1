@@ -1,4 +1,4 @@
-function ConvertFrom-Html {
+function ConvertFrom-VtHtml {
     <#
     .Synopsis
         To be done

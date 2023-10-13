@@ -151,6 +151,8 @@ function Get-VtAchievementSummary {
         # Set the Uri for the target
         $Uri = 'api.ashx/v2/achievement/summaries.json'
     
+        $UriParameters = @{}
+        
         Write-Verbose -Message "Assigning Achievement ID"
         if ( $AchievementId ) {
             $UriParameters["AchievementId"] = $AchievementId
@@ -193,9 +195,9 @@ function Get-VtAchievementSummary {
             do {
                 Write-Verbose -Message "Making call $( $UriParameters["PageIndex"] + 1 ) for $( $UriParameters["PageSize"]) records"
                 if ( $TotalAchievementSummarys -and -not $SuppressProgressBar ) {
-                    Write-Progress -Activity "Retrieving AchievementSummarys from $Community" -CurrentOperation ( "Retrieving $BatchSize records of $( $AchievementSummarysResponse.TotalCount )" ) -Status "[$TotalAchievementSummarys/$( $AchievementSummarysResponse.TotalCount )] records retrieved" -PercentComplete ( ( $TotalAchievementSummarys / $AchievementSummarysResponse.TotalCount ) * 100 )
+                    Write-Progress -Activity "Retrieving AchievementSummaries from $Community" -CurrentOperation ( "Retrieving $BatchSize records of $( $AchievementSummarysResponse.TotalCount )" ) -Status "[$TotalAchievementSummarys/$( $AchievementSummarysResponse.TotalCount )] records retrieved" -PercentComplete ( ( $TotalAchievementSummarys / $AchievementSummarysResponse.TotalCount ) * 100 )
                 }
-                Write-Verbose -Message "Making call for AchievementSummarys"
+                Write-Verbose -Message "Making call for AchievementSummariess"
                 $AchievementSummarysResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders
                 if ( $AchievementSummarysResponse ) {
                     $TotalAchievementSummarys += $AchievementSummarysResponse.AchievementSummarys.Count

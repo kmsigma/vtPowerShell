@@ -27,7 +27,7 @@
     CompanyName          = 'No company, just me.'
 
     # Copyright statement for this module
-    Copyright            = '(c) 2022 Kevin M. Sparenberg. All rights reserved.'
+    Copyright            = '(c) 2023 Kevin M. Sparenberg. All rights reserved.'
 
     # Description of the functionality provided by this module
     Description          = 'Collection of PowerShell Functions for working with Verint/Telligent Communities via their API'
@@ -67,81 +67,83 @@
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     NestedModules        = @(
-        'function_Get-VtAbuseReport.ps1',
-        'function_Get-VtAbusiveContent.ps1',
-        'function_Get-VtAchievement.ps1',
-        'function_Get-VtAchievementSummary.ps1',
-        'function_ConvertTo-VtAuthHeader.ps1',
-        'function_Get-VtBlog.ps1',
-        'function_Get-VtBlogPost.ps1',
-        'function_Get-VtChallenge.ps1',
-        'function_Get-VtForum.ps1',
-        'function_Get-VtForumThread.ps1',
-        'function_Get-VtGallery.ps1',
-        'function_Get-VtGalleryMedia.ps1',
-        'function_Get-VtGroup.ps1',
-        'function_Get-VtIdea.ps1',
-        'function_Get-VtPointTransaction.ps1',
-        'function_Get-VtSysNotification.ps1',
-        'function_Get-VtUser.ps1',
-        'function_Get-VtWiki.ps1',
-        'function_New-VtPointTransaction.ps1',
-        'function_New-VtConnection.ps1',
-        'function_Remove-VtPointTransaction.ps1',
-        'function_Remove-VtComment.ps1',
-        'function_Remove-VtForumThread.ps1',
-        'function_Remove-VtForumThreadReply.ps1',
-        'function_Remove-VtUser.ps1',
-        'function_Update-VtAuthHeader.ps1',
-        'function_Set-VtBlog.ps1',
-        'function_Set-VtForumThread.ps1',
-        'function_Set-VtGallery.ps1',
-        'function_Set-VtGalleryMedia.ps1',
-        'function_Set-VtUser.ps1',
-        'function_Set-VtAchievement.ps1',
-        'function_Test-VtConnection.ps1',
-        'function_ConvertFrom-Html.ps1',
+        'function_Get-VtAbuseReport.ps1'
+        'function_Get-VtAbusiveContent.ps1'
+        'function_Get-VtAchievement.ps1'
+        'function_Get-VtAchievementSummary.ps1'
+        'function_ConvertTo-VtAuthHeader.ps1'
+        'function_Get-VtBlog.ps1'
+        'function_Get-VtBlogPost.ps1'
+        'function_Get-VtChallenge.ps1'
+        'function_Get-VtForum.ps1'
+        'function_Get-VtForumThread.ps1'
+        'function_Get-VtGallery.ps1'
+        'function_Get-VtGalleryMedia.ps1'
+        'function_Get-VtGroup.ps1'
+        'function_Get-VtIdea.ps1'
+        'function_Get-VtPointTransaction.ps1'
+        'function_Get-VtSysNotification.ps1'
+        'function_Get-VtUser.ps1'
+        'function_Get-VtWiki.ps1'
+        'function_New-VtPointTransaction.ps1'
+        'function_New-VtConnection.ps1'
+        'function_Remove-VtPointTransaction.ps1'
+        'function_Remove-VtComment.ps1'
+        'function_Remove-VtForumThread.ps1'
+        'function_Remove-VtForumThreadReply.ps1'
+        'function_Remove-VtUser.ps1'
+        'function_Send-VtGroupInvite.ps1'
+        'function_Update-VtAuthHeader.ps1'
+        'function_Set-VtBlog.ps1'
+        'function_Set-VtForumThread.ps1'
+        'function_Set-VtGallery.ps1'
+        'function_Set-VtGalleryMedia.ps1'
+        'function_Set-VtUser.ps1'
+        'function_Set-VtAchievement.ps1'
+        'function_Test-VtConnection.ps1'
+        'function_ConvertFrom-VtHtml.ps1'
         'vtPowerShell.psm1'
     )
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport    = @(
-        'ConvertTo-VtAuthHeader',
-        'ConvertFrom-Html',
-        'Set-VtAuthHeader',
-        'Get-VtUser',
-        'Set-VtUser',
-        'Get-VtWiki',
-        'Remove-VtUser',
-        'Get-VtBlog',
-        'Get-VtBlogPost',
-        'Set-VtBlog',
-        'Get-VtForum',
-        'Get-VtForumThread',
-        'Set-VtForumThread',
-        'New-VtPointTransaction',
-        'New-VtConnection'
-        'Get-VtPointTransaction',
-        'Remove-VtPointTransaction',
-        'Get-VtSysNotification',
-        'Get-VtIdea',
-        'Get-VtGroup',
-        'Get-VtGallery',
-        'Set-VtGallery',
-        'Get-VtGalleryMedia',
-        'Set-VtGalleryMedia',
-        'Get-VtChallenge',
-        'Get-VtAbuseReport',
-        'Get-VtAbusiveContent',
-        'Get-VtAchievement',
-        'Set-VtAchievement',
+        'ConvertFrom-VtHtml'
+        'ConvertTo-QueryString'
+        'ConvertTo-VtAuthHeader'
+        'Get-VtAbuseReport'
+        'Get-VtAbusiveContent'
+        'Get-VtAchievement'
         'Get-VtAchievementSummary'
-        'Test-VtConnection',
-        'Update-VtAuthHeader',
-        'ConvertTo-QueryString',
-        'Remove-VtComment',
-        'Remove-VtForumThread',
+        'Get-VtBlog'
+        'Get-VtBlogPost'
+        'Get-VtChallenge'
+        'Get-VtForum'
+        'Get-VtForumThread'
+        'Get-VtGallery'
+        'Get-VtGalleryMedia'
+        'Get-VtGroup'
+        'Get-VtIdea'
+        'Get-VtPointTransaction'
+        'Get-VtSysNotification'
+        'Get-VtUser'
+        'Get-VtWiki'
+        'New-VtConnection'
+        'New-VtPointTransaction'
+        'Remove-VtComment'
+        'Remove-VtForumThread'
         'Remove-VtForumThreadReply'
+        'Remove-VtPointTransaction'
+        'Remove-VtUser'
+        'Send-VtGroupInvite'
+        'Set-VtAchievement'
+        'Set-VtAuthHeader'
+        'Set-VtBlog'
+        'Set-VtForumThread'
+        'Set-VtGallery'
+        'Set-VtGalleryMedia'
+        'Set-VtUser'
+        'Test-VtConnection'
+        'Update-VtAuthHeader'
     )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

@@ -70,7 +70,7 @@ PageIndex                      1
     )
     $ParameterStrings = @()
     $Parameters.GetEnumerator() | ForEach-Object {
-        $ParameterStrings += "$( $_.Key )=$( $_.Value )"
+        $ParameterStrings += "$( $_.Key )=$( [System.Web.HttpUtility]::UrlEncode( $_.Value ) )"
     }
     $ParameterStrings -join "&"
 }
