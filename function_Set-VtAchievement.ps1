@@ -129,8 +129,8 @@ function Set-VtAchievement {
 
             $PropertiesToReturn = @(
                 @{ Name = 'AchievementId'; Expression = { $_.Id } },
-                @{ Name = 'Title'; Expression = { $_.Title | ConvertFrom-HtmlString -Verbose:$false } },
-                @{ Name = 'Criteria'; Expression = { $_.Criteria | ConvertFrom-HtmlString -Verbose:$false } },
+                @{ Name = 'Title'; Expression = { $_.Title | ConvertFrom-VtHtmlString -Verbose:$false } },
+                @{ Name = 'Criteria'; Expression = { $_.Criteria | ConvertFrom-VtHtmlString -Verbose:$false } },
                 'BadgeIconUrl',
                 'DateCreated',
                 'Enabled'

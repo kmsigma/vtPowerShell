@@ -52,7 +52,7 @@ function ConvertTo-QueryString {
 .NOTES
     This is included here just to have a reference for it.  It'll typically be defined 'internally' within the `begin` blocks of functions
 #>
-function ConvertFrom-HtmlString {
+function ConvertFrom-VtHtmlString {
     [CmdletBinding()]
     param (
         # string with HTML content

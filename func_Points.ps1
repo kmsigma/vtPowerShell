@@ -321,7 +321,7 @@ function Get-VtPointTransaction {
                 Write-Progress -Activity "Querying $CommunityDomain for Points Transactions" -CurrentOperation "Searching $LookupKey for the first $BatchSize entries" -PercentComplete 0
                 $TotalResponseCount = $PointsResponse.PointTransactions.Count
                 if ( $ActionFilter ) {
-                    $PointTransactions = $PointsResponse.PointTransactions | Where-Object { ( $_.Description | ConvertFrom-HtmlString ) -like $ActionFilter }
+                    $PointTransactions = $PointsResponse.PointTransactions | Where-Object { ( $_.Description | ConvertFrom-VtHtmlString ) -like $ActionFilter }
                     Write-Verbose -Message "Keeping $( $PointTransactions.Count ) total responses"
                 }
                 else {
@@ -338,7 +338,7 @@ function Get-VtPointTransaction {
                     Write-Verbose -Message "Received $( $PointsResponse.PointTransactions.Count ) responses"
                     $TotalResponseCount += $PointsResponse.PointTransactions.Count
                     if ( $ActionFilter ) {
-                        $PointTransactions += $PointsResponse.PointTransactions | Where-Object { ( $_.Description | ConvertFrom-HtmlString ) -like $ActionFilter }
+                        $PointTransactions += $PointsResponse.PointTransactions | Where-Object { ( $_.Description | ConvertFrom-VtHtmlString ) -like $ActionFilter }
                         Write-Verbose -Message "Keeping $( $PointTransactions.Count ) total responses"
                     }
                     else {
@@ -353,7 +353,7 @@ function Get-VtPointTransaction {
                     $PointTransactions
                 }
                 else {
-                    $PointTransactions | Select-Object -Property @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
+                    $PointTransactions | Select-Object -Property @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-VtHtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-VtHtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
                 }
             }
         }
@@ -366,7 +366,7 @@ function Get-VtPointTransaction {
                     $PointsResponse.PointTransaction
                 }
                 else {
-                    $PointsResponse.PointTransaction | Select-Object -Property @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
+                    $PointsResponse.PointTransaction | Select-Object -Property @{ Name = "TransactionId"; Expression = { [int]( $_.id ) } }, @{ Name = "Username"; Expression = { $_.User.Username } }, @{ Name = "UserId"; Expression = { $_.User.Id } }, Value, @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-VtHtmlString } }, @{ Name = "Date"; Expression = { $_.CreatedDate } }, @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-VtHtmlString } }, @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
                 }
             }
             else {

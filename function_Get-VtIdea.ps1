@@ -194,11 +194,11 @@ function Get-VtIdea {
             'LastUpdatedDate',
             'Url',
             'Score',
-            @{ Name = "StatusNote"; Expression = { $_.CurrentStatus.Note | ConvertFrom-HtmlString} }
+            @{ Name = "StatusNote"; Expression = { $_.CurrentStatus.Note | ConvertFrom-VtHtmlString} }
         )
 
         if ( $IncludeDescription ) {
-            $PropertiesToReturn += @{ Name = 'Description'; Expression = { $_.Description | ConvertFrom-HtmlString} }
+            $PropertiesToReturn += @{ Name = 'Description'; Expression = { $_.Description | ConvertFrom-VtHtmlString} }
         }
 
         $Uri = 'api.ashx/v2/ideas/ideas.json'

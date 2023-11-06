@@ -112,4 +112,4 @@ function ConvertFrom-HtmlString {
 #endregion HTML Utility Functions
 
 #Export-ModuleMember -Function ConvertTo-QueryString
-#Export-ModuleMember -Function ConvertFrom-HtmlString
+#Export-ModuleMember -Function ConvertFrom-VtHtmlString

@@ -177,7 +177,7 @@ function New-VtPointTransaction {
             @{ Name = "Username"; Expression = { $_.User.Username } }
             'CreatedDate'
             'Value'
-            @{ Name = 'Content'; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString } }
+            @{ Name = 'Content'; Expression = { $_.Content.HtmlName | ConvertFrom-VtHtmlString } }
             @{ Name = 'Transaction'; Expression = { $_.id } }
         )
     }

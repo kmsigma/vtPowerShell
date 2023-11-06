@@ -1,7 +1,7 @@
-function ConvertFrom-VtHtml {
+function ConvertFrom-VtHtmlString {
     <#
     .Synopsis
-        To be done
+        Uses the Telligent API to convert HTML to a string
     .DESCRIPTION
 
     .EXAMPLE

@@ -208,8 +208,8 @@ function Get-VtAbuseReport {
         }
         else {
             $PropertiesToReturn += @(
-                @{ Name = 'Name'; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString -Verbose:$false } },
-                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription | ConvertFrom-HtmlString -Verbose:$false } }
+                @{ Name = 'Name'; Expression = { $_.Content.HtmlName | ConvertFrom-VtHtmlString -Verbose:$false } },
+                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription | ConvertFrom-VtHtmlString -Verbose:$false } }
             )
         }
     }
