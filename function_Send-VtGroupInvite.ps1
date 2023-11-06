@@ -30,7 +30,7 @@ function Send-VtGroupInvite {
         This API call wants the GroupID, but the get/list groups API retrieves the containerID.  This will cause some ...interesting... workarounds.
     #>
     [CmdletBinding(
-        DefaultParameterSetName = 'Send Group Invite with Connection File',
+        DefaultParameterSetName = 'Send Group Invite by Email with Connection File',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/12/w/api-documentation/71540/create-user-invitation-rest-endpoint',
@@ -38,12 +38,19 @@ function Send-VtGroupInvite {
     )]
     Param
     (
-        # Usernames on which to send the invitation
-        [Parameter(
-            Mandatory = $true
-        )]
+        # Emails on which to send the invitation
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Email with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Email with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Email with Connection File')]
         [ValidatePattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')]
         [string[]]$Email,
+        
+        # Usernames on which to send the invitation (automatically omits anyone who opts out of email notifications)
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Username with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Username with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Username with Connection File')]
+
+        [string[]]$Username,
 
         # Send the invitation for this group ID
         [Parameter(
@@ -53,7 +60,7 @@ function Send-VtGroupInvite {
 
         # Group Membership Type
         [Parameter()]
-        [ValidateSet("Member", "Manager", "Owner", "PendingMember", "EffectiveMember")]
+        [ValidateSet("Member", "Manager", "Owner")]
         [string]$GroupMembershipType = 'Member',
 
         # Set the title of the achievement
@@ -70,7 +77,8 @@ function Send-VtGroupInvite {
 
         #region community authorization - put at bottom of paramter block
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Email with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Username with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
@@ -78,18 +86,21 @@ function Send-VtGroupInvite {
         [string]$VtCommunity,
     
         # Authentication Header for the community
-        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Email with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Username with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable]$VtAuthHeader,
 
-        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Email with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Send Group Invite by Username with Connection Profile')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSObject]$Connection,
 
         # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
-        [Parameter(ParameterSetName = 'Send Group Invite with Connection File')]
+        [Parameter(ParameterSetName = 'Send Group Invite by Email with Connection File')]
+        [Parameter(ParameterSetName = 'Send Group Invite by Username with Connection File')]
         [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) )
         #endregion community authorization - put at bottom of paramter block
     )
@@ -145,6 +156,9 @@ function Send-VtGroupInvite {
         $UriParameters["Message"] = $Message
     }
     PROCESS {
+        if ( $Username ) {
+            $Email = $Username | ForEach-Object { Get-VtUser -Username $_ | Where-Object { $_.EmailEnabled } | Select-Object -ExpandProperty EmailAddress }
+        }
         ForEach ( $e in $Email ) {
 
             if ( $PSCmdlet.ShouldProcess($Community, "Send invitation to '$( $Group.Name )' to '$e'") ) {
