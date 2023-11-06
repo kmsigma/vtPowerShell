@@ -229,9 +229,9 @@ function Get-VtPointTransaction {
             @{ Name = "Username"; Expression = { $_.User.Username } },
             @{ Name = "UserId"; Expression = { $_.User.Id } },
             'Value',
-            @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-Html } },
+            @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-HtmlString} },
             @{ Name = "CreatedDate"; Expression = { Get-Date ( $_.CreatedDate ) } },
-            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-Html } },
+            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString} },
             @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
         )
     }

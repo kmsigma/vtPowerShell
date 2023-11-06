@@ -93,7 +93,7 @@ function Get-VtBlogPost {
         [int]$BatchSize = 20, 
 
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
-        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Post Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'All Blogs Posts with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
@@ -102,7 +102,7 @@ function Get-VtBlogPost {
         [string]$VtCommunity,
 
         # Authentication Header for the community
-        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Post Id with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'All Blogs Posts with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]

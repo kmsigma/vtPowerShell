@@ -241,8 +241,8 @@ function Get-VtAbusiveContent {
         }
         else {
             $PropertiesToReturn += @(
-                @{ Name = 'Name'; Expression = { $_.Content.HtmlName | ConvertFrom-Html -Verbose:$false } },
-                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription | ConvertFrom-Html -Verbose:$false } }
+                @{ Name = 'Name'; Expression = { $_.Content.HtmlName | ConvertFrom-HtmlString -Verbose:$false } },
+                @{ Name = 'Body'; Expression = { $_.Content.HtmlDescription | ConvertFrom-HtmlString -Verbose:$false } }
             )
         }
     }
