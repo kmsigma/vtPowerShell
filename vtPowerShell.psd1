@@ -101,13 +101,13 @@
         'function_Set-VtUser.ps1'
         'function_Set-VtAchievement.ps1'
         'function_Test-VtConnection.ps1'
-        'function_ConvertFrom-VtHtml.ps1'
+        'function_ConvertFrom-VtHtmlString.ps1'
         'vtPowerShell.psm1'
     )
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport    = @(
-        'ConvertFrom-VtHtml'
+        'ConvertFrom-VtHtmlString'
         'ConvertTo-QueryString'
         'ConvertTo-VtAuthHeader'
         'Get-VtAbuseReport'
