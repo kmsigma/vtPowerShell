@@ -157,7 +157,7 @@ function Send-VtGroupInvite {
     }
     PROCESS {
         if ( $Username ) {
-            $Email = $Username | ForEach-Object { Get-VtUser -Username $_ | Where-Object { $_.EmailEnabled } | Select-Object -ExpandProperty EmailAddress }
+            $Email = $Username | ForEach-Object { Get-VtUser -Username $_ -SuppressProgressBar | Where-Object { $_.EmailEnabled } | Select-Object -ExpandProperty EmailAddress }
         }
         ForEach ( $e in $Email ) {
 
