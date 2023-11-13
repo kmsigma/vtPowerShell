@@ -142,7 +142,7 @@ function Get-VtBlog {
             'CommentCount'
             @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Name ) } }
             @{ Name = "GroupId"; Expression = { $_.Group.Id } }
-            @{ Name = "GroupContainer"; Expression = { $_.Group.ContainerId } }
+            @{ Name = "ContainerId"; Expression = { $_.Group.ContainerId } }
             @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }
             'DefaultPostImageUrl'
             @{ Name = "Authors"; Expression = { ( $_.Authors | ForEach-Object { $_ | Select-Object -ExpandProperty DisplayName } ) } }
