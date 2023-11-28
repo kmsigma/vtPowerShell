@@ -157,6 +157,14 @@ function Get-VtGroup {
             $UriParameters['SortOrder'] = 'Ascending'
         }
 
+        # Build a lookup to xref the returned name with the "friendly" name
+        $GroupTypeLookup = @{}
+        $GroupTypeLookup['Joinless'] = 'Joinless'
+        $GroupTypeLookup['PublicOpen'] = 'Public (Open Membership)'
+        $GroupTypeLookup['PublicClosed'] = 'Public (Closed Membership)'
+        $GroupTypeLookup['PrivateListed'] = 'Private (Listed)'
+        $GroupTypeLookup['PrivateUnlisted'] = 'Private (Unlisted)'
+
         $PropertiesToReturn = @(
             @{ Name = "GroupId"; Expression = { $_.Id } }
             @{ Name = "ContainerId"; Expression = { $_.ContainerId } }
@@ -165,7 +173,7 @@ function Get-VtGroup {
             @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
             "DateCreated"
             "Url"
-            "GroupType"
+            @{ Name = "GroupType"; Expression = { $GroupTypeLookup[$_.GroupType] } }
             "ParentGroupId"
         )
 
