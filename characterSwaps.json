@@ -1,0 +1,19 @@
+{
+    "swaps": [
+        {
+            "find": "[emoticon:7d377b609b6f44bf9290e3d8a0b9a733]",
+            "replace": "&trade;",
+            "name": "Trademark"
+        },
+        {
+            "find": "[emoticon:6abd1cb2558648488dbea31d006afc59]",
+            "replace": "&reg;",
+            "name": "Registered Trademark"
+        },
+        {
+            "find": "[emoticon:3e5d812a3bd94e929c19f7d4a585767f]",
+            "replace": "&copy;",
+            "name": "Copyright"
+        }
+    ]
+}

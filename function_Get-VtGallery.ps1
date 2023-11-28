@@ -1,7 +1,7 @@
 function Get-VtGallery {
     <#
     .Synopsis
-        TBD
+        Lists one or more media galleries on the Verint Community platform
     .DESCRIPTION
         TBD
     .EXAMPLE
@@ -23,13 +23,13 @@ function Get-VtGallery {
     .ROLE
         TBD
     .LINK
-        Online REST API Documentation: 
+        Online REST API Documentation: https://community.telligent.com/community/12/w/api-documentation/71300/list-gallery-rest-endpoint
     #>
     [CmdletBinding(
         DefaultParameterSetName = 'All Galleries with Connection File',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
-        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64678/gallery-rest-endpoints',
+        HelpUri = 'https://community.telligent.com/community/12/w/api-documentation/71300/list-gallery-rest-endpoint',
         ConfirmImpact = 'Low'
     )]
     Param
@@ -110,21 +110,21 @@ function Get-VtGallery {
         )]
         [Parameter(
             ParameterSetName = 'Gallery Id and Group Id with Authentication Header',
-            Mandatory = $true,
+            Mandatory = $false,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false
         )]
         [Parameter(
             ParameterSetName = 'Gallery Id and Group Id with Connection Profile',
-            Mandatory = $true,
+            Mandatory = $false,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false
         )]
         [Parameter(
             ParameterSetName = 'Gallery Id and Group Id with Connection File',
-            Mandatory = $true,
+            Mandatory = $false,
             ValueFromPipeline = $false,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false
@@ -277,15 +277,13 @@ function Get-VtGallery {
                             $GalleriesResponse.Galleries
                         }
                         else {
-                            $GalleriesResponse.Galleries | Select-Object -Property @{ Name = "GalleryId"; Expression = { $_.Id } }, Name, Key, @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }, Url, Enabled, PostCount, CommentCount, @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Name ) } }, @{ Name = "GroupId"; Expression = { $_.Group.Id } }, @{ Name = "GroupType"; Expression = { $_.Group.GroupType } }, @{ Name = "Owners"; Expression = { ( $_.Owners | ForEach-Object { $_ | Select-Object -ExpandProperty DisplayName } ) } }
+                            $GalleriesResponse.Galleries | Select-Object -Property $PropertiesToReturn
                         }
                     }
                     $UriParameters["PageIndex"]++
                 } while ($TotalReturned -lt $GalleriesResponse.TotalCount)
             }
-            
 
-            
         } #end of 'should process'
     }
     END {

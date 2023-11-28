@@ -428,7 +428,7 @@ function Get-VtUser {
         }
 
         if ( $IncludeMentionCode ) {
-            $PropertiesToReturn += @{ Name = "MentionHtml"; Expression = { "[mention:$( $_.ContentId.Replace('-', '') ):$( $_.ContentTypeId.Replace('-', '') )]" } }
+            $PropertiesToReturn += @{ Name = "MentionHtml"; Expression = { "[mention:$( $_.ContentId.ToLower().Replace('-', '') ):$( $_.ContentTypeId.ToLower().Replace('-', '') )]" } }
         }
         if ( $IncludeAvatarCheck ) {
             $PropertiesToReturn += @{ Name = "DefaultAvatar"; Expression = { $_.AvatarUrl -like "*/cfs-file/__key/communityserver-components-avatars/default.png" } }

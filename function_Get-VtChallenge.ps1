@@ -26,7 +26,7 @@ function Get-VtChallenge {
         PositionalBinding = $false,
         HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64555/challenge-rest-endpoints',
         ConfirmImpact = 'Medium')]
-    [Alias()]
+    [Alias('Get-VtIdeation')]
     [OutputType()]
     Param
     (

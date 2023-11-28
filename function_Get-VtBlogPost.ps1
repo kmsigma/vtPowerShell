@@ -41,21 +41,70 @@ function Get-VtBlogPost {
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false,
-            ParameterSetName = 'All Blogs Posts with Connection File'
+            ParameterSetName = 'All Blogs Posts with Authentication Header'
         )]
-        [ValidateRange("Positive")]
-        [int64[]]$BlogId,
-
-        # Filter to a specific group
         [Parameter(
             Mandatory = $false, 
-            ValueFromPipeline = $false,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'All Blogs Posts with Connection Profile'
+        )]
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true, 
             ValueFromRemainingArguments = $false,
             ParameterSetName = 'All Blogs Posts with Connection File'
         )]
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'Blog Posts with Post ID with Authentication Header'
+        )]
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'Blog Posts with Post ID with Connection Profile'
+        )]
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'Blog Posts with Post ID with Connection File'
+        )]
         [ValidateRange("Positive")]
-        [int64]$GroupId,
+        [int64[]]$BlogId,
+
+        # Blog Post Id for Lookup
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'Blog Posts with Post ID with Authentication Header'
+        )]
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'Blog Posts with Post ID with Connection Profile'
+        )]
+        [Parameter(
+            Mandatory = $false, 
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true, 
+            ValueFromRemainingArguments = $false,
+            ParameterSetName = 'Blog Posts with Post ID with Connection File'
+        )]
+        [ValidateRange("Positive")]
+        [int64[]]$BlogPostId,
 
         # Do we want to include the Body of posts?
         [Parameter()]
@@ -95,6 +144,7 @@ function Get-VtBlogPost {
         # Community Domain to use (include trailing slash) Example: [https://yourdomain.telligenthosted.net/]
         [Parameter(Mandatory = $true, ParameterSetName = 'Blog Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'All Blogs Posts with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Posts with Post ID with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidatePattern('^(http:\/\/|https:\/\/)(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])\/$')]
@@ -104,12 +154,14 @@ function Get-VtBlogPost {
         # Authentication Header for the community
         [Parameter(Mandatory = $true, ParameterSetName = 'Blog Id with Authentication Header')]
         [Parameter(Mandatory = $true, ParameterSetName = 'All Blogs Posts with Authentication Header')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Posts with Post ID with Authentication Header')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Collections.Hashtable]$VtAuthHeader,
 
         [Parameter(Mandatory = $true, ParameterSetName = 'Blog Id with Connection Profile')]
         [Parameter(Mandatory = $true, ParameterSetName = 'All Blogs Posts with Connection Profile')]
+        [Parameter(Mandatory = $true, ParameterSetName = 'Blog Posts with Post ID with Connection Profile')]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [System.Management.Automation.PSObject]$Connection,
@@ -117,6 +169,7 @@ function Get-VtBlogPost {
         # File holding credentials.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
         [Parameter(ParameterSetName = 'Blog Id with Connection File')]
         [Parameter(ParameterSetName = 'All Blogs Posts with Connection File')]
+        [Parameter(ParameterSetName = 'Blog Posts with Post ID with Connection File')]
         [string]$ProfilePath = ( $env:USERPROFILE ? ( Join-Path -Path $env:USERPROFILE -ChildPath ".vtPowerShell\DefaultCommunity.json" ) : ( Join-Path -Path $env:HOME -ChildPath ".vtPowerShell/DefaultCommunity.json" ) )
         
     )
@@ -179,15 +232,6 @@ function Get-VtBlogPost {
             $PropertyList += "IsPostEnabled"
         }
 
-<# TDB
-        if ( $IncludeGroup ) {
-            $UriParameters["IncludeUnpublished"] = 'true'
-            # If we also want unpublished, then we'll add that field to the property list to return
-            $PropertyList += @{ Name = "GroupId"; Expression = { } }
-            $PropertyList += @{ Name = "GroupName"; Expression = { } }
-
-        }
-#>
         if ( $IncludeMetaInfo ) {
             # if we want the meta info, then we'll add those fields to the property list to return
             $PropertyList += "OpenGraphTitle",
@@ -211,7 +255,6 @@ function Get-VtBlogPost {
 
     PROCESS {
         if ( $BlogId -and -not $BlogPostId ) {
-            
             ForEach ( $B in $BlogId ) {
                 # Add confirmation here
 
@@ -254,6 +297,7 @@ function Get-VtBlogPost {
             # Individual Blog Posts
             ForEach ( $Bp in $BlogPostId ) {
                 ForEach ( $B in $BlogId ) {
+                    Write-Warning -Message "Retrieving BlogPostId: $Bp / BlogId: $B"
                     # Add confirmation here
                     $Uri = "api.ashx/v2/blogs/$B/posts/$Bp.json"
 
@@ -309,9 +353,7 @@ function Get-VtBlogPost {
         }
     }
             
-
-
     END {
-
+        # Nothing to see here
     }
 }
