@@ -99,7 +99,7 @@
         'function_Set-VtForumThread.ps1'
         'function_Set-VtGallery.ps1'
         'function_Set-VtGalleryMedia.ps1'
-        'function_Set-Group.ps1'
+        'function_Set-VtGroup.ps1'
         'function_Set-VtUser.ps1'
         'function_Set-VtAchievement.ps1'
         'function_Test-VtConnection.ps1'
