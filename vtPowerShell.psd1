@@ -30,7 +30,7 @@
     Copyright            = '(c) 2023 Kevin M. Sparenberg. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description          = 'Collection of PowerShell Functions for working with Verint/Telligent Communities via their API'
+    Description          = 'Collection of PowerShell sunctions for working with Verint/Telligent Communities via their API'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion    = '7.0.0'
@@ -99,6 +99,7 @@
         'function_Set-VtForumThread.ps1'
         'function_Set-VtGallery.ps1'
         'function_Set-VtGalleryMedia.ps1'
+        'function_Set-Group.ps1'
         'function_Set-VtUser.ps1'
         'function_Set-VtAchievement.ps1'
         'function_Test-VtConnection.ps1'
@@ -143,6 +144,7 @@
         'Set-VtForumThread'
         'Set-VtGallery'
         'Set-VtGalleryMedia'
+        'Set-VtGroup'
         'Set-VtUser'
         'Test-VtConnection'
         'Update-VtAuthHeader'

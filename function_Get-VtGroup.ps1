@@ -166,7 +166,7 @@ function Get-VtGroup {
         $GroupTypeLookup['PrivateUnlisted'] = 'Private (Unlisted)'
 
         $PropertiesToReturn = @(
-            @{ Name = "GroupId"; Expression = { $_.Id } }
+            @{ Name = "GroupId"; Expression = { [int64]( $_.Id ) } }
             @{ Name = "ContainerId"; Expression = { $_.ContainerId } }
             @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Name ) } }
             "Key"
