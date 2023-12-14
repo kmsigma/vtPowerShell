@@ -82,11 +82,11 @@ function Set-VtBlogPost {
         [Parameter(ParameterSetName = 'Blog Post By Blog and Post Id with Connection File')]
         [ValidateLength(1, 255)]
         [ValidateScript( {
-                if ( $_ -match '^[a-zA-Z\d-]*$' ) {
+                if ( $_ -match '^[a-zA-Z\d- ]*$' ) {
                     $true
                 }
                 else {
-                    throw "'$_' is invalid. Keys must contain alpha-numeric and dashes only. (Example: 'tech docs' is invalid, but 'tech-docs' or 'techdocs' is ok."
+                    throw "'$_' is invalid. Keys must contain alpha-numeric, dashes, and spaces only. (Example: 'tech docs' is invalid, but 'tech-docs' or 'techdocs' is ok."
                 }
             }
         )]
@@ -111,7 +111,10 @@ function Set-VtBlogPost {
         #>
 
         # Set the destination blog for the post
-        [int]$DestinationBlogId,
+        # Setting a destination will require a separate "Move-VtBlogPost" function which utilizes the
+        # "/api.ashx/v2/contentconversion/conversion.json" endpoint.
+        # [ValidateRange("Positive")]
+        # [int64]$DestinationBlogId,
 
         # Set the MetaDescription
         [string]$MetaDescription,
