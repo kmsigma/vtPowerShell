@@ -1,4 +1,8 @@
-﻿$WidgetFile = "C:\Users\kevin.sparenberg\Downloads\ThwackBlogCreate_EditPost-Widget.xml"
+﻿$WidgetFile = "C:\Users\kevin.sparenberg\GitHub\vtPowerShell\Scratch\Widgets\ThwackBlogCreate_EditPost-Widget.xml"
+$WidgetFile = "C:\Users\kevin.sparenberg\GitHub\vtPowerShell\Scratch\Widgets\ThwackBlogCreate_EditPost-Widget_v12.xml"
+
+
+
 $OutputPath = Get-Item -Path $WidgetFile | Select-Object -Property @{ Name = "DirPlusBase"; Expression = { Join-Path -Path $_.Directory -ChildPath $_.BaseName } } | Select-Object -ExpandProperty DirPlusBase
 # Build the Output Folders
 if ( -not ( Test-Path -Path $OutputPath -ErrorAction SilentlyContinue ) ) {
