@@ -254,6 +254,14 @@ function Get-VtGalleryMedia {
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
+        [switch]$IncludeMentionCode,
+
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
         [ValidateRange(1, 100)]
         [int]$BatchSize = 20,
 
@@ -319,7 +327,10 @@ function Get-VtGalleryMedia {
             $PropertiesToReturn += @{ Name = "FileUrl"; Expression = { $_.File.FileUrl } }
         }
         if ( $IncludeDescription ) {
-            @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
+            $PropertiesToReturn += @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
+        }
+        if ( $IncludeMentionCode ) {
+            $PropertiesToReturn += @{ Name = 'MentionCode'; Expression = { "[mention:$( $_.Content.ContentID.Replace('-', '').ToLower() ):$( $_.Content.ContentTypeID.Replace('-', '').ToLower() )]" } }        
         }
 
         $UriParameters['SortOrder'] = $SortOrder
