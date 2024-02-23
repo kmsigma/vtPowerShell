@@ -229,13 +229,13 @@ function Get-VtPointTransaction {
             @{ Name = "Username"; Expression = { $_.User.Username } },
             @{ Name = "UserId"; Expression = { [int64]( $_.User.Id ) } },
             'Value',
-            @{ Name = "Description"; Expression = { $_.Description | ConvertFrom-VtHtml } },
+            @{ Name = "Description"; Expression = { $_.Description | ConvertFrom-VtHtmlString } },
             @{ Name = "CreatedDate"; Expression = { Get-Date ( $_.CreatedDate ) } },
-            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-VtHtml } },
+            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-VtHtmlString } },
             @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
-            @{ Name = "Application"; Expression = { $_.Content.Application.HtmlName | ConvertFrom-VtHtml } }
+            @{ Name = "Application"; Expression = { $_.Content.Application.HtmlName | ConvertFrom-VtHtmlString } }
             @{ Name = "ApplicationUrl"; Expression = { $_.Content.Application.Url } }
-            @{ Name = "Group"; Expression = { $_.Content.Application.Container.HtmlName | ConvertFrom-VtHtml } }
+            @{ Name = "Group"; Expression = { $_.Content.Application.Container.HtmlName | ConvertFrom-VtHtmlString } }
             @{ Name = "GroupUrl"; Expression = { $_.Content.Application.Container.Url } }
             )
     }
