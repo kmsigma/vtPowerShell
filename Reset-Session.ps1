@@ -17,9 +17,7 @@ Get-Variable -Name "vt*" | Remove-Variable -ErrorAction SilentlyContinue -Verbos
 Write-Host "`tLoading the vtPowerShell Module (if exist)" -ForegroundColor Yellow
 if ( -not ( Get-Module -Name vtPowerShell -ListAvailable ) ) {
     Import-Module .\vtPowerShell.psd1 -Force
-
-}
-else {
+} else {
     Get-Module -Name vtPowerShell -ListAvailable | Import-Module -Force -Verbose
 }
 

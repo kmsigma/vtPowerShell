@@ -31,7 +31,7 @@ function Get-VtPointTransaction {
         DefaultParameterSetName = 'All Transactions with Connection File',
         SupportsShouldProcess = $true, 
         PositionalBinding = $false,
-        HelpUri = 'https://community.telligent.com/community/11/w/api-documentation/64803/list-point-transactions-point-transaction-rest-endpoint',
+        HelpUri = 'https://community.telligent.com/community/12/w/api-documentation/71427/list-point-transaction-rest-endpoint',
         ConfirmImpact = 'Low')
     ]
     Param
@@ -210,30 +210,34 @@ function Get-VtPointTransaction {
             }
         }
 
-        $RestMethod = "List"
+        $RestMethod = "Get"
     
         # Create an collection for the UriParameters
         $UriParameters = @{}
-        $UriParameters.Add("PageIndex", 0)
-        $UriParameters.Add("PageSize", $BatchSize)
-        $UriParameters.Add("SortBy", $SortBy)
+        $UriParameters["PageIndex"] = 0
+        $UriParameters["PageSize"] = $BatchSize
+        $UriParameters["SortBy"] = $SortBy
         if ( $EndDate ) {
-            $UriParameters.Add("EndDate", $EndDate)
+            $UriParameters["EndDate"] = Get-Date ( $EndDate ) -Format 'o'
         }
         if ( $StartDate ) {
-            $UriParameters.Add("StartDate", $StartDate)
+            $UriParameters["StartDate"] = Get-Date ( $StartDate ) -Format 'o'
         }
     
         $PropertiesToReturn = @(
             @{ Name = "TransactionId"; Expression = { [int64]( $_.id ) } },
             @{ Name = "Username"; Expression = { $_.User.Username } },
-            @{ Name = "UserId"; Expression = { $_.User.Id } },
+            @{ Name = "UserId"; Expression = { [int64]( $_.User.Id ) } },
             'Value',
-            @{ Name = "Action"; Expression = { $_.Description | ConvertFrom-VtHtmlString} },
+            @{ Name = "Description"; Expression = { $_.Description | ConvertFrom-VtHtml } },
             @{ Name = "CreatedDate"; Expression = { Get-Date ( $_.CreatedDate ) } },
-            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-VtHtmlString} },
+            @{ Name = "Item"; Expression = { $_.Content.HtmlName | ConvertFrom-VtHtml } },
             @{ Name = "ItemUrl"; Expression = { $_.Content.Url } }
-        )
+            @{ Name = "Application"; Expression = { $_.Content.Application.HtmlName | ConvertFrom-VtHtml } }
+            @{ Name = "ApplicationUrl"; Expression = { $_.Content.Application.Url } }
+            @{ Name = "Group"; Expression = { $_.Content.Application.Container.HtmlName | ConvertFrom-VtHtml } }
+            @{ Name = "GroupUrl"; Expression = { $_.Content.Application.Container.Url } }
+            )
     }
         
     
@@ -286,7 +290,8 @@ function Get-VtPointTransaction {
                     else {
                         $PointsResponse.PointTransaction | Select-Object -Property $PropertiesToReturn
                     }
-                } else {
+                }
+                else {
                     Write-Error -Message "Unable to find points transaction with ID: $id" -RecommendedAction "Validate the ID and try again"
                 }
             }

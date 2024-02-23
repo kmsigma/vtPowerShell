@@ -91,7 +91,6 @@ function New-VtPointTransaction {
         )]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [ValidateLength(0, 250)]
         [string]$Description,
     
         # The date/time you want to have the awards added - defaults to 'now'

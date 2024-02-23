@@ -105,6 +105,7 @@ function Remove-VtPointTransaction {
         }
 
         $RestMethod = "Delete"
+        $HttpMethod = "Post"
     
     }
     PROCESS {
@@ -117,7 +118,7 @@ function Remove-VtPointTransaction {
                     # Method: Post
                     # Rest-Method: Delete
                     try {
-                        $RemovePointsResponse = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
+                        $RemovePointsResponse = Invoke-RestMethod -Method $HttpMethod -Uri ( $Community + $Uri ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -WhatIf:$false -Verbose:$false )
                         if ( $RemovePointsResponse ) {
                             Write-Verbose -Message "Points Transaction #$id removed"
                         }
