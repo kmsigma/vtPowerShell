@@ -110,6 +110,10 @@ function Get-VtBlogPost {
         [Parameter()]
         [switch]$IncludeBody,
 
+        # Do we want to include the ContentID of the posts?
+        [Parameter()]
+        [switch]$IncludeMentionHtml,
+
         # Do we want to include the OpenGraph and Meta Information?
         [Parameter()]
         [switch]$IncludeMetaInfo,
@@ -224,6 +228,11 @@ function Get-VtBlogPost {
         if ( $IncludeBody ) {
             # if we want the body of the post, then we'll add those fields to the property list to return
             $PropertyList += "Body"
+        }
+
+        if ( $IncludeMentionHtml ) {
+            # if we want the ContentID of the post, then we'll add those fields to the property list to return
+            $PropertyList += @{ Name = "MentionHtml"; Expression = { "[mention:$( $_.ContentId.ToLower().Replace('-', '') ):$( $_.ContentTypeId.ToLower().Replace('-', '') )]" } }
         }
 
         if ( $IncludeUnpublished ) {
