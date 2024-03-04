@@ -124,6 +124,10 @@ function Get-VtPointTransaction {
         [ValidateSet("CreateDate", "Value")]
         [string]$SortBy = 'CreatedDate',
 
+        # Sort Order - default to descending
+        [Parameter()]
+        [switch]$Ascending,
+
         # Optional page size grab for the call to the API. (Script defaults to 100 per batch)
         # Larger page sizes generally complete faster, but consume more memory
         [Parameter()]
@@ -217,6 +221,12 @@ function Get-VtPointTransaction {
         $UriParameters["PageIndex"] = 0
         $UriParameters["PageSize"] = $BatchSize
         $UriParameters["SortBy"] = $SortBy
+        if ( $Ascending ) {
+            $UriParameters["SortOrder"] = 'Ascending'
+        }
+        else {
+            $UriParameters["SortOrder"] = 'Descending'
+        }
         if ( $EndDate ) {
             $UriParameters["EndDate"] = Get-Date ( $EndDate ) -Format 'o'
         }
