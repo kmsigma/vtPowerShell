@@ -163,8 +163,12 @@ function Get-VtGroupMembership {
             }
         }
 
-        # Check the authentication header for any 'Rest-Method' and revert to a traditional "get"
-        $VtAuthHeader = $AuthHeaders | Update-VtAuthHeader -RestMethod Get -Verbose:$false -WhatIf:$false
+        # API Methods
+        $HttpMethod = "Get"
+        $RestMethod = "Get"
+        
+        # Check the authentication header for any 'Rest-Method' and revert to a assigned RestMethod
+        $RestHeaders = $AuthHeaders | Update-VtAuthHeader -RestMethod $RestMethod -Verbose:$false -WhatIf:$false
         $UriParameters = @{}
         $UriParameters['PageSize'] = $BatchSize
         $UriParameters['PageIndex'] = 0
@@ -182,16 +186,19 @@ function Get-VtGroupMembership {
         }
 
         $PropertiesToReturn = @(
-            @{ Name = "GroupId"; Expression = { $_.Group.Id } }
-            @{ Name = "Name"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Name ) } }
-            @{ Name = "GroupKey"; Expression = { $_.Group.Key } }
-            @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Description ) } }
-            @{ Name = "DateCreated"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.DateCreated ) } }
-            @{ Name = "Url"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Url ) } }
+            @{ Name = "GroupID"; Expression = { $_.Group.Id } }
+            @{ Name = "GroupName"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Name ) } }
+            @{ Name = "GroupUrl"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.Url ) } }
             @{ Name = "GroupType"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Group.GroupType ) } }
+            @{ Name = "GroupContainerID"; Expression = { $_.Group.ContainerID } }
+            @{ Name = "UserId"; Expression = { $_.Id } }
             @{ Name = "Username"; Expression = { $_.DisplayName } }
             @{ Name = "MembershipType"; Expression = { $_.MembershipType } }
+            @{ Name = "IsDirectMember"; Expression = { $_.IsDirectMember } }
+            @{ Name = "IsRoleMember"; Expression = { $_.IsRoleMember } }
         )
+
+
     }
         
     PROCESS {
@@ -218,7 +225,7 @@ function Get-VtGroupMembership {
                     if ( $PSCmdlet.ShouldProcess($Community, "Retrieve group membership with group id: '$g'") ) {
                         $TotalResponses = 0
                         do {
-                        $MemberResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders -Verbose:$false
+                        $MemberResponse = Invoke-RestMethod -Method $HttpMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $RestHeaders  -Verbose:$false
                         
                         if ( $MemberResponse."$( $MemberType )s" ) {
                             $TotalResponses += $MemberResponse."$( $MemberType )s".Count
@@ -245,7 +252,7 @@ function Get-VtGroupMembership {
                     ForEach ( $Group in $Groups ) {
                         do {
                             $Uri = "api.ashx/v2/groups/$( $Group.GroupId )/members/users.json"
-                            $MemberResponse = Invoke-RestMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $AuthHeaders -Verbose:$false
+                            $MemberResponse = Invoke-RestMethod -Method $HttpMethod -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers $RestHeaders -Verbose:$false
     
                             if ( $MemberResponse ) {
                                 $MembershipCount += $MemberResponse.Users.Count

@@ -11,7 +11,7 @@ Very rudimentary query check for possible spammers
 $MinConfScore = 50
 
 # What date span are we checking for spammers?
-$StartDate = Get-Date "2022-12-27"
+$StartDate = Get-Date "2024-02-20"
 $EndDate   = Get-Date
 
 <#

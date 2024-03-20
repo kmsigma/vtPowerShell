@@ -246,6 +246,14 @@ function Get-VtGalleryMedia {
             ValueFromPipelineByPropertyName = $false, 
             ValueFromRemainingArguments = $false
         )]
+        [switch]$IncludeBody,
+        
+        [Parameter(
+            Mandatory = $false,
+            ValueFromPipeline = $false,
+            ValueFromPipelineByPropertyName = $false, 
+            ValueFromRemainingArguments = $false
+        )]
         [switch]$IncludeFileDetails,
 
         [Parameter(
@@ -326,8 +334,8 @@ function Get-VtGalleryMedia {
             $PropertiesToReturn += @{ Name = "FileSize"; Expression = { $_.File.FileSize } }
             $PropertiesToReturn += @{ Name = "FileUrl"; Expression = { $_.File.FileUrl } }
         }
-        if ( $IncludeDescription ) {
-            $PropertiesToReturn += @{ Name = "Description"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
+        if ( $IncludeBody ) {
+            $PropertiesToReturn += @{ Name = "Body"; Expression = { [System.Web.HttpUtility]::HtmlDecode( $_.Description ) } }
         }
         if ( $IncludeMentionCode ) {
             $PropertiesToReturn += @{ Name = 'MentionCode'; Expression = { "[mention:$( $_.Content.ContentID.Replace('-', '').ToLower() ):$( $_.Content.ContentTypeID.Replace('-', '').ToLower() )]" } }        

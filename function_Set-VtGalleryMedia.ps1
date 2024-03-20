@@ -160,6 +160,7 @@ function Set-VtGalleryMedia {
         [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Authentication Header')]
         [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection Profile')]
         [Parameter(ParameterSetName = 'File Id and Gallery Id (Tags List) with Connection File')]
+        [Alias("Body")]
         [string]$Description,
     
         [Parameter(ParameterSetName = 'File Id and Gallery Id (Add/Remove Tags) with Authentication Header')]
@@ -354,7 +355,7 @@ function Set-VtGalleryMedia {
         }
         else {
             if ( $PSCmdlet.ShouldProcess("Update '$( $File.Title )'", "Update $( $UriParameters.Keys -join ", " )") ) {
-                $Response = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri + '?' + ( $UriParameters | ConvertTo-QueryString ) ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod "Put" -WhatIf:$false )
+                $Response = Invoke-RestMethod -Method Post -Uri ( $Community + $Uri ) -Body ( $UriParameters  ) -Headers ( $AuthHeaders | Update-VtAuthHeader -RestMethod "Put" -WhatIf:$false )
                 if ( $Response ) {
                     if ( $PassThru ) {
                         if ( $ReturnDetails ) {

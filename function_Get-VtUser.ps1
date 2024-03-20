@@ -388,7 +388,7 @@ function Get-VtUser {
         $UriParameters["AccountStatus"] = $AccountStatus
 
         if ( $JoinDate ) {
-            $UriParameters["JoinDate"] = $JoinDate
+            $UriParameters["JoinDate"] = $JoinDate.ToString("yyyy-MM-dd hh:mm:ss")
         }
 
 
