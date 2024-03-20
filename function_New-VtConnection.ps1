@@ -92,6 +92,12 @@ function New-VtConnection {
         [Parameter(ParameterSetName = 'Profile File')]
         [switch]$Save,
 
+        # Enable notifications with this header?
+        [Parameter(ParameterSetName = 'Authentication Header')]
+        [Parameter(ParameterSetName = 'Username/API Key')]
+        [Parameter(ParameterSetName = 'Profile File')]
+        [switch]$EnableNotifications,
+
         # File to Store.  By default is stores in your user profile \.vtPowerShell\DefaultCommunity.json
         [Parameter(ParameterSetName = 'Authentication Header')]
         [Parameter(ParameterSetName = 'Username/API Key')]
@@ -113,6 +119,9 @@ function New-VtConnection {
         if ( $PSCmdlet.ParameterSetName -eq 'Username/API Key' ) {
             Write-Verbose -Message "Using Username ($Username) and API Key"
             $Authentication = ConvertTo-VtAuthHeader -Username $Username -ApiKey $ApiKey -WhatIf:$false
+            if ( -not $EnableNotifications ) {
+                $Authentication["Rest-Disable-Notifications"] = $true
+            }
         }
 
         if ( $PSCmdlet.ShouldProcess("$CommunityUrl", "Build connection information") ) {
