@@ -6,3 +6,5 @@ my*
 /Work*
 copilot_*.ps1
 .vscode*
+.store*
+.Wistia*
